@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7f2">
+  <meta name="description" content="Build your own colorful international bus network in Souha Bus.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23f78948'/%3E%3Cpath d='M12 19h35l5 22H10z' fill='white'/%3E%3Ccircle cx='20' cy='45' r='5' fill='%23315f4c'/%3E%3Ccircle cx='43' cy='45' r='5' fill='%23315f4c'/%3E%3C/svg%3E">
+  <title>Souha Bus — Route Builder</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark"><span class="brand-bus">▰</span><span class="brand-wheels">● ●</span></div><div><strong>Souha Bus</strong><small>ROUTE BUILDER</small></div></div>
+      <div class="sidebar-label">YOUR NETWORK</div>
+      <div id="station-list" class="station-list"></div>
+      <button id="open-build" class="sidebar-add"><span class="plus-round">＋</span><span>Build a new station<small>Expand to another country</small></span><span class="arrow">↗</span></button>
+      <div class="sidebar-bottom"><div class="mini-sun">☀</div><div><b>Happy travels!</b><small>Every great journey starts here.</small></div></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar"><div class="top-title"><div class="eyebrow">WELCOME TO YOUR NETWORK</div><h1>Let’s keep the world moving <span>✳</span></h1></div><div class="top-actions"><div class="day-chip"><span class="live-dot"></span> LIVE NETWORK</div><button id="sound-toggle" class="icon-btn" title="Toggle sound" aria-label="Toggle sound">♪</button><div class="avatar">SB</div></div></header>
+
+      <section class="stats-row" aria-label="Network statistics">
+        <div class="stat-card balance"><div class="stat-icon">€</div><div><small>YOUR BALANCE</small><strong id="money">€0</strong></div><div class="stat-spark">↗</div></div>
+        <div class="stat-card"><div class="stat-icon mint">♙</div><div><small>PASSENGERS MOVED</small><strong id="moved">0</strong></div></div>
+        <div class="stat-card"><div class="stat-icon peach">▰</div><div><small>YOUR FLEET</small><strong id="fleet-count">1 <em>bus</em></strong></div></div>
+        <div class="stat-card"><div class="stat-icon lavender">⌖</div><div><small>ACTIVE STATIONS</small><strong id="station-count">3 <em>countries</em></strong></div></div>
+      </section>
+
+      <div class="workspace">
+        <section class="map-card" aria-label="3D route map"><div class="map-head"><div><div class="eyebrow">YOUR LITTLE CORNER OF THE WORLD</div><h2>Route map <span class="map-subtitle">· Click a station to manage it</span></h2></div><div class="map-legend"><span><i class="legend-dot active"></i> Your stations</span><span><i class="legend-dot future"></i> Future stops</span></div></div><div id="scene-wrap"><canvas id="game-canvas" aria-label="Three dimensional map of the Souha Bus network"></canvas><div id="map-labels"></div><div class="map-hint">✦ Drag to explore · Scroll to zoom</div></div><div class="map-footer"><div class="map-footer-icon">✳</div><div><b>A whole world of possibilities</b><span>Connect cities, fill your buses, and grow your network.</span></div><button id="map-build" class="text-link">Explore new stations <span>↗</span></button></div></section>
+
+        <aside class="operations"><div class="section-heading"><div><div class="eyebrow">THE DRIVER’S SEAT</div><h2>Trip control</h2></div><span class="heading-star">✦</span></div><div class="operation-card"><div class="op-label">DEPARTING FROM</div><div id="selected-station" class="selected-station"></div><div class="form-divider"></div><label class="field-label" for="bus-select">CHOOSE YOUR BUS</label><select id="bus-select"></select><div id="bus-status" class="helper-text"></div><label class="field-label" for="destination-select">WHERE TO?</label><select id="destination-select"></select><div id="route-fare" class="route-fare"></div><div class="boarding-head"><span>Passengers waiting</span><span id="waiting-count">0 ready</span></div><div class="boarding-count"><button id="minus-count" aria-label="Remove one passenger">−</button><div><strong id="board-count">0</strong><small>passengers to board</small></div><button id="plus-count" aria-label="Add one passenger">＋</button></div><button id="board-button" class="primary-button">Board passengers <span>→</span></button><button id="depart-button" class="secondary-button">Start trip <span>↗</span></button><div id="trip-note" class="trip-note"></div></div><div class="fleet-heading"><h3>Your fleet</h3><span id="fleet-subcount">1 bus</span></div><div id="fleet-list" class="fleet-list"></div><button id="buy-bus" class="buy-button"><span class="buy-icon">＋</span><span><b>Buy another bus</b><small>12 seats · €950</small></span><span>↗</span></button></aside>
+      </div>
+      <footer class="app-footer"><span>Made for the open road <span class="heart">♥</span> Souha Bus</span><button id="reset-button">Reset progress</button></footer>
+    </main>
+  </div>
+
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+  <div id="build-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal"><div class="modal-top"><div><div class="eyebrow">GROW YOUR WORLD</div><h2 id="modal-title">Where to next?</h2><p>Open a station and welcome travelers from a new country.</p></div><button id="close-modal" class="close-modal" aria-label="Close">×</button></div><div id="available-stations" class="available-stations"></div><div class="modal-foot">✦ New stations immediately start welcoming passengers.</div></div></div>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
