@@ -11,7 +11,7 @@ const STATIONS = [
 const city = Object.fromEntries(STATIONS.map(s=>[s.id,s]));
 const $ = id=>document.getElementById(id);
 const CAPACITY=6, BUS_COST=650, SPAWN_MS=1800, SAVE_KEY='souha-bus-station-stories-v1';
-const BAYS=[{x:-1.8,z:-1.22},{x:0,z:0},{x:1.8,z:1.22}];
+const BAYS=[{x:-2.15,z:-1.22},{x:0,z:0},{x:2.15,z:1.22}];
 const euro=n=>'€'+Math.floor(n).toLocaleString('en-US');
 let currentStation='tunis',selectedBus=1,sheet=null,sound=localStorage.getItem('souha-sound')!=='off';
 let game;
@@ -29,15 +29,16 @@ function stationQueue(id){return game.passengers.filter(p=>p.origin===id).length
 function ticketPrice(origin,dest){const a=STATIONS.findIndex(s=>s.id===origin),b=STATIONS.findIndex(s=>s.id===dest);return 65+Math.abs(a-b)*15;}
 function tripTime(origin,dest){const a=STATIONS.findIndex(s=>s.id===origin),b=STATIONS.findIndex(s=>s.id===dest);return (8+Math.abs(a-b)*2)*1000;}
 function beep(frequency=600){if(!sound)return;try{const ctx=new (window.AudioContext||window.webkitAudioContext)(),osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=frequency;gain.gain.setValueAtTime(.04,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.17);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.17);osc.onended=()=>ctx.close();}catch{}}
+function boardingSound(full=false){if(!sound)return;try{const ctx=new (window.AudioContext||window.webkitAudioContext)(),osc=ctx.createOscillator(),gain=ctx.createGain(),start=ctx.currentTime;osc.type='triangle';osc.frequency.setValueAtTime(full?620:460,start);osc.frequency.exponentialRampToValueAtTime(full?1040:760,start+.24);gain.gain.setValueAtTime(.001,start);gain.gain.linearRampToValueAtTime(.055,start+.025);gain.gain.exponentialRampToValueAtTime(.001,start+.32);osc.connect(gain).connect(ctx.destination);osc.start(start);osc.stop(start+.33);osc.onended=()=>ctx.close();}catch{}}
 function toast(message,error=false){const node=document.createElement('div');node.className='toast'+(error?' error':'');node.textContent=message;$('toast-stack').appendChild(node);setTimeout(()=>node.remove(),2700);}
 
-function boardPassenger(id){const bus=getSelectedBus(),passenger=game.passengers.find(p=>p.id===id&&p.origin===currentStation);if(!passenger)return;if(!bus)return toast('This station needs a bus. Send one here from another station.',true);if(entryEffects.some(e=>e.id===bus.id))return toast('The next coach is pulling into the bay!');if(bus.passengers>=CAPACITY)return toast('This bus is full! Tap it to start the trip.');if(bus.destination&&bus.destination!==passenger.dest)return toast(`Bus #${String(bus.id).padStart(2,'0')} is boarding for ${city[bus.destination].name}. Wait for the next bus for this traveler.`,true);bus.destination=passenger.dest;bus.passengers++;game.passengers=game.passengers.filter(p=>p.id!==id);save();renderDynamic();renderHUD();beep(bus.passengers===CAPACITY?880:650);}
+function boardPassenger(id){const bus=getSelectedBus(),passenger=game.passengers.find(p=>p.id===id&&p.origin===currentStation);if(!passenger)return;if(!bus)return toast('This station needs a bus. Send one here from another station.',true);if(entryEffects.some(e=>e.id===bus.id))return toast('The next coach is pulling into the bay!');if(bus.passengers>=CAPACITY)return toast('This bus is full! Tap it to start the trip.');if(bus.destination&&bus.destination!==passenger.dest)return toast(`Bus #${String(bus.id).padStart(2,'0')} is boarding for ${city[bus.destination].name}. Wait for the next bus for this traveler.`,true);launchBoardingAnimation(id,bus.id);bus.destination=passenger.dest;bus.passengers++;game.passengers=game.passengers.filter(p=>p.id!==id);save();renderDynamic();renderHUD();boardingSound(bus.passengers===CAPACITY);}
 function tapBus(id){const bus=bayBuses().find(b=>b.id===id);if(!bus)return;if(entryEffects.some(e=>e.id===id))return toast('The coach is pulling into the bay!');if(bus.passengers===CAPACITY)return departBus(bus);selectedBus=id;renderDynamic();renderHUD();beep(490);}
 function departBus(bus){if(bus.passengers<CAPACITY)return toast('Fill the bus before starting the trip.',true);const vacatedBay=bus.bay;launchVisualDeparture(bus.id);bus.origin=bus.location;bus.departed=Date.now();bus.arrival=bus.departed+tripTime(bus.origin,bus.destination);bus.fare=ticketPrice(bus.origin,bus.destination);bus.status='trip';bus.bay=null;const replacement=bayBuses().find(b=>b.bay===vacatedBay);pendingMoves=replacement?{[replacement.id]:{x:-5.9,z:BAYS[vacatedBay].z}}:null;if(selectedBus===bus.id)selectedBus=replacement?.id??null;save();renderDynamic();renderHUD();toast(`Bus #${String(bus.id).padStart(2,'0')} is off to ${city[bus.destination].name}!`);beep(980);}
 function tick(){let changed=false;const now=Date.now();for(const bus of game.buses){if(bus.status==='trip'&&now>=bus.arrival){const earnings=bus.fare*bus.passengers;game.coins+=earnings;game.moved+=bus.passengers;bus.location=bus.destination;bus.status='idle';bus.readyAt=now;bus.origin=null;bus.destination=null;bus.passengers=0;bus.departed=0;bus.arrival=0;bus.fare=0;changed=true;toast(`Bus #${String(bus.id).padStart(2,'0')} arrived! +${euro(earnings)}`);beep(1010);}}
   if(now-game.lastSpawn>=SPAWN_MS){const turns=Math.min(24,Math.floor((now-game.lastSpawn)/SPAWN_MS));for(let i=0;i<turns;i++)for(const origin of game.open){const destinations=game.open.filter(id=>id!==origin),dest=destinations[Math.floor(Math.random()*destinations.length)];if(dest){game.passengers.push(newPassenger(origin,dest,game.nextPassenger++));changed=true;}}game.lastSpawn=now;}
   if(changed){save();if(!entryEffects.length)renderDynamic();renderHUD();if(sheet)renderSheet();}else if(sheet==='fleet')renderSheet();}
-function switchStation(id){if(!game.open.includes(id))return;currentStation=id;syncSelectedBus();closeSheet();buildStatic();renderDynamic();renderHUD();beep(560);}
+function switchStation(id){if(!game.open.includes(id))return;clearBoardingAnimations();currentStation=id;syncSelectedBus();closeSheet();buildStatic();renderDynamic();renderHUD();beep(560);}
 function buyStation(id){const target=city[id];if(!target||game.open.includes(id))return;if(game.coins<target.cost)return toast(`Earn ${euro(target.cost-game.coins)} more to open ${target.name}.`,true);game.coins-=target.cost;game.open.push(id);const destinations=game.open.filter(x=>x!==id);for(let i=0;i<7;i++)game.passengers.push(newPassenger(id,destinations[i%destinations.length],game.nextPassenger++));for(const origin of destinations){const arrivals=[];for(let i=0;i<(origin===currentStation?6:2);i++)arrivals.push(newPassenger(origin,id,game.nextPassenger++));if(origin===currentStation)game.passengers.unshift(...arrivals);else game.passengers.push(...arrivals);}save();toast(`${target.name} station is open!`);switchStation(id);beep(900);}
 function buyBus(){if(game.coins<BUS_COST)return toast(`Earn ${euro(BUS_COST-game.coins)} more for a bus.`,true);game.coins-=BUS_COST;const id=game.nextBus++;game.buses.push({id,location:currentStation,status:'idle',passengers:0,destination:null,origin:null,departed:0,arrival:0,fare:0,readyAt:Date.now()});save();closeSheet();renderDynamic();renderHUD();toast(`New Souha Bus #${String(id).padStart(2,'0')} joined the queue at ${city[currentStation].name}!`);beep(870);}
 
@@ -53,14 +54,18 @@ const scene=new THREE.Scene();scene.background=new THREE.Color(0xbbe3e5);scene.f
 const canvas=$('scene'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.4;
 const camera=new THREE.OrthographicCamera(-4,4,5,-5,.1,70);camera.position.set(2.8,8.4,10);camera.lookAt(0,.15,.25);
 scene.add(new THREE.HemisphereLight(0xffffff,0x93bfa3,2.1));const sunlight=new THREE.DirectionalLight(0xfff0cc,2.2);sunlight.position.set(-4,11,6);sunlight.castShadow=true;sunlight.shadow.mapSize.set(1024,1024);sunlight.shadow.camera.left=-9;sunlight.shadow.camera.right=9;sunlight.shadow.camera.top=9;sunlight.shadow.camera.bottom=-9;sunlight.shadow.normalBias=.025;scene.add(sunlight);
-const staticGroup=new THREE.Group(),dynamicGroup=new THREE.Group(),departureEffects=[],entryEffects=[],smokeEffects=[];let pendingMoves=null;scene.add(staticGroup,dynamicGroup);
+const staticGroup=new THREE.Group(),dynamicGroup=new THREE.Group(),departureEffects=[],entryEffects=[],smokeEffects=[],boardingEffects=[];let pendingMoves=null;scene.add(staticGroup,dynamicGroup);
 const material=(color,more={})=>new THREE.MeshLambertMaterial({color,flatShading:true,...more});
-const mats={grass:material(0x9bd49e),grass2:material(0xb7dca5),platform:material(0xf7eacb),tile:material(0xfff4df),road:material(0x80a9a6),stripe:material(0xfff5dc),orange:material(0xf7863e),orangeDark:material(0xdd6d2c),cream:material(0xfffaf0),glass:material(0x6fb7bc),dark:material(0x405b5e),wheel:material(0x344347),wheelHub:material(0xdfd8c4),trunk:material(0x997c56),leaf:material(0x71b885),leaf2:material(0x84c99a),skin:material(0xf3c29f),hair:material(0x624d3c)};
+const mats={grass:material(0x9bd49e),grass2:material(0xb7dca5),platform:material(0xf7eacb),tile:material(0xfff4df),road:material(0x80a9a6),stripe:material(0xfff5dc),orange:material(0xf7863e),orangeDark:material(0xdd6d2c),cream:material(0xfffaf0),glass:material(0x6fb7bc),coachGlass:material(0x2b5962,{side:THREE.DoubleSide}),glassShine:material(0x83aeb4,{side:THREE.DoubleSide}),dark:material(0x405b5e),wheel:material(0x344347),wheelHub:material(0xdfd8c4),trunk:material(0x997c56),leaf:material(0x71b885),leaf2:material(0x84c99a),skin:material(0xf3c29f),hair:material(0x624d3c)};
 function put(group,geometry,mat,x=0,y=0,z=0){const m=new THREE.Mesh(geometry,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
 function box(group,w,h,d,mat,x,y,z){return put(group,new THREE.BoxGeometry(w,h,d),mat,x,y,z);}
 function clear(group){for(const child of [...group.children]){group.remove(child);child.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&!Object.values(mats).includes(o.material)&&!Array.isArray(o.material))o.material.dispose();});}}
+function busModel(id){return dynamicGroup.children.find(child=>child.userData.pick?.kind==='bus'&&child.userData.pick.id===id)||departureEffects.find(effect=>effect.model.userData.pick?.id===id)?.model;}
+function disposeBoardingEffect(effect){scene.remove(effect.model);effect.model.traverse(child=>{if(child.geometry)child.geometry.dispose();if(child.material)child.material.dispose();});}
+function clearBoardingAnimations(){for(const effect of boardingEffects)disposeBoardingEffect(effect);boardingEffects.length=0;}
+function launchBoardingAnimation(passengerId,busId){const model=dynamicGroup.children.find(child=>child.userData.pick?.kind==='passenger'&&child.userData.pick.id===passengerId),bus=busModel(busId);if(!model||!bus)return;dynamicGroup.remove(model);scene.add(model);const materials=[];model.traverse(child=>{if(!child.isMesh)return;child.material=child.material.clone();child.material.transparent=true;child.material.depthWrite=false;materials.push({material:child.material,opacity:child.material.opacity});});boardingEffects.push({model,busId,from:model.position.clone(),to:bus.localToWorld(new THREE.Vector3(-.58,.55,1.18)),materials,started:performance.now()});}
 function launchVisualDeparture(id){const model=dynamicGroup.children.find(child=>child.userData.pick?.kind==='bus'&&child.userData.pick.id===id);if(!model)return;for(const child of [...model.children])if(child.userData.selectionRing){model.remove(child);child.geometry.dispose();child.material.dispose();}dynamicGroup.remove(model);scene.add(model);departureEffects.push({model,started:performance.now(),x:model.position.x,lastSmoke:0});}
-function emitSmoke(model,now){for(let i=0;i<3;i++){const p=model.localToWorld(new THREE.Vector3((i-1)*.35,.3,-1.35));const puff=new THREE.Mesh(new THREE.IcosahedronGeometry(.17+Math.random()*.07,0),new THREE.MeshBasicMaterial({color:0xe5e9df,transparent:true,opacity:.72,depthWrite:false}));puff.position.copy(p);scene.add(puff);smokeEffects.push({puff,started:now,vx:(Math.random()-.5)*.5});}}
+function emitSmoke(model,now){for(let i=0;i<3;i++){const p=model.localToWorld(new THREE.Vector3((i-1)*.35,.3,-1.68));const puff=new THREE.Mesh(new THREE.IcosahedronGeometry(.17+Math.random()*.07,0),new THREE.MeshBasicMaterial({color:0xe5e9df,transparent:true,opacity:.72,depthWrite:false}));puff.position.copy(p);scene.add(puff);smokeEffects.push({puff,started:now,vx:(Math.random()-.5)*.5});}}
 function tree(group,x,z,s=1){put(group,new THREE.CylinderGeometry(.1*s,.15*s,.78*s,6),mats.trunk,x,.4*s,z);put(group,new THREE.IcosahedronGeometry(.58*s,0),Math.random()>.5?mats.leaf:mats.leaf2,x,1.18*s,z);}
 function textTexture(text,color='#416358',background='#fff6e5'){const el=document.createElement('canvas');el.width=768;el.height=140;const cx=el.getContext('2d');cx.fillStyle=background;cx.fillRect(0,0,768,140);cx.fillStyle=color;cx.textAlign='center';cx.textBaseline='middle';cx.font='bold 76px Arial';cx.fillText(text,384,75);const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;return texture;}
 function terminalSign(text){const texture=textTexture(text,'#496452','#fff4d7');const sign=put(staticGroup,new THREE.PlaneGeometry(3.5,.5),new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide}),0,1.36,-2.86);sign.castShadow=false;return sign;}
@@ -87,35 +92,40 @@ function buildStatic(){
 const busTexture=textTexture('Souha Bus','#bd5a28','#fff9e9');
 function sideBrandTexture(){const el=document.createElement('canvas');el.width=768;el.height=160;const ctx=el.getContext('2d');ctx.clearRect(0,0,768,160);ctx.fillStyle='#fff8e9';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 112px Arial';ctx.fillText('Souha Bus',384,83);const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;return texture;}
 const sideBrand=sideBrandTexture();
+function coachPanel(group,points,mat){const geometry=new THREE.BufferGeometry(),vertices=[...points[0],...points[1],...points[2],...points[0],...points[2],...points[3]];geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();return put(group,geometry,mat);}
 function buildBus(bus,x,z){
   const g=new THREE.Group();g.position.set(x,.09,z);g.rotation.y=Math.PI/2;g.userData.pick={kind:'bus',id:bus.id};dynamicGroup.add(g);
-  // Long touring coach body: broad orange flanks, raised passenger cabin and a sloped-looking front.
-  box(g,.95,.28,2.34,mats.orangeDark,0,.29,0);
-  box(g,.98,.75,2.28,mats.orange,0,.67,-.02);
-  box(g,.96,.64,.34,mats.orange,0,.69,1.12);
-  box(g,.98,.08,2.30,mats.orangeDark,0,1.08,-.01);
-  box(g,.77,.45,.025,mats.glass,0,.85,1.305);
-  box(g,.82,.07,.035,mats.dark,0,1.08,1.31);
-  box(g,.88,.1,.06,mats.cream,0,.38,1.32);
+  // The long side profile and angled nose follow a modern touring coach.
+  box(g,1.01,.19,3.02,mats.dark,0,.25,-.01);
+  const profile=new THREE.Shape();profile.moveTo(-1.53,.26);profile.lineTo(1.37,.26);profile.lineTo(1.58,.4);profile.lineTo(1.65,.61);profile.lineTo(1.5,1.12);profile.lineTo(1.29,1.24);profile.lineTo(-1.43,1.24);profile.lineTo(-1.55,1.1);profile.closePath();
+  const body=new THREE.ExtrudeGeometry(profile,{depth:1.08,bevelEnabled:false});body.rotateY(-Math.PI/2);body.translate(.54,0,0);put(g,body,mats.orange);
+  box(g,.99,.07,2.74,mats.orangeDark,0,1.25,-.08);
+  coachPanel(g,[[-.46,1.15,1.51],[.46,1.15,1.51],[.47,.65,1.64],[-.47,.65,1.64]],mats.coachGlass);
+  coachPanel(g,[[-.39,1.11,1.522],[.12,1.11,1.522],[.12,1.08,1.535],[-.39,1.08,1.535]],mats.glassShine);
+  box(g,.9,.09,.07,mats.orangeDark,0,.61,1.65);
+  box(g,.95,.075,.08,mats.cream,0,.37,1.65);
   for(const side of [-1,1]){
-    const xx=side*.5;
-    box(g,.025,.32,1.68,mats.glass,xx,.88,-.27);
-    for(const zz of [-.92,-.54,-.16,.22,.58])box(g,.04,.35,.035,mats.orangeDark,xx+side*.01,.88,zz);
-    box(g,.03,.04,1.75,mats.dark,xx+side*.01,.7,-.27);
-    box(g,.03,.025,1.6,mats.orangeDark,xx+side*.01,.39,-.29);
-    const brand=put(g,new THREE.PlaneGeometry(1.74,.36),new THREE.MeshBasicMaterial({map:sideBrand,transparent:true,side:THREE.DoubleSide,depthWrite:false}),side*.524,.52,-.22);
+    const xx=side*.555;
+    box(g,.014,.4,2.55,mats.coachGlass,xx,.97,-.16);
+    coachPanel(g,[[xx,.77,1.1],[xx,1.17,1.1],[xx,1.12,1.46],[xx,.67,1.58]],mats.coachGlass);
+    for(const zz of [-.75,.28])box(g,.018,.39,.025,mats.orangeDark,xx+side*.012,.97,zz);
+    box(g,.025,.025,2.75,mats.cream,xx+side*.008,.75,-.05);
+    box(g,.025,.015,2.68,mats.orangeDark,xx+side*.008,.32,-.04);
+    for(const zz of [-.55,.32])box(g,.026,.22,.016,mats.orangeDark,xx+side*.01,.49,zz);
+    const brand=put(g,new THREE.PlaneGeometry(1.7,.27),new THREE.MeshBasicMaterial({map:sideBrand,transparent:true,side:THREE.DoubleSide,depthWrite:false}),side*.575,.55,-.29);
     brand.rotation.y=side*Math.PI/2;brand.castShadow=false;
-    for(const zz of [-.88,-.48,.82]){
-      const wheel=put(g,new THREE.CylinderGeometry(.19,.19,.08,12),mats.wheel,side*.55,.19,zz);wheel.rotation.z=Math.PI/2;
-      const hub=put(g,new THREE.CylinderGeometry(.075,.075,.083,12),mats.wheelHub,side*.55,.19,zz);hub.rotation.z=Math.PI/2;
+    for(const zz of [-1.08,.9]){
+      const wheel=put(g,new THREE.CylinderGeometry(.22,.22,.09,14),mats.wheel,side*.6,.22,zz);wheel.rotation.z=Math.PI/2;
+      const hub=put(g,new THREE.CylinderGeometry(.09,.09,.095,14),mats.wheelHub,side*.6,.22,zz);hub.rotation.z=Math.PI/2;
     }
-    box(g,.11,.1,.13,mats.dark,side*.57,.96,1.03);
+    box(g,.22,.035,.045,mats.dark,side*.65,1.09,1.31);
+    box(g,.14,.18,.11,mats.cream,side*.78,1.06,1.34);
+    box(g,.15,.09,.05,mats.cream,side*.35,.49,1.66);
   }
-  for(const xx of [-.34,.34])box(g,.14,.12,.035,mats.cream,xx,.52,1.33);
-  box(g,.35,.06,.5,mats.cream,0,1.15,-.45);
-  const frontBrand=put(g,new THREE.PlaneGeometry(.67,.16),new THREE.MeshBasicMaterial({map:busTexture,side:THREE.DoubleSide}),0,.39,1.35);frontBrand.castShadow=false;
-  if(bus.id===selectedBus){const ring=put(g,new THREE.TorusGeometry(1.17,.055,5,38),material(0xffa358),0,.06,0);ring.rotation.x=-Math.PI/2;ring.scale.y=1.19;ring.castShadow=false;ring.userData.selectionRing=true;}
-  const hit=put(g,new THREE.BoxGeometry(1.24,1.35,2.52),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}),0,.64,0);hit.castShadow=false;hit.receiveShadow=false;
+  box(g,.53,.05,.72,mats.cream,0,1.31,-.4);
+  const frontBrand=put(g,new THREE.PlaneGeometry(.53,.12),new THREE.MeshBasicMaterial({map:busTexture,side:THREE.DoubleSide}),0,.42,1.7);frontBrand.castShadow=false;
+  if(bus.id===selectedBus){const ring=put(g,new THREE.TorusGeometry(1,.05,5,48),material(0xffa358),0,.06,0);ring.rotation.x=-Math.PI/2;ring.scale.set(.74,1.75,1);ring.castShadow=false;ring.userData.selectionRing=true;}
+  const hit=put(g,new THREE.BoxGeometry(1.38,1.45,3.25),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}),0,.7,0);hit.castShadow=false;hit.receiveShadow=false;
   return g;
 }
 const shirtColors=[0xf6a776,0x82b8d2,0xc8a7d8,0x8fc398,0xf0cb75,0xd8a28c];
@@ -131,5 +141,6 @@ const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down=null;
 $('scene-labels').addEventListener('click',e=>{const passenger=e.target.closest('[data-passenger]'),bus=e.target.closest('[data-bus]');if(passenger)boardPassenger(Number(passenger.dataset.passenger));else if(bus)tapBus(Number(bus.dataset.bus));});$('station-switch').addEventListener('click',()=>openSheet('stations'));$('stations-button').addEventListener('click',()=>openSheet('stations'));$('fleet-button').addEventListener('click',()=>openSheet('fleet'));$('build-button').addEventListener('click',()=>openSheet('build'));$('close-sheet').addEventListener('click',closeSheet);$('modal-backdrop').addEventListener('click',e=>{if(e.target.id==='modal-backdrop')closeSheet();const station=e.target.closest('[data-station]'),build=e.target.closest('[data-build]'),fleet=e.target.closest('[data-fleet-bus]');if(station)switchStation(station.dataset.station);else if(build)buyStation(build.dataset.build);else if(fleet){const bus=game.buses.find(b=>b.id===Number(fleet.dataset.fleetBus));if(bus.status==='trip')return toast(`Bus #${String(bus.id).padStart(2,'0')} is still traveling.`);currentStation=bus.location;closeSheet();buildStatic();if(!bayBuses().some(b=>b.id===bus.id))toast(`Bus #${String(bus.id).padStart(2,'0')} is waiting for an open lane.`);else selectedBus=bus.id;renderDynamic();renderHUD();}else if(e.target.id==='buy-bus')buyBus();});addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();});$('sound').addEventListener('click',()=>{sound=!sound;localStorage.setItem('souha-sound',sound?'on':'off');$('sound').textContent=sound?'♫':'♩';toast(sound?'Sound on':'Sound off');});
 function animate(){requestAnimationFrame(animate);const now=performance.now();for(let i=departureEffects.length-1;i>=0;i--){const effect=departureEffects[i],t=Math.min(1,(now-effect.started)/650),ease=1-(1-t)**3;effect.model.position.x=THREE.MathUtils.lerp(effect.x,5.9,ease);effect.model.position.y=.09;if(now-effect.lastSmoke>45&&t<.85){emitSmoke(effect.model,now);effect.lastSmoke=now;}if(t>=1){scene.remove(effect.model);effect.model.traverse(o=>{if(o.geometry)o.geometry.dispose();});departureEffects.splice(i,1);}}
   let entriesFinished=false;for(let i=entryEffects.length-1;i>=0;i--){const effect=entryEffects[i],t=THREE.MathUtils.clamp((now-effect.started)/950,0,1),ease=t*t*(3-2*t);effect.model.position.x=THREE.MathUtils.lerp(effect.fromX,effect.toX,ease);effect.model.position.z=THREE.MathUtils.lerp(effect.fromZ,effect.toZ,ease);effect.model.position.y=.09;if(t>=1){entryEffects.splice(i,1);entriesFinished=true;}}if(entriesFinished&&!entryEffects.length)renderDynamic();
+  for(let i=boardingEffects.length-1;i>=0;i--){const effect=boardingEffects[i],t=THREE.MathUtils.clamp((now-effect.started)/560,0,1),ease=t*t*(3-2*t),bus=busModel(effect.busId);if(bus)effect.to.copy(bus.localToWorld(new THREE.Vector3(-.58,.55,1.18)));effect.model.position.lerpVectors(effect.from,effect.to,ease);effect.model.position.y+=Math.sin(Math.PI*t)*2.2;effect.model.scale.setScalar(.8*(1-.18*t));const fade=t<.58?1:(1-t)/.42;for(const item of effect.materials)item.material.opacity=item.opacity*fade;if(t>=1){disposeBoardingEffect(effect);boardingEffects.splice(i,1);}}
   for(let i=smokeEffects.length-1;i>=0;i--){const effect=smokeEffects[i],t=Math.min(1,(now-effect.started)/620);effect.puff.position.y+=.006;effect.puff.position.x+=effect.vx*.016;effect.puff.scale.setScalar(1+t*2.5);effect.puff.material.opacity=.82*(1-t);if(t>=1){scene.remove(effect.puff);effect.puff.geometry.dispose();effect.puff.material.dispose();smokeEffects.splice(i,1);}}
   positionLabels();renderer.render(scene,camera);}tick();syncSelectedBus();buildStatic();renderDynamic();renderHUD();resize();animate();setInterval(tick,1000);
