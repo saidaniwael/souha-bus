@@ -19,14 +19,13 @@
       <div class="top-stats"><div class="coin-pill"><span>€</span><strong id="coins">0</strong></div><button id="sound" class="round-icon" aria-label="Toggle sound">♫</button></div>
     </header>
 
-    <button id="station-switch" class="station-switch"><span id="station-flag" class="station-flag">TN</span><span><small>NOW BOARDING AT</small><b id="station-name">Tunis Station</b></span><span class="switch-arrow">⌄</span></button>
+    <button id="station-switch" class="station-switch"><span id="station-flag" class="station-flag"><img class="flag-station" src="./flags/tn.svg" alt="" aria-hidden="true"></span><span><small>NOW BOARDING AT</small><b id="station-name">Tunis Station</b></span><span class="switch-arrow">⌄</span></button>
 
-    <div class="progress-hud"><div class="progress-icon">✦</div><div><b id="moved">0</b><small>happy travelers</small></div></div>
+    <div id="satisfaction-hud" class="progress-hud"><div class="progress-icon">☺</div><div><b id="moved">100%</b><small>satisfaction</small></div></div>
 
     <div class="scene-callout"><span class="hand">☝</span><span id="scene-hint">Tap a traveler to board your selected bus</span></div>
 
     <section class="bottom-area" aria-label="Station controls">
-      <div class="bus-panel"><div class="bus-panel-head"><div><small>YOUR ORANGE BUS</small><h2 id="selected-bus-name">Souha Bus #01</h2></div><span id="bus-pill" class="bus-pill">READY TO BOARD</span></div><div id="route-line" class="route-line">Pick up travelers to choose a destination</div><div class="load-row"><div class="load-track"><span id="load-fill"></span></div><b id="passenger-count">0 / 6 passengers</b></div><div id="bus-instruction" class="bus-instruction">Tap the passengers in the station to fill the bus.</div></div>
       <nav class="game-nav" aria-label="Game menus"><button id="stations-button"><span class="nav-icon">⌖</span><b>Stations</b></button><button id="fleet-button"><span class="nav-icon">▰</span><b>My buses</b></button><button id="build-button"><span class="nav-icon">＋</span><b>Expand</b></button></nav>
     </section>
 
