@@ -1,0 +1,23 @@
+Souha Bus sound effects - all CC0 (public domain), free for personal and commercial use.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Kenney "Interface Sounds" (www.kenney.nl)
+  board.mp3         <- pluck_001.ogg
+  bus-full.mp3      <- confirmation_002.ogg
+  select.mp3        <- select_002.ogg
+  buy.mp3           <- confirmation_004.ogg
+  station-open.mp3  <- maximize_008.ogg
+  switch.mp3        <- switch_002.ogg
+  error.mp3         <- error_004.ogg
+  menu-open.mp3     <- open_002.ogg
+
+Kenney "Casino Audio" (www.kenney.nl)
+  coins.mp3         <- chips-stack-3.ogg
+
+"Air Woosh Move" by Almitory, OpenGameArt.org (https://opengameart.org/content/air-woosh-move)
+  depart.mp3        <- air_move.wav (trimmed to 1.2 s with a fade-out)
+
+Converted to mono 96 kbps MP3 with leading silence trimmed.
+
+Kenney "Music Jingles" (www.kenney.nl)
+  arrival.mp3       <- jingles_STEEL10.ogg (steel drum, rising D-E-F#-G)

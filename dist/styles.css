@@ -9,3 +9,11 @@
 .progress-hud .fare-indicator{margin-top:3px;color:#48a36a;font-size:8px;font-weight:900}.progress-hud.medium .fare-indicator{color:#d69a30}.progress-hud.low .fare-indicator{color:#d97161}
 .quick-buy{position:absolute;right:clamp(14px,3vw,30px);bottom:calc(141px + env(safe-area-inset-bottom));z-index:4;display:grid;justify-items:center;align-content:center;width:59px;height:59px;border:2px solid #fff8ed;border-radius:18px;background:#f58a45;color:#fff;box-shadow:0 8px 20px #a6582f61;line-height:1;touch-action:manipulation}.quick-buy span{font-size:21px;font-weight:900;line-height:18px}.quick-buy b{font:800 11px 'Outfit';margin-top:1px}.quick-buy small{font-size:8px;font-weight:800;margin-top:2px;color:#fff7d9}.quick-buy:active{transform:scale(.94)}.fleet-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.fleet-stats>div{display:grid;gap:4px;background:#f0f6e8;border:1px solid #e4eddd;border-radius:14px;padding:18px 12px;text-align:center}.fleet-stats>div:last-child{background:#fff1e2;border-color:#fbe4ce}.fleet-stats strong{font:800 28px 'Outfit';color:#4fa16d}.fleet-stats>div:last-child strong{color:#ed8842}.fleet-stats span{font-size:11px;font-weight:800;color:#789889}
 .bus-tag-heading{display:flex;align-items:center;justify-content:center;gap:4px}.bus-route-flag{display:inline-flex;align-items:center}.bus-route-flag .flag-icon{width:17px;height:12px}.bus-tag.full{display:flex;align-items:center;gap:5px}.passenger-tag.mismatch{opacity:.55}
+/* Station picker lives in the bottom bar */
+.game-nav .station-switch{position:static;flex:1.7;justify-content:flex-start;gap:8px;min-width:0;padding:6px 8px;border-radius:13px;box-shadow:0 8px 24px #254d3930}
+.game-nav .station-switch>span:nth-child(2){min-width:0}
+.game-nav .station-switch .station-flag{flex:none;width:30px;height:30px;border-radius:9px}
+.game-nav .station-switch small{font-size:7.5px;white-space:nowrap}
+.game-nav .station-switch b{margin-top:1px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game-nav .station-switch .switch-arrow{margin-left:auto;padding-left:0;font-size:18px}
+.bus-tag.selected{border-color:#3cc27a;background:#effff4;color:#23864f}
