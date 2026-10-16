@@ -1,4 +1,5 @@
 node_modules/
 qa.cjs
+qa-*.cjs
 qa-*.png
 souha-site*.tar.gz
