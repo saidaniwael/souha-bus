@@ -17,3 +17,31 @@
 .game-nav .station-switch b{margin-top:1px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .game-nav .station-switch .switch-arrow{margin-left:auto;padding-left:0;font-size:18px}
 .bus-tag.selected{border-color:#3cc27a;background:#effff4;color:#23864f}
+/* Fast tapping: floating fares, special travelers, combo / rush badge */
+.float-layer{position:absolute;inset:0;z-index:6;overflow:hidden;pointer-events:none}
+.float-gain{position:absolute;transform:translate(-50%,-100%);color:#2f8f57;font:900 15px 'Outfit',sans-serif;white-space:nowrap;text-shadow:0 2px 0 #fff,0 0 10px #fff;animation:float-up .95s ease-out forwards}
+.float-gain[class*=special-]{font-size:18px}
+.float-gain.special-vip{color:#c98a00}.float-gain.special-gift{color:#e0458f}.float-gain.special-heart{color:#e2434f}.float-gain.special-rush{color:#1f9ed6}.float-gain.special-diamond{color:#2aa8c9}
+@keyframes float-up{0%{opacity:0;transform:translate(-50%,-70%) scale(.7)}15%{opacity:1;transform:translate(-50%,-110%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-280%) scale(1)}}
+.coin-pill.bump{animation:coin-bump .3s ease-out}
+@keyframes coin-bump{40%{transform:scale(1.18)}}
+.passenger-tag{position:absolute}
+.passenger-tag.special{--glow:#ffd34d;border-color:var(--glow);box-shadow:0 0 0 2px var(--glow),0 0 16px var(--glow);animation:special-pulse .6s ease-in-out infinite alternate}
+.passenger-tag.special-gift{--glow:#ff8fc6}.passenger-tag.special-heart{--glow:#ff7a84}.passenger-tag.special-rush{--glow:#6fd3ff}.passenger-tag.special-diamond{--glow:#a6f0ff}
+@keyframes special-pulse{to{transform:translate(-50%,-100%) scale(1.12)}}
+.special-badge{position:absolute;top:-11px;right:-11px;font-size:15px;font-style:normal;line-height:1;filter:drop-shadow(0 1px 1px #0003)}
+.special-timer{position:absolute;left:5px;right:5px;bottom:-5px;height:3px;border-radius:3px;background:var(--glow);transform-origin:left;animation-name:special-timer;animation-timing-function:linear;animation-fill-mode:forwards}
+@keyframes special-timer{to{transform:scaleX(0)}}
+.combo-hud{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 64px);left:clamp(13px,3vw,38px);z-index:4;display:grid;gap:2px;padding:7px 12px;border-radius:14px;background:#fffdf3ee;box-shadow:0 7px 20px #25616f20;color:#d06a24;pointer-events:none;animation:combo-pop .25s ease-out}
+.combo-hud.hidden{display:none}
+.combo-hud b{font:900 17px/1 'Outfit',sans-serif}
+.combo-hud b.rush{color:#1f9ed6;margin-top:3px}
+.combo-hud small{color:#8aa597;font-size:9px;font-weight:800}
+@keyframes combo-pop{from{transform:scale(.8);opacity:0}}
+.bus-tag .bus-fare{display:block;font-size:9px;opacity:.9}
+.bus-tag.collect{display:grid;gap:2px;background:#ffd34d;border-color:#fff7d1;color:#6b4a00;box-shadow:0 0 0 3px #ffe58a,0 0 22px #ffcf40;animation:collect-pulse .55s ease-in-out infinite alternate}
+.bus-tag.collect:after{background:#ffd34d}
+.bus-tag.collect strong{font:900 14px/1 'Outfit',sans-serif}
+.bus-tag.collect small{font-size:8px;letter-spacing:.6px}
+@keyframes collect-pulse{to{transform:translate(-50%,-100%) scale(1.1)}}
+.float-gain.special-cash{color:#c98a00;font-size:22px}

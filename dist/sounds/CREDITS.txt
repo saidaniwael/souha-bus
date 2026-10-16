@@ -21,3 +21,11 @@ Converted to mono 96 kbps MP3 with leading silence trimmed.
 
 Kenney "Music Jingles" (www.kenney.nl)
   arrival.mp3       <- jingles_STEEL10.ogg (steel drum, rising D-E-F#-G)
+
+Special traveler sounds (all CC0, www.kenney.nl)
+  vip.mp3           <- Casino Audio: chips-collide-2.ogg
+  gift.mp3          <- Music Jingles: jingles_PIZZI10.ogg (rising D-E-F#-G)
+  diamond.mp3       <- Interface Sounds: glass_002.ogg
+  rush.mp3          <- Music Jingles: jingles_PIZZI02.ogg (rising run)
+  heart.mp3         <- Interface Sounds: pluck_002.ogg
+  combo.mp3         <- Interface Sounds: confirmation_001.ogg
