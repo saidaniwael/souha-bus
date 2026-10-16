@@ -19,11 +19,12 @@
       <div class="top-stats"><div class="coin-pill"><span>€</span><strong id="coins">0</strong></div><button id="sound" class="round-icon" aria-label="Toggle sound">♫</button></div>
     </header>
 
-    <button id="station-switch" class="station-switch"><span id="station-flag" class="station-flag"><img class="flag-station" src="./flags/tn.svg" alt="" aria-hidden="true"></span><span><small>NOW BOARDING AT</small><b id="station-name">Tunis Station</b></span><span class="switch-arrow">⌄</span></button>
+    <button id="station-switch" class="station-switch"><span id="station-flag" class="station-flag"><img class="flag-station" src="./flags/tn.svg" alt="" aria-hidden="true"></span><span><small id="station-queue">10 / 36 WAITING</small><b id="station-name">Tunis Station</b></span><span class="switch-arrow">⌄</span></button>
 
-    <div id="satisfaction-hud" class="progress-hud"><div class="progress-icon">☺</div><div><b id="moved">100%</b><small>satisfaction</small></div></div>
+    <div id="satisfaction-hud" class="progress-hud" aria-label="100% satisfaction means 100% ticket price. Lower satisfaction means lower ticket prices."><div class="progress-icon">☺</div><div><b id="moved">100%</b><small>satisfaction</small><small id="fare-indicator" class="fare-indicator">Ticket price: 100%</small></div></div>
 
     <div class="scene-callout"><span class="hand">☝</span><span id="scene-hint">Tap a traveler to board your selected bus</span></div>
+    <button id="quick-buy-bus" class="quick-buy" aria-label="Buy a Souha Bus for €550 at this station"><span>＋</span><b>Bus</b><small>€550</small></button>
 
     <section class="bottom-area" aria-label="Station controls">
       <nav class="game-nav" aria-label="Game menus"><button id="stations-button"><span class="nav-icon">⌖</span><b>Stations</b></button><button id="fleet-button"><span class="nav-icon">▰</span><b>My buses</b></button><button id="build-button"><span class="nav-icon">＋</span><b>Expand</b></button></nav>
