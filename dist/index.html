@@ -21,21 +21,23 @@
       <button id="sound" class="icon-btn" aria-label="Toggle sound"></button>
     </header>
 
-    <button id="level-chip" class="level-chip" aria-label="Level and XP"><span class="level-head"><span class="level-badge" id="level-num">1</span><b>LEVEL</b></span><span class="xp"><span class="xp-track"><i id="xp-fill"></i></span><small id="xp-text">0 / 40 XP</small></span></button>
+    <div class="hud-row">
+      <button id="level-chip" class="level-chip" aria-label="Level and XP"><span class="level-head"><span class="level-badge" id="level-num">1</span><b>LEVEL</b></span><span class="xp"><span class="xp-track"><i id="xp-fill"></i></span><small id="xp-text">0 / 40 XP</small></span></button>
+      <button id="mult-badge" class="mult-badge" data-level="0" aria-label="Money multiplier, combo and fare boost"><small id="mult-label">MONEY</small><b id="mult-value">×1</b><span id="mult-boost">+0% fares</span><i id="mult-timer"></i></button>
+    </div>
 
-    <button id="mult-badge" class="mult-badge" data-level="0" aria-label="Money multiplier and fare boost"><small>MONEY</small><b id="mult-value">×1</b><span id="mult-boost">+0% fares</span></button>
+
 
     <button id="nav-prev" class="side-nav prev" hidden></button>
     <button id="nav-next" class="side-nav next" hidden></button>
 
-    <div class="scene-callout"><span id="scene-hint">Tap a bus to choose its country</span></div>
-    <button id="quick-buy-bus" class="quick-buy" aria-label="Buy a SouSou Bus"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i><b>BUS</b><small>€1,500</small><em>+5%</em></button>
 
     <section class="bottom-area" aria-label="Station controls">
       <nav class="game-nav" aria-label="Game menus">
         <button id="station-switch" class="nav-card station-switch"><span id="station-flag" class="station-flag"></span><span class="nav-text"><b id="station-name">Tunis</b><small id="station-info">3 buses here</small></span><i class="ico switch-swipe" style="--i:url(./icons/swipe.svg)" aria-hidden="true"></i></button>
         <button id="fleet-button" class="nav-card"><span class="nav-icon orange"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i></span><span class="nav-text"><b>Buses</b><small id="fleet-sub">5 buses · +0%</small></span></button>
         <button id="build-button" class="nav-card"><span class="nav-icon blue"><i class="ico" style="--i:url(./icons/store.svg)" aria-hidden="true"></i></span><span class="nav-text"><b>Expand</b><small id="build-sub">+15%</small></span></button>
+        <button id="quick-buy-bus" class="quick-buy" aria-label="Buy a SouSou Bus"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i><b>BUS</b><small>€1,500</small><em>+5%</em></button>
       </nav>
     </section>
 

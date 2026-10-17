@@ -410,3 +410,37 @@ button:disabled{cursor:not-allowed}
 .notice{padding:2px 12px 2px 3px}
 .notice-art{width:28px;height:28px}
 .notice b{font-size:16px}
+
+/* =====================================================================================================
+   Compact HUD: top bar (brand · coins · sound) and one row (level + XP · multiplier with live combo).
+   No bottom hint; the buy button lives in the bottom bar. The camera frames the station in the space left.
+   ===================================================================================================== */
+.hud-row{position:absolute;top:calc(var(--top) + 52px);left:12px;right:12px;z-index:4;display:flex;gap:8px;height:58px}
+.hud-row .level-chip{position:relative;left:auto;top:auto;flex:1;width:auto;height:100%;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:10px;row-gap:3px;padding:6px 12px 6px 8px}
+.hud-row .level-head{display:contents}
+.hud-row .level-badge{grid-row:1/3;width:38px;height:38px;font-size:18px}
+.hud-row .level-head b{align-self:end;font-size:12px;letter-spacing:1px}
+.hud-row .xp{align-self:start}
+.hud-row .mult-badge{position:relative;right:auto;top:auto;flex:none;width:118px;height:100%;min-width:0;padding:4px 8px 6px;display:grid;justify-items:center;align-content:center;gap:1px}
+.hud-row .mult-badge small{font-size:9px;letter-spacing:.6px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.hud-row .mult-badge b{font-size:27px;line-height:1}
+.hud-row .mult-badge span{font-size:10px;padding:1px 7px}
+#mult-timer{display:none;width:100%;height:5px;margin-top:2px;border-radius:5px;background:var(--orange);transform-origin:left}
+#mult-timer.frozen{background:var(--blue)}
+.mult-badge.in-combo span{display:none}
+.mult-badge.in-combo #mult-timer{display:block}
+.mult-badge.in-combo:not([data-level="0"]) #mult-timer{background:#fff}
+.mult-badge.in-combo[data-level="0"] small{color:var(--orange-d)}
+.combo-hud{display:none!important}
+.scene-callout{display:none!important}
+.toast-stack{top:calc(var(--top) + 118px)}
+.shout{top:calc(var(--top) + 150px)}
+
+/* Bottom bar: station · buses · expand · buy bus */
+.game-nav{grid-template-columns:1fr 1fr 1fr 70px}
+.game-nav .quick-buy{position:relative;right:auto;bottom:auto;width:auto;height:auto;padding:8px 2px 6px;border-radius:var(--radius);align-content:center}
+.game-nav .quick-buy em{top:-8px;right:-4px}
+@media(max-height:700px){.game-nav .quick-buy{bottom:auto}}
+/* Wide screens: the level card keeps a phone-like width, the multiplier stays on the right */
+.hud-row .level-chip{max-width:380px}
+.hud-row .mult-badge{margin-left:auto}

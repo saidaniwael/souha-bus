@@ -235,7 +235,6 @@ let lastHudSecond=0;
 // HUD, sheets and floating feedback
 // ---------------------------------------------------------------------------------------------------------------
 const floatLayer=document.createElement('div');floatLayer.className='float-layer';$('game').appendChild(floatLayer);
-const comboHud=document.createElement('div');comboHud.className='combo-hud hidden';$('game').appendChild(comboHud);
 function floatText(x,y,html,kind){const el=document.createElement('div');el.className='float-gain'+(kind?' special-'+kind:'');el.innerHTML=html;el.style.top=y+'px';floatLayer.appendChild(el);
   // Keep the whole label on screen, however long it is.
   const half=el.offsetWidth/2+8;el.style.left=Math.min(Math.max(x,half),innerWidth-half)+'px';setTimeout(()=>el.remove(),1000);}
@@ -254,17 +253,16 @@ function burstAt(rect,color,count=10,big=false){if(!rect)return;const host=docum
   floatLayer.appendChild(host);setTimeout(()=>host.remove(),650);}
 function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
 function bumpCoins(){bump($('coins').closest('.coin-pill'));}
-// Combo card (left): the streak, what it is worth and the time left. The money multiplier is shown big on the right.
-comboHud.innerHTML=`<span class="combo-num">0</span><span class="combo-side"><b class="combo-word">${icon('crown')} COMBO</b><small class="combo-pot">€0</small></span><i class="combo-timer"></i>`;
-const comboEls={num:comboHud.querySelector('.combo-num'),pot:comboHud.querySelector('.combo-pot'),timer:comboHud.querySelector('.combo-timer')};
+// The multiplier card (top right) also shows the live combo: its count and worth, and a bar for the time left.
 let shownCombo=-1,shownMult='';
 const multLevel=m=>m>=4?4:m>=3?3:m>=2?2:m>1?1:0;
 function renderCombo(now=Date.now()){
-  const mult=combo.count?comboMultiplier():1,label=`×${mult}`;
-  if(label!==shownMult){shownMult=label;$('mult-value').textContent=label;$('mult-badge').dataset.level=multLevel(mult);if(mult>1)bump($('mult-badge'));}
-  const active=combo.count>=2;comboHud.classList.toggle('hidden',!active);if(!active){shownCombo=-1;return;}
-  if(shownCombo!==combo.count){shownCombo=combo.count;comboEls.num.textContent=combo.count;comboEls.pot.textContent=`worth ${euro(comboWorth())}`;bump(comboHud);}
-  const frozen=now<combo.frozenUntil;comboEls.timer.classList.toggle('frozen',frozen);comboEls.timer.style.transform=`scaleX(${frozen?1:Math.max(0,1-(now-combo.last)/COMBO_MS).toFixed(3)})`;}
+  const badge=$('mult-badge'),mult=combo.count?comboMultiplier():1,label=`×${mult}`,active=combo.count>=2;
+  if(label!==shownMult){shownMult=label;$('mult-value').textContent=label;badge.dataset.level=multLevel(mult);if(mult>1)bump(badge);}
+  badge.classList.toggle('in-combo',active);
+  if(!active){if(shownCombo!==-1){shownCombo=-1;$('mult-label').textContent='MONEY';}return;}
+  if(shownCombo!==combo.count){shownCombo=combo.count;$('mult-label').textContent=`COMBO ${combo.count} · ${shortEuro(comboWorth())}`;}
+  const frozen=now<combo.frozenUntil,timer=$('mult-timer');timer.classList.toggle('frozen',frozen);timer.style.transform=`scaleX(${frozen?1:Math.max(0,1-(now-combo.last)/COMBO_MS).toFixed(3)})`;}
 // XP and levels: every action earns XP; each level needs 25 XP more than the last, pays coins and adds +2% to every fare.
 const xpToNext=level=>40+25*(level-1);
 function xpProgress(xp=game.xp){let level=1;while(xp>=xpToNext(level)){xp-=xpToNext(level);level++;}return {level,into:xp,need:xpToNext(level)};}
@@ -311,12 +309,7 @@ function renderHud(){
     el.hidden=hidden;if(hidden)continue;const claims=pendingClaims(id);
     el.dataset.station=id;el.classList.toggle('alert',claims.length>0);el.setAttribute('aria-label',`Go to ${city[id].name}`);
     el.innerHTML=`${icon(el.id==='nav-prev'?'left':'right','nav-arrow')}${flagMarkup(id,'nav-flag')}${claims.length?`<span class="nav-claim">${icon('bag')}${secondsLeft(claims)}s</span>`:''}`;}
-  const bus=getSelectedBus();
-  $('scene-hint').innerHTML=bayBuses().some(b=>b.payout>0)?`${icon('bag')} Tap the gold bus to claim its fares!`
-    :!busesHere().length?`${icon('swipe')} No buses here · swipe to another station`
-    :!bus?'Tap a bus to choose its country'
-    :bus.passengers>=CAPACITY?`${icon('bus')} Bus full · tap it to send it to ${city[bus.dest].name}`
-    :`Tap ${flagMarkup(bus.dest,'hint-flag')} fast · catch ${icon('star')}${icon('gift')}${icon('diamond')}${icon('flash')}${icon('heart')}`;}
+}
 function openSheet(kind){play('menu-open',.6);sheet=kind;$('modal-backdrop').classList.remove('hidden');renderSheet();}
 function closeSheet(){sheet=null;$('modal-backdrop').classList.add('hidden');}
 const boostRow=(art,name,detail,value,tone)=>`<div class="boost-row"><span class="boost-art ${tone}">${art}</span><span><b>${name}</b><small>${detail}</small></span><strong class="${tone}">${value}</strong></div>`;
@@ -457,7 +450,8 @@ function onWalkway(x,z){if(CROWD_OBSTACLES.some(([ox,oz])=>Math.hypot(x-ox,z-oz)
 for(let attempts=0;CROWD_SPOTS.length<240&&attempts<60000;attempts++){const x=-7.35+crowdRandom()*14.65,z=-2.85+crowdRandom()*8.95;if(onWalkway(x,z)&&CROWD_SPOTS.every(([px,pz])=>Math.hypot(x-px,z-pz)>.3))CROWD_SPOTS.push([x,z]);}
 // Spots that show on screen, clear of the top bar, the bottom bar, the side arrows and the bus button (recomputed on resize).
 let onScreenSpots=null;
-function computeOnScreenSpots(){const v=new THREE.Vector3();return new Set(CROWD_SPOTS.map(([x,z],i)=>{v.set(x,.4,z).project(camera);const sx=v.x*.5+.5,sy=-v.y*.5+.5;return sx>.12&&sx<.88&&sy>.34&&sy<.82&&!(sx>.76&&sy>.68)?i:-1;}).filter(i=>i>=0));}
+function computeOnScreenSpots(){const v=new THREE.Vector3(),w=innerWidth,h=innerHeight,top=$('mult-badge').getBoundingClientRect().bottom+46,bottom=document.querySelector('.bottom-area').getBoundingClientRect().top-6;
+  return new Set(CROWD_SPOTS.map(([x,z],i)=>{v.set(x,.4,z).project(camera);const px=(v.x*.5+.5)*w,py=(-v.y*.5+.5)*h;return px>52&&px<w-52&&py>top&&py<bottom?i:-1;}).filter(i=>i>=0));}
 function buildPerson(traveler){
   const [x,z]=CROWD_SPOTS[traveler.spot],g=new THREE.Group();g.position.set(x,.1,z);g.scale.setScalar(PERSON_SCALE);g.userData.travelerId=traveler.id;crowdGroup.add(g);
   // Shirts show the traveler's country (or their bonus colour), and faded travelers stand slightly smaller.
@@ -503,8 +497,19 @@ function renderLabels(){
 function positionLabels(){
   const r=canvas.getBoundingClientRect();
   for(const entry of [...busLabels,...crowdLabels]){const el=entry.el;if(!entry.object||!el)continue;const p=entry.object.localToWorld(entry.anchor.clone()).project(camera);let x=(p.x*.5+.5)*r.width,y=(-p.y*.5+.5)*r.height;const half=el.offsetWidth/2;x=THREE.MathUtils.clamp(x,half+5,r.width-half-5);y=THREE.MathUtils.clamp(y,el.offsetHeight+8,r.height-5);el.style.left=x+'px';el.style.top=y+'px';}}
+// The camera frames the station in the free space between the HUD and the bottom bar on any screen: all three buses
+// fully visible (with room above for their labels) and the sidewalk where travelers wait just above the bottom bar.
+const FRAME_BUSES=BAYS.flatMap(b=>[[b.x-1.75,0,b.z-.5],[b.x+1.75,0,b.z+.5],[b.x-1.75,1.35,b.z],[b.x+1.75,1.35,b.z]]),FRAME_WALK=[[-3.2,0,6.3],[0,0,6.3],[3.2,0,6.3]];
+function frameCamera(w,h){
+  camera.position.set(2.8,8.4,10);camera.lookAt(0,.15,.7);camera.updateMatrixWorld();
+  const inv=camera.matrixWorldInverse,toCam=p=>new THREE.Vector3(...p).applyMatrix4(inv),buses=FRAME_BUSES.map(toCam),all=[...buses,...FRAME_WALK.map(toCam)];
+  const top=$('mult-badge').getBoundingClientRect().bottom+64,bottom=document.querySelector('.bottom-area').getBoundingClientRect().top-10,margin=14;
+  const xMin=Math.min(...buses.map(p=>p.x)),xMax=Math.max(...buses.map(p=>p.x)),yMin=Math.min(...all.map(p=>p.y)),yMax=Math.max(...all.map(p=>p.y));
+  const halfW=Math.max((xMax-xMin)/2/(1-2*margin/w),(yMax-yMin)*h/(2*Math.max(120,bottom-top))*w/h),halfH=halfW*h/w;
+  const cx=(xMin+xMax)/2,cy=(yMin+yMax)/2-halfH*(1-(top+bottom)/h);
+  camera.left=cx-halfW;camera.right=cx+halfW;camera.top=cy+halfH;camera.bottom=cy-halfH;camera.updateProjectionMatrix();}
 function resize(){
-  const w=innerWidth,h=innerHeight,aspect=w/h,halfW=aspect<1?4.05:Math.min(8.2,aspect*4.5);renderer.setSize(w,h,false);camera.lookAt(0,.15,h<700?1.25:.7);camera.left=-halfW;camera.right=halfW;camera.top=halfW/aspect;camera.bottom=-halfW/aspect;camera.updateProjectionMatrix();
+  const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);frameCamera(w,h);
   onScreenSpots=computeOnScreenSpots();crowd=crowd.filter(p=>onScreenSpots.size<8||onScreenSpots.has(p.spot));renderCrowd();}
 addEventListener('resize',resize);
 
