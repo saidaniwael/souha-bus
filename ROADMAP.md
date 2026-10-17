@@ -108,3 +108,5 @@ Difficulty still climbs (a casual player now loses level 13 on time at 87% inste
 - **Won't fit** — a group that doesn't fit the selected bus is a filled red circle with a white (still draining) icon.
 - **Special countdown** — a special's white outline is its timer: a ring that empties clockwise until it disappears (the small bar is gone).
 - **Specials look** — no glow rays or halo and no timer bar: a solid coloured circle with its icon and the white countdown ring.
+- **Level pill** — the level goal is a small pill in the top bar (purple level number + slim bar + "1.2k/4.5k"; on very narrow phones just the number and bar). Everything else in the HUD is unchanged.
+- **No zoom while tapping** — viewport locked (maximum-scale=1, user-scalable=no), touch-action: manipulation on the page, and iOS pinch/double-tap gestures blocked.

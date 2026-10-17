@@ -528,6 +528,8 @@ function resume(){
   hideOverlay();setMode('play');run.endsAt=Date.now()+run.remaining;renderBuses();renderHud();duckMusic(1);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();if(audioCtx)audioCtx.suspend().catch(()=>{});}else backToForeground();});
 addEventListener('pageshow',e=>{if(e.persisted)backToForeground();});
+// Fast tapping must never zoom the page: block iOS pinch gestures and double-tap zoom (CSS touch-action covers the rest).
+for(const type of ['gesturestart','gesturechange','dblclick'])document.addEventListener(type,e=>e.preventDefault(),{passive:false});
 
 // ---------------------------------------------------------------------------------------------------------------
 // HUD, overlays and floating feedback
@@ -580,7 +582,7 @@ function renderHud(){
   if(!run)return;renderRush();const now=Date.now();lastHudSecond=Math.floor(now/1000);
   renderMood();
   const left=timeLeft();$('timer-text').textContent=clock(left);$('timer').classList.toggle('low',left<=10000&&mode==='play');
-  $('goal-level').textContent=t('levelCaps',run.n);renderGoal();
+  $('goal-level').textContent=run.n;$('goal-card').setAttribute('aria-label',t('levelCaps',run.n));renderGoal();
   $('mult-boost').innerHTML=`${t('goalShort')} ${shortCoins(run.cfg.target)}`;
   renderClaimsBar(now);renderStationTabs();}
 // Money waiting: a gold pill per bus holding fares at another station (flag, amount, seconds, draining bar); tap one
@@ -614,7 +616,7 @@ function renderMood(){
   meter.style.setProperty('--level',`${mood}%`);meter.setAttribute('aria-label',`Travelers' mood ${Math.round(mood)} of ${MOOD_MAX}`);}
 // Goal bar: money claimed this level against the target (rolls up as coins land).
 let shownEarned=0;
-function renderGoal(){const target=run.cfg.target,value=Math.min(target,shownEarned);$('goal-fill').style.width=`${Math.min(100,value/target*100).toFixed(1)}%`;const text=`<span class="amt">${icon('coin-diagonal')}${num(value)} / ${num(target)}</span>`;if($('goal-text').innerHTML!==text)$('goal-text').innerHTML=text;$('goal-card').classList.toggle('done',run.earned>=target);}
+function renderGoal(){const target=run.cfg.target,value=Math.min(target,shownEarned);$('goal-fill').style.width=`${Math.min(100,value/target*100).toFixed(1)}%`;const text=`${shortNum(value)}/${shortNum(target)}`;if($('goal-text').innerHTML!==text)$('goal-text').innerHTML=text;$('goal-card').classList.toggle('done',run.earned>=target);}
 
 // Overlays: one card at a time over the live 3D station.
 function hideOverlay(){$('overlay').classList.add('hidden');}

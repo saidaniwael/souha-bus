@@ -1034,3 +1034,20 @@ html[lang="ar"] .brand-logo *{letter-spacing:-4px!important}
 /* Specials: no glow, just the coloured circle and its white countdown ring. */
 .traveler-tag.special{box-shadow:none!important}
 .traveler-tag .special-glow{display:none}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Compact HUD: the level goal lives in the top bar (purple level number + slim bar with the amounts); the combo badge
+   and Rush meter float small at the top right, so the station gets the space back.
+   --------------------------------------------------------------------------------------------------------------- */
+html,body,#game{touch-action:manipulation}
+.hud-top .goal-card{flex:1;min-width:0;max-width:none;height:42px;display:flex;align-items:center;gap:7px;padding:0 10px 0 5px;border-radius:var(--radius)}
+.hud-top .goal-card #goal-level{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:var(--purple);color:#fff;font-size:15px;font-weight:900;box-shadow:0 2px 0 var(--purple-d)}
+.hud-top .goal-body{display:grid;gap:3px;flex:1;min-width:0}
+.hud-top .goal-body small{justify-self:end;font-size:11px;font-weight:900;line-height:1;color:var(--green-d);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hud-top .goal-body small .ico{width:12px;height:12px}
+.hud-top .goal-track{height:9px}
+.hud-top .goal-track i:after{top:2px;height:3px}
+@media (max-width:380px){.hud-top .goal-card{padding:0 8px 0 4px;gap:5px}.hud-top .goal-card #goal-level{width:26px;height:26px;font-size:13px}.hud-top .goal-body small{font-size:10px}}
+/* The level pill shrinks with the room it has: very narrow, it keeps the level number and bar only. */
+.hud-top .goal-card{container-type:inline-size}
+@container (max-width:84px){.goal-body small{display:none}}

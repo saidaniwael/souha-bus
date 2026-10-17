@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#58cc02">
   <meta name="description" content="SouSou Bus: tap travelers fast, fill your coaches, claim the fares and beat every level's goal before time runs out.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23f78948'/%3E%3Cpath d='M12 19h35l5 22H10z' fill='white'/%3E%3Ccircle cx='20' cy='45' r='5' fill='%23315f4c'/%3E%3Ccircle cx='43' cy='45' r='5' fill='%23315f4c'/%3E%3C/svg%3E">
@@ -17,13 +17,12 @@
     <header class="hud-top">
       <button id="pause-btn" class="icon-btn" aria-label="Pause"><i class="ico" style="--i:url(./icons/pause.svg)" aria-hidden="true"></i></button>
       <div id="mood" class="mood" data-state="great" role="meter" aria-label="Travelers' mood"><i class="ico mood-face" style="--i:url(./icons/smiley-very-happy-1.svg)" aria-hidden="true"></i></div>
-      <span class="hud-spacer"></span>
+      <div id="goal-card" class="goal-card" aria-label="Level goal"><b id="goal-level">1</b><span class="goal-body"><small id="goal-text">0 / 650</small><span class="goal-track"><i id="goal-fill"></i></span></span></div>
       <div id="timer" class="timer-pill" aria-label="Time left"><i class="ico" style="--i:url(./icons/timer.svg)" aria-hidden="true"></i><b id="timer-text">1:00</b></div>
       <button id="sound" class="icon-btn" aria-label="Toggle sound"></button>
     </header>
 
     <div class="hud-row">
-      <div id="goal-card" class="goal-card" aria-label="Level goal"><span class="goal-head"><b id="goal-level">LEVEL 1</b><small id="goal-text">0 / 650</small></span><span class="goal-track"><i id="goal-fill"></i></span></div>
       <button id="mult-badge" class="mult-badge" data-level="0" aria-label="Money multiplier and combo"><small id="mult-label"></small><b id="mult-value">×1</b><span id="mult-boost">goal 650</span><i id="mult-timer"></i></button>
     </div>
     <div id="rush-meter" class="rush-meter" aria-label="Rush meter"><i class="ico" style="--i:url(./icons/flash.svg)" aria-hidden="true"></i><span class="rush-track"><i id="rush-fill"></i></span></div>
