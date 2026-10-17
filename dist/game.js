@@ -146,7 +146,7 @@ function depart(bus){
 function arrive(bus,now){
   Object.assign(bus,{status:'idle',location:bus.dest,dest:null,payout:bus.revenue,revenue:0,passengers:0,claimBy:now+run.cfg.claim,readyAt:now,bay:null});
   if(bus.location===currentStation){pendingMoves[bus.id]=true;play('arrival',.9);}
-  else toast(`${icon('bag')} ${euro(bus.payout)} waiting in <b>${city[bus.location].name}</b> · ${Math.round(run.cfg.claim/1000)}s!`,'claim');}
+  else{toast(`${icon('bag')} ${euro(bus.payout)} waiting in <b>${city[bus.location].name}</b> · ${Math.round(run.cfg.claim/1000)}s!`,'claim');play('ping',.6,1.6);play('ping',.6,2,.09);vibrate([25,40,25]);}}
 // Claimed money counts toward the level goal and is yours to keep.
 function claim(bus){
   const amount=bus.payout;bus.payout=0;bus.claimBy=0;run.earned+=amount;game.coins+=amount;coinsInFlight+=amount;assignDest(bus);save();
@@ -236,14 +236,14 @@ function loseHeart(reason){
   play('error',.9);play('lost',.8);vibrate([70,40,70]);toast(`${icon('heart')} ${reason}`,'error-soft');
   const hearts=$('hearts');hearts.classList.remove('hurt');void hearts.offsetWidth;hearts.classList.add('hurt');renderHud();
   if(!run.hearts)finishRun(false,'hearts');}
-// Winning pays a star bonus (more for higher levels) and unlocks the next level; losing keeps what you claimed.
+// Winning unlocks the next level and records the stars; money only ever comes from claiming buses (kept win or lose).
 function finishRun(won,reason='time'){
   if(mode!=='play')return;endCombo();run.remaining=timeLeft();mode='over';crowd=[];renderCrowd();
-  const stars=won?Math.max(1,run.hearts):0,bonus=won?stars*(40+20*run.n):0;
-  if(won){game.coins+=bonus;coinsInFlight+=bonus;game.stars[run.n]=Math.max(game.stars[run.n]||0,stars);if(game.level===run.n)game.level++;}
-  save();run.result={won,reason,stars,bonus};
+  const stars=won?Math.max(1,run.hearts):0;
+  if(won){game.stars[run.n]=Math.max(game.stars[run.n]||0,stars);if(game.level===run.n)game.level++;}
+  save();run.result={won,reason,stars};
   if(won){play('gift',.9);playCash(2000,.8);play('arrival',.8,1.1);vibrate([40,60,40,60,120]);}else{play('lost',.9);play('error',.6,.8);vibrate([200]);}
-  setTimeout(()=>{showOverlay('result');if(won&&bonus)setTimeout(()=>{const box=document.querySelector('.result-bonus')?.getBoundingClientRect();if(box)flyCoins(...rectCentre(box),bonus);else coinsInFlight-=bonus;},900+stars*350);},won?700:500);}
+  setTimeout(()=>showOverlay('result'),won?700:500);}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Stations: swipe left/right or tap a station tab to move between the level's stations.
@@ -268,7 +268,7 @@ function tick(){
   const left=timeLeft(),second=Math.ceil(left/1000);
   if(second!==lastTickSecond){lastTickSecond=second;
     // Ticks in the last 3 seconds of a claim here, and every second of the level's last 10 seconds.
-    if(second<=10&&second>0)play('tick',second<=5?.9:.5,second<=5?1.3:1);else if(bayBuses().some(b=>b.payout>0&&b.claimBy-now<3200&&b.claimBy>now))play('tick',.7);}
+    if(second<=10&&second>0)play('tick',second<=5?.9:.5,second<=5?1.3:1);else if(run.buses.some(b=>b.payout>0&&b.claimBy-now<3200&&b.claimBy>now))play('tick',.7);}
   if(left<=0){finishRun(run.earned>=run.cfg.target);return;}
   const before=crowd.length;for(const p of crowd)if(now>=p.until)launchVanish(p.id);crowd=crowd.filter(p=>now<p.until);if(crowd.length!==before)crowdChanged=true;
   if(now-lastSpawn>=run.cfg.spawn){lastSpawn=now;for(let i=Math.random()<.35?2:1;i>0;i--)if(spawnTraveler(now))crowdChanged=true;}
@@ -347,6 +347,12 @@ function renderHud(){
   const left=timeLeft();$('timer-text').textContent=clock(left);$('timer').classList.toggle('low',left<=10000&&mode==='play');
   $('goal-level').textContent=`LEVEL ${run.n}`;renderGoal();
   $('mult-boost').textContent=`goal ${shortEuro(run.cfg.target)}`;
+  // Money waiting: a gold pill per bus holding fares at another station (flag, amount, seconds, draining bar);
+  // tap one to jump there. The bar keeps its height when empty so the station view never shifts.
+  const waiting=run.buses.filter(b=>b.status==='idle'&&b.payout>0&&b.location!==currentStation).sort((a,b)=>a.claimBy-b.claimBy);
+  $('claims-bar').innerHTML=waiting.length?waiting.map(b=>{const left=Math.max(0,b.claimBy-now),total=run.cfg.claim;
+    return `<button class="claim-pill${left<4000?' hurry':''}" data-station="${b.location}" aria-label="${euro(b.payout)} waiting in ${city[b.location].name}, ${Math.ceil(left/1000)} seconds">${flagMarkup(b.location,'claim-flag')}${icon('bag')}<b>${euro(b.payout)}</b><span>${Math.ceil(left/1000)}s</span><i style="animation-duration:${total}ms;animation-delay:-${total-left}ms"></i></button>`;}).join('')
+    :`<span class="claims-empty">${icon('bag')} Buses that arrive elsewhere show up here</span>`;
   // Station tabs: one per station of the level, with its parked buses and any fares waiting to be claimed there.
   $('station-tabs').innerHTML=stationsInRun().map(id=>{const claims=pendingClaims(id),parked=run.buses.filter(b=>b.status==='idle'&&b.location===id).length;
     return `<button class="station-tab${id===currentStation?' here':''}${claims.length&&id!==currentStation?' alert':''}" data-station="${id}" aria-label="${city[id].name}: ${parked} buses${claims.length?`, ${claims.length} to claim`:''}">${flagMarkup(id,'tab-flag')}<b>${city[id].name}</b><small>${claims.length?`${icon('bag')} ${secondsLeft(claims)}s`:`${icon('bus')} ${parked}`}</small></button>`;}).join('');}
@@ -381,7 +387,7 @@ function showOverlay(kind){
   else{const r=run.result,pct=Math.min(100,Math.round(run.earned/cfg.target*100));
     card.innerHTML=r.won?`<small class="eyebrow">LEVEL ${run.n}</small><h1 class="win">Shift complete!</h1>${starsMarkup(r.stars,'big reveal')}
         <div class="result-stats"><div><strong>${euro(run.earned)}</strong><span>claimed</span></div><div><strong>${run.bestCombo}</strong><span>best combo</span></div><div><strong>${clock(run.remaining)}</strong><span>to spare</span></div></div>
-        <div class="result-bonus chip gold">${icon('coin')} Star bonus +${euro(r.bonus)}</div>
+        <div class="result-bonus chip gold">${icon('coin')} ${euro(run.earned)} added to your coins</div>
         <div class="overlay-actions"><button class="btn green big" id="next-btn">NEXT LEVEL ${icon('right')}</button><button class="btn ghost" id="home-btn">${icon('home')}</button></div>`
       :`<small class="eyebrow">LEVEL ${run.n}</small><h1 class="lose">${r.reason==='hearts'?'Out of hearts!':'Time’s up!'}</h1>
         <div class="goal-track big"><i style="width:${pct}%"></i></div><p class="pause-goal">${euro(run.earned)} of ${euro(cfg.target)} · ${pct}%</p>
@@ -586,7 +592,9 @@ addEventListener('pointerup',e=>{
 // Travelers and buses react the moment a finger touches them (tag, body or coach), so quick taps that wobble a little still count.
 $('scene-labels').addEventListener('pointerdown',e=>{const traveler=e.target.closest('[data-traveler]'),bus=e.target.closest('[data-bus]');if(traveler){e.preventDefault();tapTraveler(Number(traveler.dataset.traveler));}else if(bus){e.preventDefault();tapBus(Number(bus.dataset.bus));}});
 canvas.addEventListener('pointerdown',e=>{if(mode!=='play')return;const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);for(const hit of raycaster.intersectObjects([...crowdGroup.children,...busGroup.children],true)){let o=hit.object;while(o&&o.userData.travelerId===undefined&&!o.userData.pick)o=o.parent;if(!o)continue;if(o.userData.pick)tapBus(o.userData.pick.id);else tapTraveler(o.userData.travelerId);break;}});
-$('station-tabs').addEventListener('click',e=>{const tab=e.target.closest('[data-station]');if(tab)switchStation(tab.dataset.station);});
+// Tabs and money pills redraw every second, so they react on touch-down (a tap can never land mid-redraw).
+$('station-tabs').addEventListener('pointerdown',e=>{const tab=e.target.closest('[data-station]');if(tab){e.preventDefault();switchStation(tab.dataset.station);}});
+$('claims-bar').addEventListener('pointerdown',e=>{const pill=e.target.closest('[data-station]');if(pill){e.preventDefault();switchStation(pill.dataset.station);}});
 $('pause-btn').addEventListener('click',pause);
 $('overlay').addEventListener('click',e=>{
   const button=e.target.closest('button');if(!button)return;

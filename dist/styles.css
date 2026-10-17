@@ -601,3 +601,22 @@ button:disabled{cursor:not-allowed}
 @media(max-width:380px){.timer-pill b{font-size:17px}.hearts .ico{width:21px;height:21px}.level-card h1{font-size:30px}}
 /* The multiplier card shows COMBO + value (+ timer while a combo runs); the goal lives in the goal card */
 .hud-row .mult-badge span#mult-boost{display:none}
+
+/* Money waiting at other stations: gold pills above the station tabs (fixed height so the view never shifts) */
+.bottom-area{display:grid;gap:6px}
+.claims-bar{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;max-width:520px;width:100%;margin:0 auto;overflow-x:auto;scrollbar-width:none}
+.claims-empty{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#5d7f72;opacity:.8}
+.claims-empty .ico{width:13px;height:13px}
+.claim-pill{position:relative;flex:none;display:flex;align-items:center;gap:5px;height:36px;padding:0 10px 2px 6px;border:0;border-radius:999px;background:var(--gold);color:#5a3d00;box-shadow:0 3px 0 var(--gold-d);overflow:hidden;animation:claim-in .3s cubic-bezier(.2,1.5,.4,1),alert-glow .7s ease-in-out .3s infinite alternate}
+.claim-pill .claim-flag{width:24px;height:16px;border-radius:3px;box-shadow:0 0 0 2px #fff}
+.claim-pill .ico{width:15px;height:15px}
+.claim-pill b{font-size:14px;font-weight:900}
+.claim-pill span{padding:1px 6px;border-radius:999px;background:#ffffff80;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums}
+.claim-pill i:last-child{position:absolute;left:0;right:0;bottom:0;height:4px;background:#7a5200;transform-origin:left;animation-name:drain;animation-timing-function:linear;animation-fill-mode:forwards}
+.claim-pill.hurry{background:var(--red);color:#fff;box-shadow:0 3px 0 var(--red-d);animation:claim-shake .3s ease-in-out infinite alternate}
+.claim-pill.hurry span{background:#ffffff40}
+.claim-pill.hurry i:last-child{background:#fff}
+.claim-pill:active{transform:translateY(2px)}
+@keyframes claim-in{from{transform:scale(.4);opacity:0}}
+@keyframes claim-shake{from{transform:rotate(-2deg) scale(1.03)}to{transform:rotate(2deg) scale(1.06)}}
+.station-tabs{width:100%}
