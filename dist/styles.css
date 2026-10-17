@@ -444,3 +444,160 @@ button:disabled{cursor:not-allowed}
 /* Wide screens: the level card keeps a phone-like width, the multiplier stays on the right */
 .hud-row .level-chip{max-width:380px}
 .hud-row .mult-badge{margin-left:auto}
+
+/* Groups: a number badge; red when the group would not fit the selected bus */
+.traveler-tag.group{padding-right:12px}
+.group-badge{position:absolute;right:-9px;bottom:-7px;display:grid;place-items:center;min-width:20px;height:20px;padding:0 4px;border:2px solid #fff;border-radius:10px;background:var(--blue);color:#fff;font-size:12px;font-weight:900;line-height:1;box-shadow:0 2px 0 var(--blue-d)}
+.traveler-tag.too-big{border-color:var(--red);box-shadow:0 0 0 2px var(--red-l)}
+.traveler-tag.too-big .group-badge{background:var(--red);box-shadow:0 2px 0 var(--red-d);animation:warn-pulse .5s ease-in-out infinite alternate}
+.traveler-tag.faded .group-badge{background:var(--muted);box-shadow:none}
+@keyframes warn-pulse{to{transform:scale(1.18)}}
+.bus-tag.nope{animation:nope .3s}
+.float-gain.special-loss{color:var(--red-d);font-size:18px}
+/* Multiplier card: room for label, value and fare chip */
+.hud-row{height:62px}
+.hud-row .mult-badge b{font-size:25px}
+.hud-row .mult-badge span{line-height:14px}
+
+/* =====================================================================================================
+   Levels: in-level HUD (pause · hearts · timer · sound / goal · multiplier / station tabs) and the overlays
+   (home, intro, pause, result). Outside play the HUD keeps its space (so the camera framing is stable) but is hidden.
+   ===================================================================================================== */
+#game:not([data-mode="play"]):not([data-mode="paused"]) .hud-top,
+#game:not([data-mode="play"]):not([data-mode="paused"]) .hud-row,
+#game:not([data-mode="play"]):not([data-mode="paused"]) .bottom-area{visibility:hidden}
+#game:not([data-mode="play"]) #scene-labels{pointer-events:none}
+
+/* Top bar */
+.hud-top{gap:8px}
+.hearts{display:flex;align-items:center;gap:3px;height:42px;padding:0 10px;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white)}
+.hearts .ico{width:24px;height:24px}
+.hearts .heart.full{color:var(--red);filter:drop-shadow(0 2px 0 var(--red-d))}
+.hearts .heart.empty{color:var(--line)}
+.hearts.hurt{animation:hurt .45s ease-out}
+.hearts.bump{animation:bump .3s ease-out}
+@keyframes hurt{20%{transform:translateX(-6px);background:var(--red-l)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.timer-pill{display:flex;align-items:center;gap:5px;height:42px;padding:0 12px;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white);color:var(--blue-d)}
+.timer-pill .ico{width:20px;height:20px}
+.timer-pill b{font-size:19px;font-weight:900;font-variant-numeric:tabular-nums}
+.timer-pill.low{border-color:var(--red);background:var(--red);color:#fff;box-shadow:0 0 0 0 #ff4b4b88;animation:timer-low 1s ease-out infinite}
+@keyframes timer-low{0%{box-shadow:0 0 0 0 #ff4b4b88}100%{box-shadow:0 0 0 10px #ff4b4b00}}
+
+/* Goal card (left of the second row) */
+.goal-card{position:relative;flex:1;max-width:380px;display:grid;align-content:center;gap:6px;height:100%;padding:8px 12px;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white)}
+.goal-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.goal-head b{font-size:13px;font-weight:900;letter-spacing:1px;color:var(--purple-d)}
+.goal-head small{font-size:12px;font-weight:900;color:var(--green-d);font-variant-numeric:tabular-nums}
+.goal-track{position:relative;display:block;height:14px;border-radius:999px;background:var(--line);overflow:hidden}
+.goal-track i{position:relative;display:block;height:100%;width:0;border-radius:999px;background:var(--green)}
+.goal-track i:after{content:'';position:absolute;left:6px;right:6px;top:3px;height:4px;border-radius:3px;background:#ffffff66}
+.goal-card.done{border-color:var(--green);background:var(--green-l)}
+.goal-card.bump{animation:bump-small .2s ease-out}
+.hud-row .mult-badge{margin-left:auto}
+
+/* Station tabs */
+.station-tabs{display:flex;gap:6px;max-width:520px;margin:0 auto;overflow-x:auto;scrollbar-width:none}
+.station-tab{flex:1 1 0;min-width:62px;display:grid;justify-items:center;gap:1px;padding:6px 4px 5px;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white);color:var(--ink)}
+.station-tab .tab-flag{width:30px;height:20px;border-radius:4px;box-shadow:0 0 0 2px #0000000f}
+.station-tab b{font-size:12px;font-weight:900;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.station-tab small{display:flex;align-items:center;gap:2px;font-size:10px;font-weight:900;color:var(--muted)}
+.station-tab small .ico{width:11px;height:11px}
+.station-tab.here{border-color:var(--blue);background:var(--blue-l)}
+.station-tab.here b{color:var(--blue-d)}
+.station-tab.alert{border-color:var(--gold-d);background:var(--gold);animation:alert-glow .7s ease-in-out infinite alternate}
+.station-tab.alert small,.station-tab.alert b{color:#6b4a00}
+.station-tab:active{transform:translateY(3px)}
+.side-nav{display:none!important}
+
+/* Overlay and cards */
+.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:calc(var(--top) + 8px) 14px calc(var(--bottom) + 14px);background:#3c5a5266;backdrop-filter:blur(2px);overflow:auto}
+.overlay.hidden{display:none}
+.overlay-card{width:min(100%,430px);display:grid;justify-items:center;gap:12px;padding:20px 18px 18px;border:2px solid var(--line);border-bottom-width:5px;border-radius:24px;background:var(--white);text-align:center;animation:card-in .3s cubic-bezier(.2,1.3,.4,1)}
+@keyframes card-in{from{opacity:0;transform:translateY(20px) scale(.92)}}
+.overlay-card h1{margin:0;font-size:32px;font-weight:900;line-height:1.05}
+.overlay-card h1.win{color:var(--green-d)}
+.overlay-card h1.lose{color:var(--red-d)}
+.eyebrow{font-size:12px;font-weight:900;letter-spacing:1.5px;color:var(--muted)}
+.overlay-actions{display:flex;gap:10px;width:100%}
+.overlay-actions .btn.big{flex:1}
+.overlay-actions.column{flex-direction:column}
+.btn.big{padding:16px 18px;font-size:18px;border-radius:18px}
+.btn.big .ico{width:20px;height:20px}
+.btn.ghost{background:var(--white);color:var(--muted);box-shadow:inset 0 0 0 2px var(--line),0 4px 0 var(--line)}
+.btn.ghost .ico{width:20px;height:20px}
+.level-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.level-chips .chip{font-size:12px;padding:5px 10px}
+.chip-flag{width:20px;height:14px;border-radius:3px;margin-right:-2px;box-shadow:0 0 0 1px #0000001a}
+.intro-hint{margin:0;font-size:14px;font-weight:800;color:var(--ink);line-height:1.4}
+.intro-hearts{display:flex;align-items:center;gap:4px;margin:0;font-size:12px;font-weight:800;color:var(--muted);text-align:left}
+.intro-hearts .ico{width:20px;height:20px;color:var(--red)}
+.intro-hearts span{margin-left:6px}
+.how{display:grid;gap:8px;width:100%;margin:0;padding:0;list-style:none;text-align:left}
+.how li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:var(--snow);font-size:13px;font-weight:800}
+.how .ico{flex:none;width:26px;height:26px;padding:4px;border-radius:9px;background:var(--orange);color:#fff}
+.pause-goal{margin:0;font-size:15px;font-weight:900;color:var(--muted)}
+.kept{display:flex;align-items:center;gap:5px;margin:0;font-size:13px;font-weight:900;color:#b07d00}
+.kept .ico{width:16px;height:16px;color:var(--gold)}
+.goal-track.big{width:100%;height:18px}
+.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.result-stats>div{display:grid;gap:2px;padding:10px 4px;border:2px solid var(--line);border-bottom-width:4px;border-radius:14px}
+.result-stats strong{font-size:18px;font-weight:900;color:var(--blue-d)}
+.result-stats span{font-size:11px;font-weight:900;color:var(--muted)}
+.result-bonus{font-size:15px!important;padding:8px 14px!important}
+
+/* Stars */
+.stars{display:flex;gap:4px}
+.stars .ico{width:18px;height:18px}
+.stars .star.on{color:var(--gold);filter:drop-shadow(0 2px 0 var(--gold-d))}
+.stars .star.off{color:var(--line)}
+.stars.big{gap:10px}
+.stars.big .ico{width:58px;height:58px}
+.stars.big .star:nth-child(2){transform:translateY(-10px)}
+.stars.reveal .star{opacity:0;transform:scale(.3)}
+.stars.reveal .star.shown{opacity:1;transform:scale(1);transition:transform .35s cubic-bezier(.2,1.6,.4,1),opacity .2s}
+.stars.reveal .star:nth-child(2).shown{transform:translateY(-10px) scale(1)}
+.stars.tiny{gap:0}
+.stars.tiny .ico{width:10px;height:10px}
+
+/* Home */
+.overlay[data-kind="home"]{background:linear-gradient(#bce8e6e6,#d6f0e3d9)}
+.overlay[data-kind="home"] .overlay-card{border:0;background:none;box-shadow:none;padding-top:4px}
+.home-brand{display:flex;align-items:center;justify-content:space-between;width:100%}
+.logo.big{height:52px;padding:0 14px 0 10px;border-radius:18px}
+.logo.big .ico{width:30px;height:30px}
+.logo.big .logo-text b{font-size:20px}
+.logo.big .logo-text small{font-size:11px}
+.home-brand .coin-pill{height:46px}
+.level-path{display:flex;align-items:center;gap:8px;width:100%;justify-content:center}
+.path-node{display:grid;justify-items:center;gap:2px;width:48px;padding:6px 0 4px;border:2px solid var(--line);border-bottom-width:4px;border-radius:16px;background:var(--white);color:var(--ink)}
+.path-node b{display:grid;place-items:center;height:22px;font-size:17px;font-weight:900}
+.path-node b .ico{width:16px;height:16px;color:var(--muted)}
+.path-node.current{border-color:var(--green-d);background:var(--green);color:#fff;transform:scale(1.12);box-shadow:0 0 0 4px #58cc0233}
+.path-node.locked{background:var(--snow)}
+.level-card{display:grid;justify-items:center;gap:8px;width:100%;padding:16px 14px;border:2px solid var(--line);border-bottom-width:5px;border-radius:22px;background:var(--white)}
+.level-card small{font-size:11px;font-weight:900;letter-spacing:1.5px;color:var(--muted)}
+.level-card h1{font-size:36px}
+.level-card p{margin:0;font-size:13px;font-weight:800;color:var(--ink)}
+#play-btn{width:100%;font-size:22px;padding:18px}
+.shop-title{display:grid;justify-items:center;margin:6px 0 0;font-size:17px;font-weight:900}
+.shop-title small{font-size:11px;font-weight:800;color:var(--muted)}
+.shop{display:grid;gap:8px;width:100%}
+.shop-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:2px solid var(--line);border-bottom-width:4px;border-radius:16px;background:var(--white);text-align:left}
+.shop-art{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:12px;background:var(--purple);color:#fff;box-shadow:0 3px 0 var(--purple-d)}
+.shop-art .ico{width:20px;height:20px}
+.shop-text{display:grid;gap:1px;min-width:0;flex:1}
+.shop-text b{font-size:14px;font-weight:900}
+.shop-text em{font-style:normal;font-size:11px;color:var(--purple-d)}
+.shop-text small{font-size:11px;font-weight:800;color:var(--muted)}
+.shop-item .btn{flex:none;padding:9px 12px;font-size:13px}
+.home-best{display:flex;align-items:center;gap:5px;margin:0;font-size:12px;font-weight:900;color:var(--muted)}
+.home-best .ico{width:14px;height:14px;color:var(--gold)}
+
+/* 3-2-1 countdown */
+.countdown{position:absolute;left:50%;top:42%;z-index:15;transform:translate(-50%,-50%);color:#fff;font-size:110px;font-weight:900;-webkit-text-stroke:4px var(--green-d);text-shadow:0 8px 0 var(--green-d);pointer-events:none}
+.countdown.pop{animation:count-pop .6s ease-out}
+@keyframes count-pop{0%{transform:translate(-50%,-50%) scale(2.2);opacity:0}30%{transform:translate(-50%,-50%) scale(.95);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:.85}}
+
+@media(max-width:380px){.timer-pill b{font-size:17px}.hearts .ico{width:21px;height:21px}.level-card h1{font-size:30px}}
+/* The multiplier card shows COMBO + value (+ timer while a combo runs); the goal lives in the goal card */
+.hud-row .mult-badge span#mult-boost{display:none}

@@ -4,45 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#58cc02">
-  <meta name="description" content="Tap travelers fast, fill your orange SouSou Bus coaches, claim the fares, level up and grow your station network.">
+  <meta name="description" content="SouSou Bus: tap travelers fast, fill your coaches, claim the fares and beat every level's goal before time runs out.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23f78948'/%3E%3Cpath d='M12 19h35l5 22H10z' fill='white'/%3E%3Ccircle cx='20' cy='45' r='5' fill='%23315f4c'/%3E%3Ccircle cx='43' cy='45' r='5' fill='%23315f4c'/%3E%3C/svg%3E">
   <title>SouSou Bus — Station Stories</title>
   <link rel="stylesheet" href="./styles.css?v=__BUILD__">
 </head>
 <body>
-  <main id="game">
+  <main id="game" data-mode="home">
     <canvas id="scene" aria-label="Interactive three dimensional bus station"></canvas>
     <div id="scene-labels" aria-label="Travelers and buses"></div>
 
     <header class="hud-top">
-      <span class="logo" title="SouSou Bus"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i><span class="logo-text"><b>SouSou</b><small>BUS</small></span></span>
+      <button id="pause-btn" class="icon-btn" aria-label="Pause"><i class="ico" style="--i:url(./icons/pause.svg)" aria-hidden="true"></i></button>
+      <div id="hearts" class="hearts" aria-label="Hearts left"></div>
       <span class="hud-spacer"></span>
-      <div class="coin-pill"><i class="ico coin-ico" style="--i:url(./icons/coin.svg)" aria-hidden="true"></i><strong id="coins">0</strong></div>
+      <div id="timer" class="timer-pill" aria-label="Time left"><i class="ico" style="--i:url(./icons/timer.svg)" aria-hidden="true"></i><b id="timer-text">1:00</b></div>
       <button id="sound" class="icon-btn" aria-label="Toggle sound"></button>
     </header>
 
     <div class="hud-row">
-      <button id="level-chip" class="level-chip" aria-label="Level and XP"><span class="level-head"><span class="level-badge" id="level-num">1</span><b>LEVEL</b></span><span class="xp"><span class="xp-track"><i id="xp-fill"></i></span><small id="xp-text">0 / 40 XP</small></span></button>
-      <button id="mult-badge" class="mult-badge" data-level="0" aria-label="Money multiplier, combo and fare boost"><small id="mult-label">MONEY</small><b id="mult-value">×1</b><span id="mult-boost">+0% fares</span><i id="mult-timer"></i></button>
+      <div id="goal-card" class="goal-card" aria-label="Level goal"><span class="goal-head"><b id="goal-level">LEVEL 1</b><small id="goal-text">€0 / €650</small></span><span class="goal-track"><i id="goal-fill"></i></span></div>
+      <button id="mult-badge" class="mult-badge" data-level="0" aria-label="Money multiplier and combo"><small id="mult-label">COMBO</small><b id="mult-value">×1</b><span id="mult-boost">goal €650</span><i id="mult-timer"></i></button>
     </div>
 
-
-
-    <button id="nav-prev" class="side-nav prev" hidden></button>
-    <button id="nav-next" class="side-nav next" hidden></button>
-
-
-    <section class="bottom-area" aria-label="Station controls">
-      <nav class="game-nav" aria-label="Game menus">
-        <button id="station-switch" class="nav-card station-switch"><span id="station-flag" class="station-flag"></span><span class="nav-text"><b id="station-name">Tunis</b><small id="station-info">3 buses here</small></span><i class="ico switch-swipe" style="--i:url(./icons/swipe.svg)" aria-hidden="true"></i></button>
-        <button id="fleet-button" class="nav-card"><span class="nav-icon orange"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i></span><span class="nav-text"><b>Buses</b><small id="fleet-sub">5 buses · +0%</small></span></button>
-        <button id="build-button" class="nav-card"><span class="nav-icon blue"><i class="ico" style="--i:url(./icons/store.svg)" aria-hidden="true"></i></span><span class="nav-text"><b>Expand</b><small id="build-sub">+15%</small></span></button>
-        <button id="quick-buy-bus" class="quick-buy" aria-label="Buy a SouSou Bus"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i><b>BUS</b><small>€1,500</small><em>+5%</em></button>
-      </nav>
+    <section class="bottom-area" aria-label="Stations">
+      <nav id="station-tabs" class="station-tabs" aria-label="Stations in this level"></nav>
     </section>
 
     <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
-    <div id="modal-backdrop" class="modal-backdrop hidden"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"><div class="sheet-grip"></div><div class="sheet-header"><div><small id="sheet-eyebrow">YOUR WORLD</small><h2 id="sheet-title">Stations</h2></div><button id="close-sheet" aria-label="Close menu">×</button></div><div id="sheet-content"></div></div></div>
+    <div id="overlay" class="overlay hidden"><div id="overlay-card" class="overlay-card" role="dialog" aria-modal="true"></div></div>
   </main>
   <script type="module" src="./game.js?v=__BUILD__"></script>
 </body>

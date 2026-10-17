@@ -5,15 +5,18 @@ import {GLTFLoader} from './vendor/GLTFLoader.js';
 const BUILD=new URL(import.meta.url).searchParams.get('v')||'dev';
 
 // ---------------------------------------------------------------------------------------------------------------
-// Rules and tuning
+// SouSou Bus is played in levels. Each level is a timed shift with a money goal: fill buses with travelers for their
+// country, send them, swipe to where they arrive and claim the fares. Reach the goal to win; run out of time or of
+// the 3 hearts (lost when a group does not fit or a claim is missed) and you lose. Stars = hearts left.
+// The stations and buses of a level are part of its design and its difficulty; coins only buy small boosters.
 // ---------------------------------------------------------------------------------------------------------------
 const STATIONS = [
-  {id:'tunis',name:'Tunis',country:'Tunisia',code:'TN',cost:0,accent:0xf7a86a,shirt:0xe8833f},
-  {id:'paris',name:'Paris',country:'France',code:'FR',cost:0,accent:0xa5c9ed,shirt:0x5b8fd6},
-  {id:'rome',name:'Rome',country:'Italy',code:'IT',cost:6000,accent:0xeec99b,shirt:0x52a86b},
-  {id:'barcelona',name:'Barcelona',country:'Spain',code:'ES',cost:15000,accent:0xf5bca2,shirt:0xe0b13a},
-  {id:'berlin',name:'Berlin',country:'Germany',code:'DE',cost:35000,accent:0xbbc9da,shirt:0x6d6f78},
-  {id:'istanbul',name:'Istanbul',country:'Türkiye',code:'TR',cost:70000,accent:0xcbb2d6,shirt:0xd2475a}
+  {id:'tunis',name:'Tunis',country:'Tunisia',code:'TN',accent:0xf7a86a,shirt:0xe8833f},
+  {id:'paris',name:'Paris',country:'France',code:'FR',accent:0xa5c9ed,shirt:0x5b8fd6},
+  {id:'rome',name:'Rome',country:'Italy',code:'IT',accent:0xeec99b,shirt:0x52a86b},
+  {id:'barcelona',name:'Barcelona',country:'Spain',code:'ES',accent:0xf5bca2,shirt:0xe0b13a},
+  {id:'berlin',name:'Berlin',country:'Germany',code:'DE',accent:0xbbc9da,shirt:0x6d6f78},
+  {id:'istanbul',name:'Istanbul',country:'Türkiye',code:'TR',accent:0xcbb2d6,shirt:0xd2475a}
 ];
 const city=Object.fromEntries(STATIONS.map(s=>[s.id,s]));
 const $=id=>document.getElementById(id);
@@ -21,56 +24,59 @@ const flagMarkup=(id,className='flag-icon')=>`<img class="${className}" src="./f
 // Icons are single-colour SVGs (Streamline Plump Solid) used as CSS masks, so they take the text colour.
 const icon=(name,className='')=>`<i class="ico ${className}" style="--i:url(./icons/${name}.svg)" aria-hidden="true"></i>`;
 const euro=n=>'€'+Math.floor(n).toLocaleString('en-US');
-const busName=bus=>`Bus #${String(bus.id).padStart(2,'0')}`;
-const SAVE_KEY='souha-bus-station-stories-v1',CAPACITY=20,PERSON_SCALE=.58;
+const shortEuro=n=>n>=1000?'€'+(n/1000).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':euro(n);
+const SAVE_KEY='souha-bus-station-stories-v1',CAPACITY=20,PERSON_SCALE=.58,MAX_HEARTS=3,COMBO_STEP=4;
 const BAYS=[{x:-2.15,z:-2},{x:0,z:0},{x:2.15,z:2}],LANE_EDGES=[-3.1,-1.02,1.02,3.1];
 // Where the raised walkway stops behind bay i (just past the rear of a parked coach).
 const platformEdge=i=>BAYS[i].x-1.98;
-// Travelers arrive every SPAWN_MS while there is room on screen and leave after LIFE_MS; bonus travelers leave after BONUS_LIFE_MS.
-const SPAWN_MS=170,LIFE_MS=[2600,3800],BONUS_LIFE_MS=500;
-// An arrived bus holds its fares for CLAIM_MS: tap it in time or the money is lost.
-const CLAIM_MS=12000;
-// Combo: boardings less than COMBO_MS apart keep it going, and every COMBO_STEP boardings add +0.5 to its multiplier.
-const COMBO_MS=1500,COMBO_STEP=4;
 const SPECIALS={
   vip:{icon:'star',label:'VIP · combo ×2',chance:.06,color:0xffc93c},
   gift:{icon:'gift',label:'Gift',chance:.06,color:0xff7ab8,bonus:60},
-  heart:{icon:'heart',label:'Friends +3',chance:.05,color:0xff5f6d},
+  heart:{icon:'heart',label:'Extra life',chance:.025,color:0xff5f6d},
   rush:{icon:'flash',label:'Rush · combo frozen',chance:.04,color:0x48c8ff},
   diamond:{icon:'diamond',label:'Diamond',chance:.015,color:0x8ee8ff,bonus:250}};
 const SPECIAL_CSS={vip:'#ffc800',gift:'#ff86d0',heart:'#ff4b4b',rush:'#1cb0f6',diamond:'#7fe3ff'};
 const stationIndex=id=>STATIONS.findIndex(s=>s.id===id);
 const distance=(a,b)=>Math.abs(stationIndex(a)-stationIndex(b));
-// Why grow: every bus beyond the first five adds +5% to every fare, every station beyond the first two adds +15%,
-// and every player level adds +2%; new stations also open longer routes, and longer routes pay more per traveler.
-const BUS_BOOST=.05,STATION_BOOST=.15,LEVEL_BOOST=.02;
-const boostParts=()=>({buses:BUS_BOOST*Math.max(0,game.buses.length-5),stations:STATION_BOOST*Math.max(0,game.open.length-2),level:LEVEL_BOOST*((game.level||1)-1)});
-const boost=()=>{const p=boostParts();return 1+p.buses+p.stations+p.level;};
-const shortEuro=n=>n>=1000?'€'+(n/1000).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':euro(n);
-const pct=v=>`+${Math.round(v*100)}%`;
-const fareFor=(origin,dest)=>Math.round((12+6*distance(origin,dest))*boost());
+// Longer routes pay more per traveler and take longer to drive.
+const fareFor=(origin,dest)=>12+6*distance(origin,dest);
 const tripTime=(origin,dest)=>(7+2*distance(origin,dest))*1000;
-// Each bus beyond the starting five costs 20% more than the last.
-const busCost=()=>Math.round(1500*1.2**Math.max(0,game.buses.length-5)/10)*10;
+
+// Boosters: the only things coins buy. They make every level a little kinder, never change the level itself.
+const UPGRADES={
+  patience:{name:'Patient travelers',icon:'timer',effect:level=>`Travelers wait ${level*10}% longer`,next:'+10% waiting time'},
+  claim:{name:'Longer claims',icon:'bag',effect:level=>`+${(level*1.5).toFixed(1)} s to claim arrived buses`,next:'+1.5 s to claim'},
+  combo:{name:'Combo keeper',icon:'crown',effect:level=>`Combos last ${(level*.15).toFixed(2)} s longer`,next:'+0.15 s combo window'}};
+const UPGRADE_MAX=5,upgradeCost=level=>Math.round(1500*1.9**level/100)*100;
+
+// Level design: every 3 levels a new country joins (more destinations, longer and better-paid routes); inside each
+// group of 3 the level gives one bus fewer. Traveler patience, bonus speed, groups and claim time get tougher over the
+// first 16 levels (t: 0 → 1); after that the levels keep growing (e: 0 → 1 over the next 24): fewer buses, shorter
+// claims, faster travelers, bigger groups. Goals are a share of what a quick player earns in a full shift (measured
+// with a test player): 22% at level 1, 70% by level 16, then +1% per level up to 95%.
+function levelConfig(n){
+  const k=Math.min(STATIONS.length,2+Math.floor((n-1)/3)),stations=STATIONS.slice(0,k).map(s=>s.id),up=game.upgrades;
+  const t=Math.min(1,(n-1)/15),e=Math.min(1,Math.max(0,n-16)/24),patience=(1+.1*up.patience)*(1-.2*e);
+  const potential=9500*(1+.25*(k-2)),share=n<=16?.22+.48*t:Math.min(.95,.7+.01*(n-16));
+  return {n,stations,buses:Math.max(k+2,2*k+2-(n-1)%3-Math.floor(4*e)),duration:(60+10*(k-2))*1000,
+    target:Math.round(potential*share/50)*50,
+    life:[(2800-1000*t)*patience,(4000-1300*t)*patience],bonusLife:600-150*t-50*e,
+    claim:Math.max(6000,12000-3500*t-2000*e)+1500*up.claim,combo:1500-200*t-150*e+150*up.combo,
+    groupChance:.25+.3*t+.1*e,maxGroup:3+Math.round(2*t+e),spawn:190-50*t};}
 
 // ---------------------------------------------------------------------------------------------------------------
-// Saved game: coins, unlocked stations and buses. Travelers are not saved; they come and go every few seconds.
+// Saved progress: coins, the next level to play, best stars per level and boosters. A level in progress is not saved.
 // ---------------------------------------------------------------------------------------------------------------
-function newBus(id,location){return {id,location,status:'idle',dest:null,passengers:0,revenue:0,payout:0,claimBy:0,readyAt:Date.now()};}
-function freshGame(){const buses=[];for(let id=1;id<=5;id++)buses.push(newBus(id,id<=3?'tunis':'paris'));return {version:2,coins:360,open:['tunis','paris'],buses,nextBus:6,bestCombo:0,xp:0,level:1};}
-// Version 1 saves keep their coins (plus any fares still on buses), stations and buses; every bus is parked at a station.
-function migrate(old){
-  const open=old.open.filter(id=>city[id]),parked=b=>b.status==='idle'&&open.includes(b.location)?b.location:open.includes(b.destination)?b.destination:open[0];
-  const owed=old.buses.reduce((sum,b)=>sum+(b.payout||0)+(b.revenue||0),0);
-  return {version:2,coins:Math.floor((old.coins||0)+owed),open,buses:old.buses.map(b=>newBus(b.id,parked(b))),nextBus:old.nextBus||old.buses.length+1,bestCombo:0};}
-function load(){try{const data=JSON.parse(localStorage.getItem(SAVE_KEY));if(data?.version===2&&Array.isArray(data.buses))return data;if(data?.version===1&&Array.isArray(data.buses))return migrate(data);}catch{}return freshGame();}
-const game=load();game.xp??=0;game.level??=1;
+function freshGame(){return {version:3,coins:0,level:1,stars:{},upgrades:{patience:0,claim:0,combo:0},bestCombo:0};}
+// Earlier saves (free play) keep their coins, including fares still sitting on buses, and start at level 1.
+function migrate(old){const owed=(old.buses||[]).reduce((sum,b)=>sum+(b.payout||0)+(b.revenue||0),0);return {...freshGame(),coins:Math.floor((old.coins||0)+owed),bestCombo:old.bestCombo||0};}
+function load(){try{const data=JSON.parse(localStorage.getItem(SAVE_KEY));if(data?.version===3)return data;if(data&&(data.version===1||data.version===2))return migrate(data);}catch{}return freshGame();}
+const game=load();
+// Developer switch for balancing (?calibrate): levels never end early, so a test player can measure a full shift.
+const CALIBRATE=new URLSearchParams(location.search).has('calibrate');
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(game));}catch{}}
-// Every parked bus waiting for travelers has a random destination among the other unlocked stations.
-function assignDest(bus){const options=game.open.filter(id=>id!==bus.location);bus.dest=options[Math.floor(Math.random()*options.length)]||null;}
-for(const bus of game.buses)if(bus.status==='idle'&&!bus.payout&&!bus.dest)assignDest(bus);
-let currentStation=game.buses.find(b=>b.status==='idle')?.location||game.open[0],selectedBus=null,sheet=null,sound=localStorage.getItem('souha-sound')!=='off';
 save();
+let sound=localStorage.getItem('souha-sound')!=='off';
 
 // ---------------------------------------------------------------------------------------------------------------
 // Sound: CC0 samples (see sounds/CREDITS.txt) through one shared Web Audio context, unlocked by the first tap.
@@ -93,10 +99,26 @@ function vibrate(pattern){if(sound&&navigator.userActivation?.hasBeenActive!==fa
 function toast(message,kind=''){if(kind==='error')play('error',.6);const node=document.createElement('div');node.className='toast'+(kind?' '+kind:'');node.innerHTML=message;$('toast-stack').replaceChildren(node);setTimeout(()=>node.remove(),2600);}
 
 // ---------------------------------------------------------------------------------------------------------------
-// Buses: tap one to choose it, fill it with travelers for its country, tap it again when full to send it.
-// It parks at its destination holding the fares; tap it there within CLAIM_MS or the money is lost.
+// The level being played (or previewed on the home screen).
+// mode: 'home' · 'intro' (goal card, then 3-2-1) · 'play' · 'paused' · 'over' (win or lose card)
 // ---------------------------------------------------------------------------------------------------------------
-const busesHere=()=>game.buses.filter(b=>b.status==='idle'&&b.location===currentStation);
+let mode='home',run=null,currentStation='tunis',selectedBus=null,nextBusId=1;
+function newBus(location){return {id:nextBusId++,location,status:'idle',dest:null,passengers:0,revenue:0,payout:0,claimBy:0,readyAt:Date.now()};}
+// The level's buses start spread over its stations, the first station getting the extra ones.
+function prepareRun(n){
+  const cfg=levelConfig(n),buses=[];for(let i=0;i<cfg.buses;i++)buses.push(newBus(cfg.stations[i%cfg.stations.length]));
+  run={n,cfg,buses,hearts:MAX_HEARTS,earned:0,endsAt:0,remaining:cfg.duration,bestCombo:0,result:null};
+  for(const bus of buses)assignDest(bus);currentStation=cfg.stations[0];selectedBus=null;crowd=[];shownEarned=0;coinsInFlight=0;resetCombo();}
+const stationsInRun=()=>run.cfg.stations;
+// Every parked bus waiting for travelers has a random destination among the level's other stations.
+function assignDest(bus){const options=stationsInRun().filter(id=>id!==bus.location);bus.dest=options[Math.floor(Math.random()*options.length)]||null;}
+const timeLeft=()=>mode==='play'?Math.max(0,run.endsAt-Date.now()):run.remaining;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Buses: tap one to choose it, fill it with travelers for its country, tap it again when full to send it.
+// It parks at its destination holding the fares; tap it there in time or the money (and a heart) is lost.
+// ---------------------------------------------------------------------------------------------------------------
+const busesHere=()=>run.buses.filter(b=>b.status==='idle'&&b.location===currentStation);
 // Up to three buses park in the bays: buses holding fares first (so you can always claim), then partly filled ones.
 function bayBuses(){
   const buses=busesHere().sort((a,b)=>(b.payout>0)-(a.payout>0)||(b.passengers>0)-(a.passengers>0)||(a.readyAt||0)-(b.readyAt||0)||a.id-b.id).slice(0,BAYS.length),occupied=new Set();
@@ -110,7 +132,7 @@ function getSelectedBus(){return bayBuses().find(b=>b.id===selectedBus);}
 // Keep a sensible bus selected: the current one while it is in a bay, otherwise the fullest bus that can still board.
 function syncSelectedBus(){const bays=bayBuses();if(bays.some(b=>b.id===selectedBus&&!b.payout))return;selectedBus=bays.filter(b=>!b.payout&&b.dest).sort((a,b)=>(b.passengers<CAPACITY)-(a.passengers<CAPACITY)||b.passengers-a.passengers)[0]?.id??null;}
 function tapBus(id){
-  const bus=bayBuses().find(b=>b.id===id);if(!bus)return;
+  if(mode!=='play')return;const bus=bayBuses().find(b=>b.id===id);if(!bus)return;
   if(bus.payout>0)return claim(bus);
   if(entering(bus))return;
   if(bus.passengers>=CAPACITY)return depart(bus);
@@ -119,29 +141,21 @@ function depart(bus){
   const tagRect=document.querySelector(`[data-bus="${bus.id}"]`)?.getBoundingClientRect(),vacated=bus.bay;launchVisualDeparture(bus.id);
   Object.assign(bus,{status:'trip',origin:bus.location,departed:Date.now(),arrival:Date.now()+tripTime(bus.location,bus.dest),bay:null});
   const replacement=bayBuses().find(b=>b.bay===vacated);if(replacement)pendingMoves[replacement.id]=true;
-  selectedBus=null;syncSelectedBus();save();renderBuses();renderCrowd();renderHud();play('depart',.9);vibrate(20);
-  if(tagRect){floatText(tagRect.left+tagRect.width/2,tagRect.top,`${icon('bus')} ${euro(bus.revenue)} → ${city[bus.dest].name}`,'depart');gainXp(10,tagRect.left+tagRect.width/2,tagRect.top+34);}else gainXp(10);}
+  selectedBus=null;syncSelectedBus();renderBuses();renderCrowd();renderHud();play('depart',.9);vibrate(20);
+  if(tagRect)floatText(tagRect.left+tagRect.width/2,tagRect.top,`${icon('bus')} ${euro(bus.revenue)} → ${city[bus.dest].name}`,'depart');}
 function arrive(bus,now){
-  Object.assign(bus,{status:'idle',location:bus.dest,dest:null,payout:bus.revenue,revenue:0,passengers:0,claimBy:now+CLAIM_MS,readyAt:now,bay:null});
+  Object.assign(bus,{status:'idle',location:bus.dest,dest:null,payout:bus.revenue,revenue:0,passengers:0,claimBy:now+run.cfg.claim,readyAt:now,bay:null});
   if(bus.location===currentStation){pendingMoves[bus.id]=true;play('arrival',.9);}
-  else toast(`${icon('bag')} ${euro(bus.payout)} waiting in <b>${city[bus.location].name}</b> · ${CLAIM_MS/1000}s!`,'claim');}
+  else toast(`${icon('bag')} ${euro(bus.payout)} waiting in <b>${city[bus.location].name}</b> · ${Math.round(run.cfg.claim/1000)}s!`,'claim');}
+// Claimed money counts toward the level goal and is yours to keep.
 function claim(bus){
-  const amount=bus.payout;bus.payout=0;bus.claimBy=0;game.coins+=amount;coinsInFlight+=amount;assignDest(bus);
-  const tag=document.querySelector(`[data-bus="${bus.id}"]`)?.getBoundingClientRect();if(tag)floatText(tag.left+tag.width/2,tag.top,`${icon('bag')} +${euro(amount)}`,'cash');gainXp(5,tag&&tag.left+tag.width/2,tag&&tag.top+40);
-  playCash(amount);burstAt(tag,'#ffc800',16,true);if(tag)flyCoins(tag.left+tag.width/2,tag.top+tag.height/2,amount);else coinsInFlight-=amount;vibrate([20,30,20]);save();renderBuses();renderCrowd();renderHud();}
+  const amount=bus.payout;bus.payout=0;bus.claimBy=0;run.earned+=amount;game.coins+=amount;coinsInFlight+=amount;assignDest(bus);save();
+  const tag=document.querySelector(`[data-bus="${bus.id}"]`)?.getBoundingClientRect();if(tag)floatText(tag.left+tag.width/2,tag.top,`${icon('bag')} +${euro(amount)}`,'cash');
+  playCash(amount);burstAt(tag,'#ffc800',16,true);if(tag)flyCoins(tag.left+tag.width/2,tag.top+tag.height/2,amount);else coinsInFlight-=amount;vibrate([20,30,20]);
+  renderBuses();renderCrowd();renderHud();if(run.earned>=run.cfg.target&&!CALIBRATE)finishRun(true);}
 function loseClaim(bus){
-  const lost=bus.payout;bus.payout=0;bus.claimBy=0;assignDest(bus);play('lost',.8);vibrate(60);
-  toast(`${icon('timer')} ${euro(lost)} lost in ${city[bus.location].name}`,'error-soft');}
-function buyBus(){
-  const cost=busCost();if(game.coins<cost)return toast(`Earn ${euro(cost-game.coins)} more for a bus.`,'error');
-  game.coins-=cost;const bus=newBus(game.nextBus++,currentStation);assignDest(bus);game.buses.push(bus);pendingMoves[bus.id]=true;
-  gainXp(25);save();closeSheet();renderBuses();renderCrowd();renderHud();showPurchase(icon('bus'),`New ${busName(bus)}`,[`${pct(BUS_BOOST)} every fare`,`Fares now ${pct(boost()-1)}`]);play('purchase',.9);play('buy',.6);}
-function buyStation(id){
-  const target=city[id];if(!target||game.open.includes(id))return;if(game.coins<target.cost)return toast(`Earn ${euro(target.cost-game.coins)} more to open ${target.name}.`,'error');
-  game.coins-=target.cost;game.open.push(id);
-  // The new station starts with a bus of its own so you can play there right away.
-  const bus=newBus(game.nextBus++,id);assignDest(bus);game.buses.push(bus);
-  gainXp(100);save();switchStation(id);showPurchase(flagMarkup(id,'flag-large'),`${target.name} is open!`,[`${pct(STATION_BOOST)} every fare`,'+1 free bus',`Fares now ${pct(boost()-1)}`]);play('station-open');}
+  const lost=bus.payout;bus.payout=0;bus.claimBy=0;assignDest(bus);
+  loseHeart(`${icon('timer')} ${euro(lost)} lost in ${city[bus.location].name}`);}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Travelers: they pop up all over the visible walkway, each heading to a country, and leave after a few seconds.
@@ -151,7 +165,7 @@ let crowd=[],nextTravelerId=1,lastSpawn=0;
 function rollSpecial(){let roll=Math.random();for(const [kind,special] of Object.entries(SPECIALS)){if(roll<special.chance)return kind;roll-=special.chance;}return null;}
 // Destinations favour the selected bus (so there is always someone to tap), then the other buses here, then any other country.
 function travelerDest(){
-  const others=game.open.filter(id=>id!==currentStation),selected=getSelectedBus(),bays=bayBuses().filter(b=>b.dest&&!b.payout).map(b=>b.dest),roll=Math.random();
+  const others=stationsInRun().filter(id=>id!==currentStation),selected=getSelectedBus(),bays=bayBuses().filter(b=>b.dest&&!b.payout).map(b=>b.dest),roll=Math.random();
   if(selected?.dest&&roll<.55)return selected.dest;if(bays.length&&roll<.8)return bays[Math.floor(Math.random()*bays.length)];return others[Math.floor(Math.random()*others.length)];}
 // A flag needs about a tag-sized box of walkway (TAG_BOX) so tags never cover each other.
 const TAG_BOX=[.64,.72];
@@ -159,80 +173,131 @@ function freeSpot(){
   const pool=onScreenSpots&&onScreenSpots.size>=8?[...onScreenSpots]:CROWD_SPOTS.map((_,i)=>i);
   const roomy=pool.filter(i=>crowd.every(p=>{const [x1,z1]=CROWD_SPOTS[i],[x2,z2]=CROWD_SPOTS[p.spot];return Math.abs(x1-x2)>=TAG_BOX[0]||Math.abs(z1-z2)>=TAG_BOX[1];}));
   return roomy.length?roomy[Math.floor(Math.random()*roomy.length)]:null;}
+// Groups: a traveler tag can carry 2 or more people (more often, and bigger, in later levels). A group fills that
+// many seats in one tap; a group that does not fit the selected bus costs its fares and a heart and breaks the combo.
+// Filling the bus exactly with a group is a PERFECT FIT worth 5 extra fares.
+const PERFECT_FIT_FARES=5;
+function rollGroup(){if(Math.random()>=run.cfg.groupChance)return 1;return 2+Math.floor(Math.random()**1.6*(run.cfg.maxGroup-1));}
 function spawnTraveler(now,dest=travelerDest()){
-  const spot=freeSpot();if(spot===null||!dest)return false;const special=rollSpecial();
-  crowd.push({id:nextTravelerId++,dest,spot,special,born:now,until:now+(special?BONUS_LIFE_MS:LIFE_MS[0]+Math.random()*(LIFE_MS[1]-LIFE_MS[0]))});return true;}
+  const spot=freeSpot();if(spot===null||!dest)return false;const special=rollSpecial(),[lo,hi]=run.cfg.life;
+  crowd.push({id:nextTravelerId++,dest,spot,special,size:special?1:rollGroup(),born:now,until:now+(special?run.cfg.bonusLife:lo+Math.random()*(hi-lo))});return true;}
+function groupDoesNotFit(traveler,bus){
+  const loss=fareFor(currentStation,bus.dest)*traveler.size;bus.revenue=Math.max(0,bus.revenue-loss);
+  const tag=document.querySelector(`[data-traveler="${traveler.id}"]`)?.getBoundingClientRect();
+  resetCombo();crowd=crowd.filter(p=>p.id!==traveler.id);launchVanish(traveler.id);burstAt(tag,'#ff4b4b',12,true);
+  if(tag)floatText(tag.left+tag.width/2,tag.top,`−${euro(loss)} · ${traveler.size} won't fit!`,'loss');
+  const busTag=document.querySelector(`[data-bus="${bus.id}"]`);busTag?.classList.remove('nope');void busTag?.offsetWidth;busTag?.classList.add('nope');
+  renderBuses();renderCrowd();loseHeart(`${traveler.size} travelers didn't fit!`);}
 function tapTraveler(id){
-  const traveler=crowd.find(p=>p.id===id),bus=getSelectedBus(),now=Date.now();if(!traveler)return;
+  if(mode!=='play')return;const traveler=crowd.find(p=>p.id===id),bus=getSelectedBus(),now=Date.now();if(!traveler)return;
   if(!canBoard(bus)||traveler.dest!==bus.dest){const tag=document.querySelector(`[data-traveler="${id}"]`);tag?.classList.remove('nope');void tag?.offsetWidth;tag?.classList.add('nope');return;}
-  // Combo: fares go on the bus; the combo multiplier (+0.5 every COMBO_STEP boardings, ×2 per VIP) is paid on the combo's money when it ends.
-  if(combo.count&&now-combo.last>COMBO_MS&&now>combo.frozenUntil)endCombo();
+  const size=traveler.size||1;if(size>CAPACITY-bus.passengers)return groupDoesNotFit(traveler,bus);
+  // Combo: fares go on the bus; the combo multiplier (+0.25 every COMBO_STEP boardings, ×2 per VIP, up to ×4) is added to those buses when it ends.
+  if(combo.count&&now-combo.last>run.cfg.combo&&now>combo.frozenUntil)endCombo();
   combo.count++;combo.last=now;const special=traveler.special,fare=fareFor(currentStation,bus.dest);
   if(special==='vip')combo.vip*=2;else if(special==='rush')combo.frozenUntil=now+5000;
-  const bonus=SPECIALS[special]?.bonus||0,share=combo.byBus[bus.id]??={fares:0,bonus:0};share.fares+=fare;share.bonus+=bonus;
-  combo.fares+=fare;combo.bonus+=bonus;bus.revenue+=fare;bus.passengers++;
+  const fares=fare*size,perfect=size>1&&bus.passengers+size===CAPACITY,bonus=(SPECIALS[special]?.bonus||0)+(perfect?fare*PERFECT_FIT_FARES:0),share=combo.byBus[bus.id]??={fares:0,bonus:0};share.fares+=fares;share.bonus+=bonus;
+  combo.fares+=fares;combo.bonus+=bonus;bus.revenue+=fares+bonus;bus.passengers+=size;
   crowd=crowd.filter(p=>p.id!==id);
-  if(special==='heart')for(let i=0;i<3;i++)spawnTraveler(now,bus.dest);
   const tag=document.querySelector(`[data-traveler="${id}"]`)?.getBoundingClientRect();
+  if(special==='heart'){if(run.hearts<MAX_HEARTS){run.hearts++;bump($('hearts'));}else{bus.revenue+=40;}}
   burstAt(tag,special?SPECIAL_CSS[special]:'#58cc02',special?14:5,!!special);
-  gainXp(special?5:1,tag&&tag.left+tag.width/2,tag&&tag.top,!special);
   const level=Math.min(4,Math.floor(combo.count/COMBO_STEP));
-  if(tag)floatText(tag.left+tag.width/2,tag.top,special?`${icon(SPECIALS[special].icon)} ${SPECIALS[special].label}${SPECIALS[special].bonus?' +'+euro(SPECIALS[special].bonus):''}`:`+${euro(fare)}${comboMultiplier()>1?`<em>×${comboMultiplier()}</em>`:''}`,special||`lvl${level}`);
-  const shout=SHOUTS[combo.count];if(shout)showShout(shout);
+  if(tag)floatText(tag.left+tag.width/2,tag.top,special?`${icon(SPECIALS[special].icon)} ${SPECIALS[special].label}${SPECIALS[special].bonus?' +'+euro(SPECIALS[special].bonus):''}`:`+${euro(fares)}${size>1?` · ${size} seats`:''}${comboMultiplier()>1?`<em>×${comboMultiplier()}</em>`:''}`,special||`lvl${level}`);
+  const shout=perfect?'PERFECT FIT!':SHOUTS[combo.count];if(shout)showShout(shout);
   launchBoardingAnimation(id,bus.id);
-  playComboNote(combo.count);if(special)play(special,.9);if(combo.count%10===0)play('combo',.7);
+  playComboNote(combo.count);for(let i=1;i<size;i++)play(POPS[i%POPS.length],.8,1.05+i*.14,i*.05);if(perfect){play('gift',.8);play('combo',.7,1.1);}if(special)play(special,.9);if(combo.count%10===0)play('combo',.7);
   if(bus.passengers>=CAPACITY){play('bus-full',.8);vibrate(35);}else vibrate(special?[15,40,15]:10);
-  save();renderBuses();renderCrowd();renderHud();renderCombo();}
+  renderBuses();renderCrowd();renderHud();renderCombo();}
 
 // ---------------------------------------------------------------------------------------------------------------
-// Combo: money earned while the combo lasts is multiplied when it ends (fares already on buses get the extra part).
+// Combo: money earned while the combo lasts is multiplied when it ends; the extra goes onto the buses that earned it.
 // ---------------------------------------------------------------------------------------------------------------
 const combo={count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0,byBus:{}};
 const SHOUTS={10:'NICE!',20:'GREAT!',30:'AMAZING!',45:'INCREDIBLE!',60:'UNSTOPPABLE!',80:'LEGENDARY!'};
+// Every COMBO_STEP boardings add +0.25 and each VIP doubles it, up to COMBO_CAP.
+const COMBO_CAP=4,comboMultiplier=()=>Math.min(COMBO_CAP,(1+.25*Math.floor(combo.count/COMBO_STEP))*combo.vip);
 const comboWorth=()=>Math.round((combo.fares+combo.bonus)*comboMultiplier());
-const comboMultiplier=()=>(1+.5*Math.floor(combo.count/COMBO_STEP))*combo.vip;
-const comboPayout=()=>Math.round(combo.fares*(comboMultiplier()-1)+combo.bonus*comboMultiplier());
+function resetCombo(){Object.assign(combo,{count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0,byBus:{}});}
 function endCombo(){
-  if(!combo.count)return;const count=combo.count,mult=comboMultiplier(),shares=combo.byBus;
-  Object.assign(combo,{count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0,byBus:{}});
-  if(count>game.bestCombo)game.bestCombo=count;if(count>=5)gainXp(Math.floor(count/2));
+  if(!combo.count)return;const count=combo.count,mult=comboMultiplier(),shares=combo.byBus;resetCombo();
+  if(run&&count>run.bestCombo)run.bestCombo=count;if(count>game.bestCombo){game.bestCombo=count;save();}
   let payout=0;const targets=[];
-  for(const [id,share] of Object.entries(shares)){const extra=Math.round(share.fares*(mult-1)+share.bonus*mult),bus=game.buses.find(b=>b.id===Number(id));if(!bus||extra<=0)continue;
+  for(const [id,share] of Object.entries(shares)){const extra=Math.round(share.fares*(mult-1)+share.bonus*mult),bus=run?.buses.find(b=>b.id===Number(id));if(!bus||extra<=0)continue;
     if(bus.payout>0)bus.payout+=extra;else bus.revenue+=extra;payout+=extra;targets.push(bus.id);}
-  if(payout>0){save();renderBuses();const from=rectCentre(showComboBanner(count,mult,payout));for(const id of targets)coinsToBus(from,id);play('combo',.8);playCash(payout,0);vibrate([20,40,20]);}
+  if(payout>0){renderBuses();const from=rectCentre(showComboBanner(count,mult,payout));for(const id of targets)coinsToBus(from,id);play('combo',.8);playCash(payout,0);vibrate([20,40,20]);}
   renderCombo();}
 
 // ---------------------------------------------------------------------------------------------------------------
-// Stations: swipe left/right (or use the side arrows) to move between unlocked stations.
+// Hearts, time and the goal
 // ---------------------------------------------------------------------------------------------------------------
-const openInOrder=()=>STATIONS.filter(s=>game.open.includes(s.id)).map(s=>s.id);
-function neighbour(step){const list=openInOrder(),i=list.indexOf(currentStation);return list[(i+step+list.length)%list.length];}
+function loseHeart(reason){
+  if(mode!=='play')return;run.hearts=Math.max(0,run.hearts-1);
+  play('error',.9);play('lost',.8);vibrate([70,40,70]);toast(`${icon('heart')} ${reason}`,'error-soft');
+  const hearts=$('hearts');hearts.classList.remove('hurt');void hearts.offsetWidth;hearts.classList.add('hurt');renderHud();
+  if(!run.hearts)finishRun(false,'hearts');}
+// Winning pays a star bonus (more for higher levels) and unlocks the next level; losing keeps what you claimed.
+function finishRun(won,reason='time'){
+  if(mode!=='play')return;endCombo();run.remaining=timeLeft();mode='over';crowd=[];renderCrowd();
+  const stars=won?Math.max(1,run.hearts):0,bonus=won?stars*(40+20*run.n):0;
+  if(won){game.coins+=bonus;coinsInFlight+=bonus;game.stars[run.n]=Math.max(game.stars[run.n]||0,stars);if(game.level===run.n)game.level++;}
+  save();run.result={won,reason,stars,bonus};
+  if(won){play('gift',.9);playCash(2000,.8);play('arrival',.8,1.1);vibrate([40,60,40,60,120]);}else{play('lost',.9);play('error',.6,.8);vibrate([200]);}
+  setTimeout(()=>{showOverlay('result');if(won&&bonus)setTimeout(()=>{const box=document.querySelector('.result-bonus')?.getBoundingClientRect();if(box)flyCoins(...rectCentre(box),bonus);else coinsInFlight-=bonus;},900+stars*350);},won?700:500);}
+
+// ---------------------------------------------------------------------------------------------------------------
+// Stations: swipe left/right or tap a station tab to move between the level's stations.
+// ---------------------------------------------------------------------------------------------------------------
+function neighbour(step){const list=stationsInRun(),i=list.indexOf(currentStation);return list[(i+step+list.length)%list.length];}
 function switchStation(id,direction=0){
-  if(!game.open.includes(id)||id===currentStation&&!direction)return;endCombo();clearBoardingAnimations();currentStation=id;selectedBus=null;crowd=[];
-  syncSelectedBus();closeSheet();buildStatic();for(let i=0;i<6;i++)spawnTraveler(Date.now());renderBuses();renderCrowd();renderHud();
-  const view=$('game');view.classList.remove('slide-from-left','slide-from-right');void view.offsetWidth;if(direction)view.classList.add(direction>0?'slide-from-right':'slide-from-left');
+  if(mode!=='play'||!stationsInRun().includes(id)||id===currentStation)return;endCombo();clearBoardingAnimations();
+  const list=stationsInRun();direction||=list.indexOf(id)>list.indexOf(currentStation)?1:-1;currentStation=id;selectedBus=null;crowd=[];
+  syncSelectedBus();buildStatic();for(let i=0;i<6;i++)spawnTraveler(Date.now());renderBuses();renderCrowd();renderHud();
+  const view=$('game');view.classList.remove('slide-from-left','slide-from-right');void view.offsetWidth;view.classList.add(direction>0?'slide-from-right':'slide-from-left');
   play('depart',.35,1.7);play('switch',.5);}
 
 // ---------------------------------------------------------------------------------------------------------------
-// Clock: arrivals, claim deadlines, travelers coming and going.
+// Clock: arrivals, claim deadlines, the level timer, travelers coming and going.
 // ---------------------------------------------------------------------------------------------------------------
-let lastTickSecond=0;
+let lastTickSecond=0,lastHudSecond=0;
 function tick(){
-  const now=Date.now();let busesChanged=false,crowdChanged=false;
-  for(const bus of game.buses){
+  if(mode!=='play')return;const now=Date.now();let busesChanged=false,crowdChanged=false;
+  for(const bus of run.buses){
     if(bus.status==='trip'&&now>=bus.arrival){arrive(bus,now);busesChanged=true;}
-    else if(bus.status==='idle'&&bus.payout>0&&now>bus.claimBy){loseClaim(bus);busesChanged=true;}}
-  // Countdown ticks in the last 3 seconds of a claim at the station you are on.
-  const second=Math.floor(now/1000);if(second!==lastTickSecond){lastTickSecond=second;if(bayBuses().some(b=>b.payout>0&&b.claimBy-now<3200&&b.claimBy>now))play('tick',.7);}
+    else if(bus.status==='idle'&&bus.payout>0&&now>bus.claimBy){loseClaim(bus);busesChanged=true;if(mode!=='play')return;}}
+  const left=timeLeft(),second=Math.ceil(left/1000);
+  if(second!==lastTickSecond){lastTickSecond=second;
+    // Ticks in the last 3 seconds of a claim here, and every second of the level's last 10 seconds.
+    if(second<=10&&second>0)play('tick',second<=5?.9:.5,second<=5?1.3:1);else if(bayBuses().some(b=>b.payout>0&&b.claimBy-now<3200&&b.claimBy>now))play('tick',.7);}
+  if(left<=0){finishRun(run.earned>=run.cfg.target);return;}
   const before=crowd.length;for(const p of crowd)if(now>=p.until)launchVanish(p.id);crowd=crowd.filter(p=>now<p.until);if(crowd.length!==before)crowdChanged=true;
-  if(now-lastSpawn>=SPAWN_MS){lastSpawn=now;for(let i=Math.random()<.35?2:1;i>0;i--)if(spawnTraveler(now))crowdChanged=true;}
-  if(busesChanged){syncSelectedBus();save();renderBuses();}
+  if(now-lastSpawn>=run.cfg.spawn){lastSpawn=now;for(let i=Math.random()<.35?2:1;i>0;i--)if(spawnTraveler(now))crowdChanged=true;}
+  if(busesChanged){syncSelectedBus();renderBuses();}
   if(busesChanged||crowdChanged)renderCrowd();
   if(busesChanged||second!==lastHudSecond)renderHud();}
-let lastHudSecond=0;
 
 // ---------------------------------------------------------------------------------------------------------------
-// HUD, sheets and floating feedback
+// Flow: home → intro (goal, 3-2-1) → play → result; pause at any time.
+// ---------------------------------------------------------------------------------------------------------------
+function setMode(next){mode=next;$('game').dataset.mode=next;}
+function goHome(){if(run)endCombo();prepareRun(game.level);setMode('home');clearBoardingAnimations();buildStatic();renderBuses();renderCrowd();renderHud();showOverlay('home');}
+function openLevel(n){prepareRun(n);setMode('intro');clearBoardingAnimations();buildStatic();renderBuses();renderCrowd();renderHud();showOverlay('intro');play('menu-open',.7);}
+function startCountdown(){
+  hideOverlay();let count=3;const el=document.createElement('div');el.className='countdown';floatLayer.appendChild(el);
+  const step=()=>{el.textContent=count||'GO!';el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
+    if(count){play('tick',1,1.2);count--;setTimeout(step,650);}else{play('station-open');play('depart',.5,1.4);setTimeout(()=>el.remove(),600);beginPlay();}};
+  step();}
+function beginPlay(){setMode('play');run.endsAt=Date.now()+run.remaining;lastSpawn=0;for(let i=0;i<8;i++)spawnTraveler(Date.now());syncSelectedBus();renderBuses();renderCrowd();renderHud();}
+// Pausing freezes the level: on resume every deadline moves forward by the paused time; waiting travelers leave.
+function pause(){if(mode!=='play')return;run.pausedAt=Date.now();run.remaining=timeLeft();endCombo();setMode('paused');crowd=[];renderCrowd();showOverlay('pause');play('menu-open',.6);}
+function resume(){
+  if(mode!=='paused')return;const delta=Date.now()-run.pausedAt;
+  for(const bus of run.buses){if(bus.status==='trip')bus.arrival+=delta;if(bus.payout>0)bus.claimBy+=delta;}
+  hideOverlay();setMode('play');run.endsAt=Date.now()+run.remaining;renderBuses();renderHud();play('select');}
+document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
+
+// ---------------------------------------------------------------------------------------------------------------
+// HUD, overlays and floating feedback
 // ---------------------------------------------------------------------------------------------------------------
 const floatLayer=document.createElement('div');floatLayer.className='float-layer';$('game').appendChild(floatLayer);
 function floatText(x,y,html,kind){const el=document.createElement('div');el.className='float-gain'+(kind?' special-'+kind:'');el.innerHTML=html;el.style.top=y+'px';floatLayer.appendChild(el);
@@ -245,14 +310,11 @@ const rectCentre=r=>[r.left+r.width/2,r.top+r.height/2];
 function showComboBanner(count,mult,payout){return showNotice('combo',`<span class="notice-art">${icon('crown')}</span><span>COMBO ${count}</span><b>+${euro(payout)}</b><span class="chip orange">×${mult}</span><span class="chip blue">${icon('bus')} on the bus</span>`,1800);}
 // Coins fly onto a bus label (only a visual: the money is already on that bus).
 function coinsToBus([x,y],busId){const tag=document.querySelector(`[data-bus="${busId}"]`);if(tag)flyTo(x,y,tag,'coin-flyer',icon('coin'),4,()=>{});}
-// A purchase pops a card listing exactly what it adds, so the benefit is always visible.
-function showPurchase(art,title,perks){showNotice('buy',`<span class="notice-art">${art}</span><b>${title}</b>${perks.map(p=>`<span class="chip green">${p}</span>`).join('')}`,2600);}
 // Particle burst at a screen rectangle: small CSS-animated dots that fly out and fade (no canvas or 3D work).
 function burstAt(rect,color,count=10,big=false){if(!rect)return;const host=document.createElement('div');host.className='burst'+(big?' big':'');host.style.left=rect.left+rect.width/2+'px';host.style.top=rect.top+rect.height/2+'px';host.style.setProperty('--c',color);
   host.innerHTML='<i class="burst-ring"></i>'+Array.from({length:count},(_,i)=>{const a=i/count*Math.PI*2+Math.random()*.4,d=(big?46:30)+Math.random()*(big?34:20);return `<i style="--dx:${(Math.cos(a)*d).toFixed(1)}px;--dy:${(Math.sin(a)*d).toFixed(1)}px;--s:${(.6+Math.random()*.8).toFixed(2)}"></i>`;}).join('');
   floatLayer.appendChild(host);setTimeout(()=>host.remove(),650);}
 function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
-function bumpCoins(){bump($('coins').closest('.coin-pill'));}
 // The multiplier card (top right) also shows the live combo: its count and worth, and a bar for the time left.
 let shownCombo=-1,shownMult='';
 const multLevel=m=>m>=4?4:m>=3?3:m>=2?2:m>1?1:0;
@@ -260,82 +322,80 @@ function renderCombo(now=Date.now()){
   const badge=$('mult-badge'),mult=combo.count?comboMultiplier():1,label=`×${mult}`,active=combo.count>=2;
   if(label!==shownMult){shownMult=label;$('mult-value').textContent=label;badge.dataset.level=multLevel(mult);if(mult>1)bump(badge);}
   badge.classList.toggle('in-combo',active);
-  if(!active){if(shownCombo!==-1){shownCombo=-1;$('mult-label').textContent='MONEY';}return;}
+  if(!active){if(shownCombo!==-1){shownCombo=-1;$('mult-label').textContent='COMBO';}return;}
   if(shownCombo!==combo.count){shownCombo=combo.count;$('mult-label').textContent=`COMBO ${combo.count} · ${shortEuro(comboWorth())}`;}
-  const frozen=now<combo.frozenUntil,timer=$('mult-timer');timer.classList.toggle('frozen',frozen);timer.style.transform=`scaleX(${frozen?1:Math.max(0,1-(now-combo.last)/COMBO_MS).toFixed(3)})`;}
-// XP and levels: every action earns XP; each level needs 25 XP more than the last, pays coins and adds +2% to every fare.
-const xpToNext=level=>40+25*(level-1);
-function xpProgress(xp=game.xp){let level=1;while(xp>=xpToNext(level)){xp-=xpToNext(level);level++;}return {level,into:xp,need:xpToNext(level)};}
-// Money and XP "add up": the game state changes at once, but coins and XP orbs fly to the counters first and the
-// numbers roll up as they land. coinsInFlight / xpInFlight hold what is still on its way.
-let coinsInFlight=0,xpInFlight=0,shownXp=game.xp,shownLevel=xpProgress().level;const pendingLevelUps=[];
-function gainXp(amount,x,y,quiet=false){
-  game.xp+=amount;xpInFlight+=amount;
-  if(x!==undefined&&y!==undefined){if(!quiet)floatText(x,y,`+${amount} XP`,'xp');flyTo(x,y,$('xp-fill'),'xp-orb','',1,()=>{xpInFlight-=amount;bump($('level-chip'));});}else xpInFlight-=amount;
-  const {level}=xpProgress();while(game.level<level){game.level++;const reward=150*game.level,bus=getSelectedBus()||bayBuses()[0];
-    if(bus){if(bus.payout>0)bus.payout+=reward;else bus.revenue+=reward;}else{game.coins+=reward;coinsInFlight+=reward;}pendingLevelUps.push({level:game.level,reward,busId:bus?.id});}}
-function renderXp(){const shown=Math.floor(shownXp),{level,into,need}=xpProgress(shown),fill=Math.min(100,(into+(shownXp-shown))/need*100);
-  $('level-num').textContent=level;$('xp-fill').style.width=fill.toFixed(1)+'%';$('xp-text').textContent=`${into} / ${need} XP`;}
-// Flying tokens use the Web Animations API on a few small elements, so they cost almost nothing.
+  const frozen=now<combo.frozenUntil,timer=$('mult-timer');timer.classList.toggle('frozen',frozen);timer.style.transform=`scaleX(${frozen?1:Math.max(0,1-(now-combo.last)/run.cfg.combo).toFixed(3)})`;}
+// Coins and the goal "add up": coins fly to the counter first and the numbers roll up as they land.
+let coinsInFlight=0;
 function flyTo(x,y,target,className,html,count,onArrive,onEach){
-  const to=target.getBoundingClientRect(),tx=target.id==='xp-fill'?to.right:to.left+to.width/2,ty=to.top+to.height/2;let landed=0;
+  const to=target.getBoundingClientRect(),tx=to.left+to.width/2,ty=to.top+to.height/2;let landed=0;
   for(let i=0;i<count;i++){const el=document.createElement('div');el.className='flyer '+className;el.innerHTML=html;floatLayer.appendChild(el);
     const jx=(Math.random()-.5)*70,jy=(Math.random()-.5)*50-20,duration=520+i*55+Math.random()*80;let done=false;
-    const land=()=>{if(done)return;done=true;el.remove();landed++;if(className==='coin-flyer'){const pill=target.closest('.coin-pill');if(pill)bump(pill);play('ping',.12,2.2+Math.random()*.4);}onEach?.();if(landed===count)onArrive();};
+    const land=()=>{if(done)return;done=true;el.remove();landed++;if(className==='coin-flyer'){const pill=target.closest('.coin-pill,.goal-card');if(pill)bump(pill);play('ping',.12,2.2+Math.random()*.4);}onEach?.();if(landed===count)onArrive();};
     el.animate([{transform:`translate(${x}px,${y}px) scale(.4)`,opacity:0},{transform:`translate(${x+jx}px,${y+jy}px) scale(1.15)`,opacity:1,offset:.3},{transform:`translate(${tx}px,${ty}px) scale(.6)`,opacity:.9}],{duration,easing:'cubic-bezier(.45,0,.7,1)',delay:i*35,fill:'backwards'}).onfinish=land;
     setTimeout(land,duration+i*35+400);}}
-// Each landing coin releases its share, so the counter climbs coin by coin.
+// During a level coins fly into the goal card; on the home and result screens into the coin counter.
+function coinTarget(){return mode==='play'||mode==='paused'?$('goal-fill'):($('home-coins')||$('result-coins')||$('goal-fill'));}
 function flyCoins(x,y,amount){const count=Math.max(3,Math.min(10,Math.round(2+Math.log10(Math.max(1,amount))*2))),share=Math.floor(amount/count);let released=0;
-  flyTo(x,y,$('coins').closest('.coin-pill').querySelector('.coin-ico'),'coin-flyer',icon('coin'),count,()=>{coinsInFlight-=amount-released;},()=>{released+=share;coinsInFlight-=share;});}
-function showLevelUp(level,reward,busId){
-  const rect=showNotice('level',`<span class="notice-art">${level}</span><b>LEVEL ${level}!</b><span class="chip gold">+${euro(reward)}${busId?' on the bus':''}</span><span class="chip green">${pct(LEVEL_BOOST)} fares</span>`,2600);
-  play('arrival');play('station-open',.6);vibrate([30,50,30,50,60]);setTimeout(()=>busId?coinsToBus(rectCentre(rect),busId):flyCoins(...rectCentre(rect),reward),350);save();renderBuses();renderHud();}
-function pendingClaims(id){return game.buses.filter(b=>b.status==='idle'&&b.location===id&&b.payout>0);}
+  flyTo(x,y,coinTarget(),'coin-flyer',icon('coin'),count,()=>{coinsInFlight-=amount-released;},()=>{released+=share;coinsInFlight-=share;});}
+function pendingClaims(id){return run.buses.filter(b=>b.status==='idle'&&b.location===id&&b.payout>0);}
 const secondsLeft=claims=>Math.max(0,Math.ceil(Math.min(...claims.map(b=>b.claimBy-Date.now()))/1000));
+const clock=ms=>{const s=Math.ceil(ms/1000);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 function renderHud(){
-  const now=Date.now(),parts=boostParts();lastHudSecond=Math.floor(now/1000);
-  $('mult-boost').textContent=`${pct(boost()-1)} fares`;
-  $('station-flag').innerHTML=flagMarkup(currentStation,'flag-station');$('station-name').textContent=city[currentStation].name;
-  const here=busesHere().length,away=game.open.filter(id=>id!==currentStation).flatMap(pendingClaims);
-  $('station-info').innerHTML=away.length?`${icon('bag')} ${secondsLeft(away)}s`:`${here} bus${here===1?'':'es'}`;
-  $('station-switch').classList.toggle('alert',away.length>0);
-  // The buy buttons say what each purchase is worth.
-  const price=busCost(),quick=$('quick-buy-bus');quick.querySelector('small').textContent=euro(price);quick.classList.toggle('can-buy',game.coins>=price);quick.setAttribute('aria-label',`Buy a SouSou Bus for ${euro(price)}: ${pct(BUS_BOOST)} on every fare`);
-  $('fleet-sub').textContent=`${game.buses.length} · ${pct(parts.buses)}`;
-  const nextStation=STATIONS.find(st=>!game.open.includes(st.id));$('build-sub').textContent=nextStation?`${pct(STATION_BOOST)} · ${shortEuro(nextStation.cost)}`:'All open';$('build-button').classList.toggle('can-buy',!!nextStation&&game.coins>=nextStation.cost);
-  // Side arrows show the neighbouring stations and any fares waiting there.
-  const prev=neighbour(-1),next=neighbour(1),single=game.open.length<2;
-  for(const [el,id,hidden] of [[$('nav-prev'),prev,single||prev===next],[$('nav-next'),next,single]]){
-    el.hidden=hidden;if(hidden)continue;const claims=pendingClaims(id);
-    el.dataset.station=id;el.classList.toggle('alert',claims.length>0);el.setAttribute('aria-label',`Go to ${city[id].name}`);
-    el.innerHTML=`${icon(el.id==='nav-prev'?'left':'right','nav-arrow')}${flagMarkup(id,'nav-flag')}${claims.length?`<span class="nav-claim">${icon('bag')}${secondsLeft(claims)}s</span>`:''}`;}
-}
-function openSheet(kind){play('menu-open',.6);sheet=kind;$('modal-backdrop').classList.remove('hidden');renderSheet();}
-function closeSheet(){sheet=null;$('modal-backdrop').classList.add('hidden');}
-const boostRow=(art,name,detail,value,tone)=>`<div class="boost-row"><span class="boost-art ${tone}">${art}</span><span><b>${name}</b><small>${detail}</small></span><strong class="${tone}">${value}</strong></div>`;
-function renderSheet(){
-  if(!sheet)return;const eyebrow=$('sheet-eyebrow'),title=$('sheet-title'),content=$('sheet-content'),parts=boostParts();
-  if(sheet==='stations'){eyebrow.textContent='SWIPE OR TAP TO TRAVEL';title.textContent='Your stations';
-    content.innerHTML=`<div class="sheet-list">${openInOrder().map(id=>{const claims=pendingClaims(id),buses=game.buses.filter(b=>b.status==='idle'&&b.location===id).length;
-      return `<button class="sheet-row ${id===currentStation?'selected':''}" data-station="${id}"><span class="sheet-row-icon">${flagMarkup(id,'flag-large')}</span><span><b>${city[id].name}</b><small>${buses} bus${buses===1?'':'es'} parked</small>${claims.length?`<span class="chip gold">${icon('bag')} ${euro(claims.reduce((sum,b)=>sum+b.payout,0))} · ${secondsLeft(claims)}s</span>`:''}</span><span class="sheet-row-end">${id===currentStation?'HERE':'GO'}</span></button>`;}).join('')}</div>`;}
-  else if(sheet==='fleet'){eyebrow.textContent='FARE BOOST';title.textContent=`${pct(boost()-1)} on every fare`;
-    const parked=game.buses.filter(b=>b.status==='idle').length,trip=game.buses.length-parked,{level}=xpProgress();
-    content.innerHTML=`<div class="boost-list">
-        ${boostRow(icon('bus'),'Buses',`${game.buses.length} owned · ${pct(BUS_BOOST)} each after 5`,pct(parts.buses),'orange')}
-        ${boostRow(icon('pin'),'Stations',`${game.open.length} open · ${pct(STATION_BOOST)} each after 2`,pct(parts.stations),'blue')}
-        ${boostRow(icon('crown'),'Level',`Level ${level} · ${pct(LEVEL_BOOST)} per level`,pct(parts.level),'purple')}
-      </div>
-      <div class="perk-card"><h3>Why buy another bus?</h3>
-        <p>${icon('boost')} <span><b>${pct(BUS_BOOST)} on every fare</b>, everywhere, forever.</span></p>
-        <p>${icon('bus')} <span><b>Never wait:</b> a bus stays parked and ready while the others travel, so your combo keeps going.</span></p>
-        <p>${icon('route')} <span><b>More at once:</b> fill buses for several countries in the same station.</span></p>
-        <button id="buy-bus" class="btn green" ${game.coins<busCost()?'disabled':''}>${icon('bus')} Buy bus · ${euro(busCost())}</button></div>
-      <div class="fleet-stats"><div><strong>${parked}</strong><span>Parked</span></div><div><strong>${trip}</strong><span>On a trip</span></div><div><strong>${game.bestCombo||0}</strong><span>Best combo</span></div></div>`;}
-  else{eyebrow.textContent='GROW YOUR NETWORK';title.textContent='Open a station';const locked=STATIONS.filter(st=>!game.open.includes(st.id));
-    content.innerHTML=`<div class="perk-strip"><span class="chip green">${icon('boost')} ${pct(STATION_BOOST)} every fare</span><span class="chip blue">${icon('bus')} +1 free bus</span><span class="chip orange">${icon('route')} Longer routes pay more</span></div>
-      <div class="sheet-list">${locked.length?locked.map(st=>{const from=game.open.reduce((a,o)=>distance(o,st.id)>distance(a,st.id)?o:a,game.open[0]),best=Math.round((12+6*distance(from,st.id))*(boost()+STATION_BOOST)),short=Math.max(0,st.cost-game.coins);
-        return `<div class="sheet-row station-offer"><span class="sheet-row-icon">${flagMarkup(st.id,'flag-large')}</span><span><b>${st.name}</b><small>${icon('route')} ${city[from].name} → ${st.name}: ${euro(best)} per traveler</small></span><button class="btn ${short?'locked':'green'} build-action" data-build="${st.id}" ${short?'disabled':''}>${short?`${euro(st.cost)}<small>need ${euro(short)}</small>`:euro(st.cost)}</button></div>`;}).join(''):'<p class="sheet-intro">Every station is open. Your network spans the whole map!</p>'}</div>`;}}
+  if(!run)return;const now=Date.now();lastHudSecond=Math.floor(now/1000);
+  $('hearts').innerHTML=Array.from({length:MAX_HEARTS},(_,i)=>icon('heart',i<run.hearts?'heart full':'heart empty')).join('');
+  const left=timeLeft();$('timer-text').textContent=clock(left);$('timer').classList.toggle('low',left<=10000&&mode==='play');
+  $('goal-level').textContent=`LEVEL ${run.n}`;renderGoal();
+  $('mult-boost').textContent=`goal ${shortEuro(run.cfg.target)}`;
+  // Station tabs: one per station of the level, with its parked buses and any fares waiting to be claimed there.
+  $('station-tabs').innerHTML=stationsInRun().map(id=>{const claims=pendingClaims(id),parked=run.buses.filter(b=>b.status==='idle'&&b.location===id).length;
+    return `<button class="station-tab${id===currentStation?' here':''}${claims.length&&id!==currentStation?' alert':''}" data-station="${id}" aria-label="${city[id].name}: ${parked} buses${claims.length?`, ${claims.length} to claim`:''}">${flagMarkup(id,'tab-flag')}<b>${city[id].name}</b><small>${claims.length?`${icon('bag')} ${secondsLeft(claims)}s`:`${icon('bus')} ${parked}`}</small></button>`;}).join('');}
+// Goal bar: money claimed this level against the target (rolls up as coins land).
+let shownEarned=0;
+function renderGoal(){const target=run.cfg.target,value=Math.min(target,shownEarned);$('goal-fill').style.width=`${Math.min(100,value/target*100).toFixed(1)}%`;$('goal-text').textContent=`${euro(value)} / ${euro(target)}`;$('goal-card').classList.toggle('done',run.earned>=target);}
 
+// Overlays: one card at a time over the live 3D station.
+function hideOverlay(){$('overlay').classList.add('hidden');}
+function levelChips(cfg){return `<div class="level-chips"><span class="chip gold">${icon('coin')} Earn ${euro(cfg.target)}</span><span class="chip blue">${icon('timer')} ${cfg.duration/1000}s</span><span class="chip orange">${icon('bus')} ${cfg.buses} buses</span><span class="chip green">${cfg.stations.map(id=>flagMarkup(id,'chip-flag')).join('')}</span></div>`;}
+const starsMarkup=(count,className='')=>`<span class="stars ${className}">${[0,1,2].map(i=>icon('star',i<count?'star on':'star off')).join('')}</span>`;
+function showOverlay(kind){
+  const card=$('overlay-card'),cfg=run.cfg;$('overlay').classList.remove('hidden');$('overlay').dataset.kind=kind;
+  if(kind==='home'){
+    const first=Math.max(1,game.level-3),path=Array.from({length:6},(_,i)=>first+i);
+    card.innerHTML=`<div class="home-brand"><span class="logo big">${icon('bus')}<span class="logo-text"><b>SouSou</b><small>BUS</small></span></span><div class="coin-pill" id="home-coins">${icon('coin','coin-ico')}<strong>${Math.round(shownCoins).toLocaleString('en-US')}</strong></div></div>
+      <div class="level-path">${path.map(n=>`<button class="path-node${n===game.level?' current':''}${n>game.level?' locked':''}" data-level="${n}" ${n>game.level?'disabled':''}><b>${n>game.level?icon('lock'):n}</b>${n<game.level?starsMarkup(game.stars[n]||0,'tiny'):''}</button>`).join('')}</div>
+      <div class="level-card"><small>NEXT SHIFT</small><h1>Level ${game.level}</h1>${levelChips(levelConfig(game.level))}<p>${levelHint(game.level)}</p></div>
+      <button class="btn green big" id="play-btn">${icon('play')} PLAY</button>
+      <h3 class="shop-title">Boosters <small>bought with the money you earn</small></h3>
+      <div class="shop">${Object.entries(UPGRADES).map(([key,u])=>{const level=game.upgrades[key],max=level>=UPGRADE_MAX,cost=upgradeCost(level);
+        return `<div class="shop-item"><span class="shop-art">${icon(u.icon)}</span><span class="shop-text"><b>${u.name} <em>${level}/${UPGRADE_MAX}</em></b><small>${level?u.effect(level):u.next}</small></span><button class="btn ${max?'locked':game.coins>=cost?'green':'locked'}" data-upgrade="${key}" ${max||game.coins<cost?'disabled':''}>${max?'MAX':shortEuro(cost)}</button></div>`;}).join('')}</div>
+      <p class="home-best">${icon('crown')} Best combo ${game.bestCombo||0}</p>`;}
+  else if(kind==='intro'){
+    card.innerHTML=`<small class="eyebrow">SHIFT ${run.n}</small><h1>Level ${run.n}</h1>${levelChips(cfg)}
+      ${run.n<=2?`<ol class="how"><li>${icon('bus')}<span><b>Tap a bus</b> to pick its country</span></li><li>${icon('swipe')}<span><b>Tap its travelers</b> fast. Numbers are groups: they must fit!</span></li><li>${icon('play')}<span><b>Tap GO</b> when full, then <b>swipe</b> to where it arrives</span></li><li>${icon('bag')}<span><b>Tap the gold bus</b> in time to cash in</span></li></ol>`:`<p class="intro-hint">${levelHint(run.n)}</p>`}
+      <p class="intro-hearts">${icon('heart','heart full')}${icon('heart','heart full')}${icon('heart','heart full')} <span>A heart is lost when a group doesn't fit or a claim is missed.</span></p>
+      <div class="overlay-actions"><button class="btn green big" id="start-btn">${icon('play')} START</button><button class="btn ghost" id="home-btn">${icon('home')}</button></div>`;}
+  else if(kind==='pause'){
+    card.innerHTML=`<small class="eyebrow">LEVEL ${run.n}</small><h1>Paused</h1><p class="pause-goal">${euro(run.earned)} of ${euro(cfg.target)} · ${clock(run.remaining)} left</p>
+      <div class="overlay-actions column"><button class="btn green big" id="resume-btn">${icon('play')} RESUME</button><button class="btn orange" id="restart-btn">${icon('retry')} RESTART</button><button class="btn ghost" id="home-btn">${icon('home')} HOME</button></div>`;}
+  else{const r=run.result,pct=Math.min(100,Math.round(run.earned/cfg.target*100));
+    card.innerHTML=r.won?`<small class="eyebrow">LEVEL ${run.n}</small><h1 class="win">Shift complete!</h1>${starsMarkup(r.stars,'big reveal')}
+        <div class="result-stats"><div><strong>${euro(run.earned)}</strong><span>claimed</span></div><div><strong>${run.bestCombo}</strong><span>best combo</span></div><div><strong>${clock(run.remaining)}</strong><span>to spare</span></div></div>
+        <div class="result-bonus chip gold">${icon('coin')} Star bonus +${euro(r.bonus)}</div>
+        <div class="overlay-actions"><button class="btn green big" id="next-btn">NEXT LEVEL ${icon('right')}</button><button class="btn ghost" id="home-btn">${icon('home')}</button></div>`
+      :`<small class="eyebrow">LEVEL ${run.n}</small><h1 class="lose">${r.reason==='hearts'?'Out of hearts!':'Time’s up!'}</h1>
+        <div class="goal-track big"><i style="width:${pct}%"></i></div><p class="pause-goal">${euro(run.earned)} of ${euro(cfg.target)} · ${pct}%</p>
+        <p class="intro-hint">${r.reason==='hearts'?'Watch the red numbers: a group that does not fit costs a heart. Claim gold buses before their timer runs out.':'Keep buses moving: fill one while others travel, and swipe to claim the moment they arrive.'}</p>
+        <p class="kept">${icon('coin')} You keep the ${euro(run.earned)} you claimed.</p>
+        <div class="overlay-actions"><button class="btn orange big" id="retry-btn">${icon('retry')} RETRY</button><button class="btn ghost" id="home-btn">${icon('home')}</button></div>`;
+    if(r.won)card.querySelectorAll('.stars.reveal .star').forEach((star,i)=>setTimeout(()=>{star.classList.add('shown');if(star.classList.contains('on')){play('ping',.8,1+i*.25);play('vip',.6,1+i*.15);}},500+i*350));}}
+// One line about what makes this level different.
+function levelHint(n){const cfg=levelConfig(n),prev=n>1?levelConfig(n-1):null;
+  if(!prev)return 'Learn the ropes: two cities, plenty of buses.';
+  if(cfg.stations.length>prev.stations.length)return `New country: ${city[cfg.stations.at(-1)].name}! More destinations, longer routes, bigger fares.`;
+  if(cfg.buses<prev.buses)return `One bus fewer than last time: keep every bus busy.`;
+  return 'Higher goal, faster travelers, bigger groups.';}
+function buyUpgrade(key){const level=game.upgrades[key],cost=upgradeCost(level);if(level>=UPGRADE_MAX||game.coins<cost)return;game.coins-=cost;shownCoins=game.coins;game.upgrades[key]++;save();play('purchase',.9);play('buy',.6);if(mode==='home'){prepareRun(game.level);showOverlay('home');}}
 // ---------------------------------------------------------------------------------------------------------------
 // 3D scene: a small low-poly station; the sky and the flag on the pole change with the station.
 // ---------------------------------------------------------------------------------------------------------------
@@ -455,8 +515,9 @@ function computeOnScreenSpots(){const v=new THREE.Vector3(),w=innerWidth,h=inner
 function buildPerson(traveler){
   const [x,z]=CROWD_SPOTS[traveler.spot],g=new THREE.Group();g.position.set(x,.1,z);g.scale.setScalar(PERSON_SCALE);g.userData.travelerId=traveler.id;crowdGroup.add(g);
   // Shirts show the traveler's country (or their bonus colour), and faded travelers stand slightly smaller.
-  put(g,new THREE.CylinderGeometry(.11,.16,.33,6),shirtMats[traveler.special||traveler.dest],0,.3,0);put(g,new THREE.IcosahedronGeometry(.14,0),mats.skin,0,.61,0);put(g,new THREE.IcosahedronGeometry(.145,0),mats.hair,0,.69,-.045);
-  for(const xx of [-.075,.075])put(g,new THREE.CylinderGeometry(.035,.04,.18,5),mats.dark,xx,.08,0);
+  const offsets=[[0,0],[-.34,.18],[.34,.14]].slice(0,Math.min(3,traveler.size||1));
+  for(const [ox,oz] of offsets){put(g,new THREE.CylinderGeometry(.11,.16,.33,6),shirtMats[traveler.special||traveler.dest],ox,.3,oz);put(g,new THREE.IcosahedronGeometry(.14,0),mats.skin,ox,.61,oz);put(g,new THREE.IcosahedronGeometry(.145,0),mats.hair,ox,.69,oz-.045);
+    for(const xx of [-.075,.075])put(g,new THREE.CylinderGeometry(.035,.04,.18,5),mats.dark,ox+xx,.08,oz);}
   g.userData.pop=performance.now();return g;}
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -470,7 +531,7 @@ function renderBuses(){
     delete pendingMoves[bus.id];busLabels.push({kind:'bus',id:bus.id,object:g,anchor:new THREE.Vector3(0,1.62,-.15)});}
   renderLabels();}
 function renderCrowd(){
-  const now=Date.now(),known=new Set(crowd.map(p=>p.id));
+  const known=new Set(crowd.map(p=>p.id));
   for(const child of [...crowdGroup.children])if(!known.has(child.userData.travelerId)){crowdGroup.remove(child);disposeTree(child);}
   const built=new Set(crowdGroup.children.map(c=>c.userData.travelerId));for(const p of crowd)if(!built.has(p.id))buildPerson(p);
   crowdLabels=crowd.map(p=>({kind:'traveler',id:p.id,object:crowdGroup.children.find(c=>c.userData.travelerId===p.id),anchor:new THREE.Vector3(0,.96,0)}));
@@ -478,20 +539,21 @@ function renderCrowd(){
 // Tags are kept and updated in place (keyed by kind and id), so their pop-in and countdown animations never restart.
 const tagElements=new Map();
 function busTagMarkup(b,now){
-  if(b.payout>0){const left=Math.max(0,b.claimBy-now);return {className:'bus-tag collect'+(left<3500?' hurry':''),label:`Claim ${euro(b.payout)} from ${busName(b)}`,html:`<strong>${icon('bag')} ${euro(b.payout)}</strong><small>TAP TO CLAIM · <span class="claim-left">${Math.ceil(left/1000)}</span>s</small><span class="claim-timer" style="animation-duration:${CLAIM_MS}ms;animation-delay:-${CLAIM_MS-left}ms"></span>`,sig:`pay${b.payout}-${b.claimBy}`};}
+  if(b.payout>0){const left=Math.max(0,b.claimBy-now),total=run.cfg.claim;return {className:'bus-tag collect'+(left<3500?' hurry':''),label:`Claim ${euro(b.payout)}`,html:`<strong>${icon('bag')} ${euro(b.payout)}</strong><small>TAP TO CLAIM · <span class="claim-left">${Math.ceil(left/1000)}</span>s</small><span class="claim-timer" style="animation-duration:${total}ms;animation-delay:-${total-left}ms"></span>`,sig:`pay${b.payout}-${b.claimBy}`};}
   const full=b.passengers>=CAPACITY,dest=b.dest?`${flagMarkup(b.dest,'bus-flag')}<b class="bus-dest">${city[b.dest].name}</b>`:'';
-  return {className:`bus-tag${b.id===selectedBus?' selected':''}${full?' full':''}`,label:`${busName(b)} to ${b.dest?city[b.dest].name:'nowhere'}, ${b.passengers} of ${CAPACITY} aboard${full?', tap to send':''}`,
+  return {className:`bus-tag${b.id===selectedBus?' selected':''}${full?' full':''}`,label:`Bus to ${b.dest?city[b.dest].name:'nowhere'}, ${b.passengers} of ${CAPACITY} aboard${full?', tap to send':''}`,
     html:full?`<span class="bus-tag-heading">${dest}</span><strong>${icon('bus')} GO!</strong><small class="bus-fare">${euro(b.revenue)}</small>`:`<span class="bus-tag-heading">${dest}</span><small>${b.passengers}/${CAPACITY}${b.revenue?` · ${euro(b.revenue)}`:''}</small><span class="bus-progress"><i style="width:${b.passengers/CAPACITY*100}%"></i></span>`,
     sig:`${b.dest}-${b.passengers}-${b.revenue}`};}
 function renderLabels(){
-  const now=Date.now(),selected=getSelectedBus(),tappableDest=canBoard(selected)?selected.dest:null,host=$('scene-labels'),seen=new Set();
+  const now=Date.now(),selected=getSelectedBus(),tappableDest=canBoard(selected)?selected.dest:null,freeSeats=canBoard(selected)?CAPACITY-selected.passengers:0,host=$('scene-labels'),seen=new Set();
   const upsert=(key,attr,id,className,label,html,sig)=>{seen.add(key);let tag=tagElements.get(key);
     if(!tag){const el=document.createElement('button');el.dataset[attr]=id;host.appendChild(el);tag={el,sig:null};tagElements.set(key,tag);}
     if(tag.sig!==sig){tag.el.innerHTML=html;tag.sig=sig;}if(tag.el.className!==className)tag.el.className=className;tag.el.setAttribute('aria-label',label);return tag.el;};
-  for(const entry of busLabels){const b=game.buses.find(x=>x.id===entry.id);if(!b)continue;const m=busTagMarkup(b,now);entry.el=upsert('bus'+b.id,'bus',b.id,m.className,m.label,m.html,m.sig);}
+  for(const entry of busLabels){const b=run.buses.find(x=>x.id===entry.id);if(!b)continue;const m=busTagMarkup(b,now);entry.el=upsert('bus'+b.id,'bus',b.id,m.className,m.label,m.html,m.sig);}
   for(const entry of crowdLabels){const p=crowd.find(x=>x.id===entry.id);if(!p)continue;const faded=p.dest!==tappableDest,special=p.special&&SPECIALS[p.special],life=p.until-p.born;
-    entry.el=upsert('t'+p.id,'traveler',p.id,`traveler-tag${faded?' faded':''}${special?` special special-${p.special}`:''}`,`${special?special.label+' ':''}traveler to ${city[p.dest].name}${faded?', board a bus to that country first':''}`,
-      `${flagMarkup(p.dest)}${special?`<span class="special-glow"></span><span class="special-badge">${icon(special.icon)}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,'t');}
+    const size=p.size||1,tooBig=!faded&&size>freeSeats;
+    entry.el=upsert('t'+p.id,'traveler',p.id,`traveler-tag${faded?' faded':''}${special?` special special-${p.special}`:''}${size>1?' group':''}${tooBig?' too-big':''}`,`${special?special.label+' ':''}${size>1?`group of ${size} `:''}traveler to ${city[p.dest].name}${faded?', board a bus to that country first':tooBig?', does not fit':''}`,
+      `${flagMarkup(p.dest)}${size>1?`<span class="group-badge">${size}</span>`:''}${special?`<span class="special-glow"></span><span class="special-badge">${icon(special.icon)}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,'t');}
   for(const [key,tag] of tagElements)if(!seen.has(key)){tag.el.remove();tagElements.delete(key);}
   positionLabels();}
 function positionLabels(){
@@ -510,37 +572,41 @@ function frameCamera(w,h){
   camera.left=cx-halfW;camera.right=cx+halfW;camera.top=cy+halfH;camera.bottom=cy-halfH;camera.updateProjectionMatrix();}
 function resize(){
   const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);frameCamera(w,h);
-  onScreenSpots=computeOnScreenSpots();crowd=crowd.filter(p=>onScreenSpots.size<8||onScreenSpots.has(p.spot));renderCrowd();}
+  onScreenSpots=computeOnScreenSpots();crowd=crowd.filter(p=>onScreenSpots.size<8||onScreenSpots.has(p.spot));if(run)renderCrowd();}
 addEventListener('resize',resize);
 
 // ---------------------------------------------------------------------------------------------------------------
-// Input: tap tags or buses; swipe sideways anywhere to change station.
+// Input: tap tags or buses; swipe sideways anywhere to change station; buttons for the overlays.
 // ---------------------------------------------------------------------------------------------------------------
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let press=null;
-addEventListener('pointerdown',e=>{press=sheet?null:{x:e.clientX,y:e.clientY,t:performance.now()};},{capture:true});
+addEventListener('pointerdown',e=>{press=mode==='play'?{x:e.clientX,y:e.clientY,t:performance.now()}:null;},{capture:true});
 addEventListener('pointerup',e=>{
   if(!press)return;const dx=e.clientX-press.x,dy=e.clientY-press.y,quick=performance.now()-press.t<800;press=null;
-  if(quick&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&game.open.length>1){switchStation(neighbour(dx<0?1:-1),dx<0?1:-1);}},{capture:true});
+  if(quick&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&stationsInRun().length>1)switchStation(neighbour(dx<0?1:-1),dx<0?1:-1);},{capture:true});
 // Travelers and buses react the moment a finger touches them (tag, body or coach), so quick taps that wobble a little still count.
 $('scene-labels').addEventListener('pointerdown',e=>{const traveler=e.target.closest('[data-traveler]'),bus=e.target.closest('[data-bus]');if(traveler){e.preventDefault();tapTraveler(Number(traveler.dataset.traveler));}else if(bus){e.preventDefault();tapBus(Number(bus.dataset.bus));}});
-canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);for(const hit of raycaster.intersectObjects([...crowdGroup.children,...busGroup.children],true)){let o=hit.object;while(o&&o.userData.travelerId===undefined&&!o.userData.pick)o=o.parent;if(!o)continue;if(o.userData.pick)tapBus(o.userData.pick.id);else tapTraveler(o.userData.travelerId);break;}});
-
-for(const id of ['nav-prev','nav-next'])$(id).addEventListener('click',()=>switchStation($(id).dataset.station,id==='nav-next'?1:-1));
-$('station-switch').addEventListener('click',()=>openSheet('stations'));$('fleet-button').addEventListener('click',()=>openSheet('fleet'));$('mult-badge').addEventListener('click',()=>openSheet('fleet'));$('level-chip').addEventListener('click',()=>openSheet('fleet'));$('quick-buy-bus').addEventListener('click',buyBus);$('build-button').addEventListener('click',()=>openSheet('build'));$('close-sheet').addEventListener('click',closeSheet);
-$('modal-backdrop').addEventListener('click',e=>{if(e.target.id==='modal-backdrop')return closeSheet();const station=e.target.closest('[data-station]'),build=e.target.closest('[data-build]');if(station)switchStation(station.dataset.station);else if(build)buyStation(build.dataset.build);else if(e.target.closest('#buy-bus'))buyBus();});
-addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if(!sheet&&e.key==='ArrowRight')switchStation(neighbour(1),1);if(!sheet&&e.key==='ArrowLeft')switchStation(neighbour(-1),-1);});
+canvas.addEventListener('pointerdown',e=>{if(mode!=='play')return;const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);for(const hit of raycaster.intersectObjects([...crowdGroup.children,...busGroup.children],true)){let o=hit.object;while(o&&o.userData.travelerId===undefined&&!o.userData.pick)o=o.parent;if(!o)continue;if(o.userData.pick)tapBus(o.userData.pick.id);else tapTraveler(o.userData.travelerId);break;}});
+$('station-tabs').addEventListener('click',e=>{const tab=e.target.closest('[data-station]');if(tab)switchStation(tab.dataset.station);});
+$('pause-btn').addEventListener('click',pause);
+$('overlay').addEventListener('click',e=>{
+  const button=e.target.closest('button');if(!button)return;
+  if(button.id==='play-btn')openLevel(game.level);else if(button.id==='start-btn')startCountdown();else if(button.id==='resume-btn')resume();
+  else if(button.id==='restart-btn'||button.id==='retry-btn')openLevel(run.n);else if(button.id==='next-btn')openLevel(game.level);else if(button.id==='home-btn'){play('select');goHome();}
+  else if(button.dataset.level)openLevel(Number(button.dataset.level));else if(button.dataset.upgrade)buyUpgrade(button.dataset.upgrade);});
+addEventListener('keydown',e=>{if(e.key==='Escape')mode==='play'?pause():mode==='paused'&&resume();if(mode==='play'&&e.key==='ArrowRight')switchStation(neighbour(1),1);if(mode==='play'&&e.key==='ArrowLeft')switchStation(neighbour(-1),-1);});
 function renderSoundButton(){$('sound').innerHTML=icon(sound?'sound-on':'sound-off');$('sound').setAttribute('aria-label',sound?'Mute sound':'Turn sound on');}
 $('sound').addEventListener('click',()=>{sound=!sound;localStorage.setItem('souha-sound',sound?'on':'off');renderSoundButton();play('select');});
 
 // ---------------------------------------------------------------------------------------------------------------
 // Animation loop
 // ---------------------------------------------------------------------------------------------------------------
-let shownCoins=0;
+let shownCoins=game.coins;
 function animate(){
-  requestAnimationFrame(animate);const now=performance.now(),clock=Date.now();
-  const coinTarget=game.coins-coinsInFlight;if(shownCoins!==coinTarget){const gap=coinTarget-shownCoins;shownCoins+=Math.abs(gap)<2?gap:Math.round(gap*.14)||Math.sign(gap);$('coins').textContent=Math.round(shownCoins).toLocaleString('en-US');}
-  const xpTarget=game.xp-xpInFlight;if(Math.abs(xpTarget-shownXp)>.001){const gap=xpTarget-shownXp;shownXp=Math.abs(gap)<.05?xpTarget:shownXp+gap*.12+Math.sign(gap)*.03;renderXp();const level=xpProgress(Math.floor(shownXp)).level;if(level>shownLevel){shownLevel=level;const up=pendingLevelUps.shift();if(up)showLevelUp(up.level,up.reward,up.busId);}}
-  if(combo.count&&clock-combo.last>COMBO_MS&&clock>combo.frozenUntil)endCombo();renderCombo(clock);
+  requestAnimationFrame(animate);const now=performance.now(),clockNow=Date.now();
+  // Coin counters and the goal bar roll toward what has landed.
+  const coinGoal=game.coins-coinsInFlight;if(shownCoins!==coinGoal){const gap=coinGoal-shownCoins;shownCoins+=Math.abs(gap)<2?gap:Math.round(gap*.14)||Math.sign(gap);for(const el of document.querySelectorAll('.coin-pill strong'))el.textContent=Math.round(shownCoins).toLocaleString('en-US');}
+  if(run){const earnedGoal=run.earned-(mode==='play'||mode==='paused'?coinsInFlight:0);if(shownEarned!==earnedGoal){const gap=earnedGoal-shownEarned;shownEarned+=Math.abs(gap)<2?gap:Math.round(gap*.14)||Math.sign(gap);renderGoal();}}
+  if(mode==='play'){if(combo.count&&clockNow-combo.last>run.cfg.combo&&clockNow>combo.frozenUntil)endCombo();renderCombo(clockNow);}
   for(const pad of pads){const pulse=Math.sin(now/260);pad.scale.set(1+pulse*.025,1,1+pulse*.012);pad.userData.fill.opacity=.42+pulse*.12;}
   if(stationFlag){const pos=stationFlag.geometry.attributes.position;for(let i=0;i<pos.count;i++){const x=pos.getX(i)+.525;pos.setZ(i,Math.sin(now/260+x*5)*.06*x);}pos.needsUpdate=true;}
   // New travelers pop in with a little bounce.
@@ -551,8 +617,8 @@ function animate(){
   for(let i=vanishEffects.length-1;i>=0;i--){const effect=vanishEffects[i],t=Math.min(1,(now-effect.started)/180);effect.model.scale.setScalar(PERSON_SCALE*(1-t));effect.model.position.y=.1+t*.15;if(t>=1){scene.remove(effect.model);disposeTree(effect.model);vanishEffects.splice(i,1);}}
   for(let i=smokeEffects.length-1;i>=0;i--){const effect=smokeEffects[i],t=Math.min(1,(now-effect.started)/620);effect.puff.position.y+=.006;effect.puff.position.x+=effect.vx*.016;effect.puff.scale.setScalar(1+t*2.5);effect.puff.material.opacity=.82*(1-t);if(t>=1){scene.remove(effect.puff);effect.puff.geometry.dispose();effect.puff.material.dispose();smokeEffects.splice(i,1);}}
   // Claim countdowns tick down on the gold tags without re-rendering them.
-  for(const el of document.querySelectorAll('.claim-left')){const bus=game.buses.find(b=>b.id===Number(el.closest('[data-bus]').dataset.bus));if(bus){const s=Math.max(0,Math.ceil((bus.claimBy-clock)/1000));if(el.textContent!==String(s))el.textContent=s;el.closest('.bus-tag').classList.toggle('hurry',bus.claimBy-clock<3500);}}
+  if(run)for(const el of document.querySelectorAll('.claim-left')){const bus=run.buses.find(b=>b.id===Number(el.closest('[data-bus]').dataset.bus));if(bus){const s=Math.max(0,Math.ceil((bus.claimBy-clockNow)/1000));if(el.textContent!==String(s))el.textContent=s;el.closest('.bus-tag').classList.toggle('hurry',bus.claimBy-clockNow<3500);}}
   positionLabels();renderer.render(scene,camera);}
 
 coachTemplate=await coachTemplatePromise;
-renderSoundButton();renderXp();buildStatic();resize();syncSelectedBus();for(let i=0;i<6;i++)spawnTraveler(Date.now());renderBuses();renderCrowd();renderHud();animate();setInterval(tick,90);
+renderSoundButton();prepareRun(game.level);buildStatic();resize();goHome();animate();setInterval(tick,90);
