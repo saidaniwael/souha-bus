@@ -476,6 +476,9 @@ button:disabled{cursor:not-allowed}
 .hearts .heart.empty{color:var(--line)}
 .hearts.hurt{animation:hurt .45s ease-out}
 .hearts.bump{animation:bump .3s ease-out}
+.hearts[data-count="4"]{gap:2px;padding:0 8px}.hearts[data-count="4"] .ico{width:21px;height:21px}
+.hearts[data-count="5"]{gap:1px;padding:0 7px}.hearts[data-count="5"] .ico{width:18px;height:18px}
+.shop-text small i{font-style:normal;color:var(--green-d,#58a700)}
 @keyframes hurt{20%{transform:translateX(-6px);background:var(--red-l)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
 .timer-pill{display:flex;align-items:center;gap:5px;height:42px;padding:0 12px;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white);color:var(--blue-d)}
 .timer-pill .ico{width:20px;height:20px}
@@ -504,7 +507,7 @@ button:disabled{cursor:not-allowed}
 .station-tab small .ico{width:11px;height:11px}
 .station-tab.here{border-color:var(--blue);background:var(--blue-l)}
 .station-tab.here b{color:var(--blue-d)}
-.station-tab.alert{border-color:var(--gold-d);background:var(--gold);animation:alert-glow .7s ease-in-out infinite alternate}
+.station-tab.alert{border-color:var(--gold-d);background:var(--gold)}
 .station-tab.alert small,.station-tab.alert b{color:#6b4a00}
 .station-tab:active{transform:translateY(3px)}
 .side-nav{display:none!important}
@@ -607,16 +610,17 @@ button:disabled{cursor:not-allowed}
 .claims-bar{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;max-width:520px;width:100%;margin:0 auto;overflow-x:auto;scrollbar-width:none}
 .claims-empty{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:#5d7f72;opacity:.8}
 .claims-empty .ico{width:13px;height:13px}
-.claim-pill{position:relative;flex:none;display:flex;align-items:center;gap:5px;height:36px;padding:0 10px 2px 6px;border:0;border-radius:999px;background:var(--gold);color:#5a3d00;box-shadow:0 3px 0 var(--gold-d);overflow:hidden;animation:claim-in .3s cubic-bezier(.2,1.5,.4,1),alert-glow .7s ease-in-out .3s infinite alternate}
+.claim-pill{position:relative;flex:none;display:flex;align-items:center;gap:5px;height:36px;padding:0 10px 2px 6px;border:0;border-radius:999px;background:var(--gold);color:#5a3d00;box-shadow:0 3px 0 var(--gold-d);overflow:hidden;animation:claim-in .3s cubic-bezier(.2,1.5,.4,1);transition:background .3s,box-shadow .3s,color .3s}
 .claim-pill .claim-flag{width:24px;height:16px;border-radius:3px;box-shadow:0 0 0 2px #fff}
 .claim-pill .ico{width:15px;height:15px}
 .claim-pill b{font-size:14px;font-weight:900}
 .claim-pill span{padding:1px 6px;border-radius:999px;background:#ffffff80;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums}
 .claim-pill i:last-child{position:absolute;left:0;right:0;bottom:0;height:4px;background:#7a5200;transform-origin:left;animation-name:drain;animation-timing-function:linear;animation-fill-mode:forwards}
-.claim-pill.hurry{background:var(--red);color:#fff;box-shadow:0 3px 0 var(--red-d);animation:claim-shake .3s ease-in-out infinite alternate}
+.claim-pill.hurry{background:var(--red);color:#fff;box-shadow:0 3px 0 var(--red-d);animation:claim-pulse 1s ease-in-out infinite}
+#game[data-mode="paused"] .claim-pill i:last-child{animation-play-state:paused}
 .claim-pill.hurry span{background:#ffffff40}
 .claim-pill.hurry i:last-child{background:#fff}
 .claim-pill:active{transform:translateY(2px)}
 @keyframes claim-in{from{transform:scale(.4);opacity:0}}
-@keyframes claim-shake{from{transform:rotate(-2deg) scale(1.03)}to{transform:rotate(2deg) scale(1.06)}}
+@keyframes claim-pulse{50%{transform:scale(1.05)}}
 .station-tabs{width:100%}

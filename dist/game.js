@@ -42,12 +42,15 @@ const distance=(a,b)=>Math.abs(stationIndex(a)-stationIndex(b));
 const fareFor=(origin,dest)=>12+6*distance(origin,dest);
 const tripTime=(origin,dest)=>(7+2*distance(origin,dest))*1000;
 
-// Boosters: the only things coins buy. They make every level a little kinder, never change the level itself.
+// Boosters: the only things coins buy. They make every level kinder, never change the level itself. Prices follow
+// what a level pays (about its goal: €2k at level 1, €8.5k at level 10), so one lands every level or two.
+const TIER_COSTS=[800,2000,4000,7000,11000];
 const UPGRADES={
-  patience:{name:'Patient travelers',icon:'timer',effect:level=>`Travelers wait ${level*10}% longer`,next:'+10% waiting time'},
-  claim:{name:'Longer claims',icon:'bag',effect:level=>`+${(level*1.5).toFixed(1)} s to claim arrived buses`,next:'+1.5 s to claim'},
-  combo:{name:'Combo keeper',icon:'crown',effect:level=>`Combos last ${(level*.15).toFixed(2)} s longer`,next:'+0.15 s combo window'}};
-const UPGRADE_MAX=5,upgradeCost=level=>Math.round(1500*1.9**level/100)*100;
+  patience:{name:'Patient travelers',icon:'timer',costs:TIER_COSTS,effect:level=>`Travelers wait ${level*12}% longer`,next:'+12% waiting'},
+  claim:{name:'Longer claims',icon:'bag',costs:TIER_COSTS,effect:level=>`+${level*2} s to claim buses`,next:'+2 s to claim'},
+  combo:{name:'Combo keeper',icon:'crown',costs:TIER_COSTS,effect:level=>`Combos last +${(level*.25).toFixed(2)} s`,next:'+0.25 s combo'},
+  hearts:{name:'Extra heart',icon:'heart',costs:[3000,9000],effect:level=>`Start levels with ${MAX_HEARTS+level} hearts`,next:'+1 heart'}};
+const upgradeMax=key=>UPGRADES[key].costs.length,upgradeCost=(key,level)=>UPGRADES[key].costs[level];
 
 // Level design: every 3 levels a new country joins (more destinations, longer and better-paid routes); inside each
 // group of 3 the level gives one bus fewer. Traveler patience, bonus speed, groups and claim time get tougher over the
@@ -56,22 +59,22 @@ const UPGRADE_MAX=5,upgradeCost=level=>Math.round(1500*1.9**level/100)*100;
 // with a test player): 22% at level 1, 70% by level 16, then +1% per level up to 95%.
 function levelConfig(n){
   const k=Math.min(STATIONS.length,2+Math.floor((n-1)/3)),stations=STATIONS.slice(0,k).map(s=>s.id),up=game.upgrades;
-  const t=Math.min(1,(n-1)/15),e=Math.min(1,Math.max(0,n-16)/24),patience=(1+.1*up.patience)*(1-.2*e);
+  const t=Math.min(1,(n-1)/15),e=Math.min(1,Math.max(0,n-16)/24),patience=(1+.12*up.patience)*(1-.2*e);
   const potential=9500*(1+.25*(k-2)),share=n<=16?.22+.48*t:Math.min(.95,.7+.01*(n-16));
   return {n,stations,buses:Math.max(k+2,2*k+2-(n-1)%3-Math.floor(4*e)),duration:(60+10*(k-2))*1000,
     target:Math.round(potential*share/50)*50,
     life:[(2800-1000*t)*patience,(4000-1300*t)*patience],bonusLife:600-150*t-50*e,
-    claim:Math.max(6000,12000-3500*t-2000*e)+1500*up.claim,combo:1500-200*t-150*e+150*up.combo,
+    claim:Math.max(6000,12000-3500*t-2000*e)+2000*up.claim,combo:1500-200*t-150*e+250*up.combo,
     groupChance:.25+.3*t+.1*e,maxGroup:3+Math.round(2*t+e),spawn:190-50*t};}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Saved progress: coins, the next level to play, best stars per level and boosters. A level in progress is not saved.
 // ---------------------------------------------------------------------------------------------------------------
-function freshGame(){return {version:3,coins:0,level:1,stars:{},upgrades:{patience:0,claim:0,combo:0},bestCombo:0};}
+function freshGame(){return {version:3,coins:0,level:1,stars:{},upgrades:{patience:0,claim:0,combo:0,hearts:0},bestCombo:0};}
 // Earlier saves (free play) keep their coins, including fares still sitting on buses, and start at level 1.
 function migrate(old){const owed=(old.buses||[]).reduce((sum,b)=>sum+(b.payout||0)+(b.revenue||0),0);return {...freshGame(),coins:Math.floor((old.coins||0)+owed),bestCombo:old.bestCombo||0};}
 function load(){try{const data=JSON.parse(localStorage.getItem(SAVE_KEY));if(data?.version===3)return data;if(data&&(data.version===1||data.version===2))return migrate(data);}catch{}return freshGame();}
-const game=load();
+const game=load();game.upgrades={...freshGame().upgrades,...game.upgrades};
 // Developer switch for balancing (?calibrate): levels never end early, so a test player can measure a full shift.
 const CALIBRATE=new URLSearchParams(location.search).has('calibrate');
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(game));}catch{}}
@@ -107,7 +110,8 @@ function newBus(location){return {id:nextBusId++,location,status:'idle',dest:nul
 // The level's buses start spread over its stations, the first station getting the extra ones.
 function prepareRun(n){
   const cfg=levelConfig(n),buses=[];for(let i=0;i<cfg.buses;i++)buses.push(newBus(cfg.stations[i%cfg.stations.length]));
-  run={n,cfg,buses,hearts:MAX_HEARTS,earned:0,endsAt:0,remaining:cfg.duration,bestCombo:0,result:null};
+  const maxHearts=MAX_HEARTS+game.upgrades.hearts;
+  run={n,cfg,buses,maxHearts,hearts:maxHearts,earned:0,endsAt:0,remaining:cfg.duration,bestCombo:0,result:null};
   for(const bus of buses)assignDest(bus);currentStation=cfg.stations[0];selectedBus=null;crowd=[];shownEarned=0;coinsInFlight=0;resetCombo();}
 const stationsInRun=()=>run.cfg.stations;
 // Every parked bus waiting for travelers has a random destination among the level's other stations.
@@ -200,7 +204,7 @@ function tapTraveler(id){
   combo.fares+=fares;combo.bonus+=bonus;bus.revenue+=fares+bonus;bus.passengers+=size;
   crowd=crowd.filter(p=>p.id!==id);
   const tag=document.querySelector(`[data-traveler="${id}"]`)?.getBoundingClientRect();
-  if(special==='heart'){if(run.hearts<MAX_HEARTS){run.hearts++;bump($('hearts'));}else{bus.revenue+=40;}}
+  if(special==='heart'){if(run.hearts<run.maxHearts){run.hearts++;bump($('hearts'));}else{bus.revenue+=40;}}
   burstAt(tag,special?SPECIAL_CSS[special]:'#58cc02',special?14:5,!!special);
   const level=Math.min(4,Math.floor(combo.count/COMBO_STEP));
   if(tag)floatText(tag.left+tag.width/2,tag.top,special?`${icon(SPECIALS[special].icon)} ${SPECIALS[special].label}${SPECIALS[special].bonus?' +'+euro(SPECIALS[special].bonus):''}`:`+${euro(fares)}${size>1?` · ${size} seats`:''}${comboMultiplier()>1?`<em>×${comboMultiplier()}</em>`:''}`,special||`lvl${level}`);
@@ -239,7 +243,7 @@ function loseHeart(reason){
 // Winning unlocks the next level and records the stars; money only ever comes from claiming buses (kept win or lose).
 function finishRun(won,reason='time'){
   if(mode!=='play')return;endCombo();run.remaining=timeLeft();mode='over';crowd=[];renderCrowd();
-  const stars=won?Math.max(1,run.hearts):0;
+  const stars=won?Math.max(1,Math.min(3,run.hearts)):0;
   if(won){game.stars[run.n]=Math.max(game.stars[run.n]||0,stars);if(game.level===run.n)game.level++;}
   save();run.result={won,reason,stars};
   if(won){play('gift',.9);playCash(2000,.8);play('arrival',.8,1.1);vibrate([40,60,40,60,120]);}else{play('lost',.9);play('error',.6,.8);vibrate([200]);}
@@ -343,19 +347,34 @@ const secondsLeft=claims=>Math.max(0,Math.ceil(Math.min(...claims.map(b=>b.claim
 const clock=ms=>{const s=Math.ceil(ms/1000);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 function renderHud(){
   if(!run)return;const now=Date.now();lastHudSecond=Math.floor(now/1000);
-  $('hearts').innerHTML=Array.from({length:MAX_HEARTS},(_,i)=>icon('heart',i<run.hearts?'heart full':'heart empty')).join('');
+  $('hearts').dataset.count=run.maxHearts;$('hearts').innerHTML=Array.from({length:run.maxHearts},(_,i)=>icon('heart',i<run.hearts?'heart full':'heart empty')).join('');
   const left=timeLeft();$('timer-text').textContent=clock(left);$('timer').classList.toggle('low',left<=10000&&mode==='play');
   $('goal-level').textContent=`LEVEL ${run.n}`;renderGoal();
   $('mult-boost').textContent=`goal ${shortEuro(run.cfg.target)}`;
-  // Money waiting: a gold pill per bus holding fares at another station (flag, amount, seconds, draining bar);
-  // tap one to jump there. The bar keeps its height when empty so the station view never shifts.
-  const waiting=run.buses.filter(b=>b.status==='idle'&&b.payout>0&&b.location!==currentStation).sort((a,b)=>a.claimBy-b.claimBy);
-  $('claims-bar').innerHTML=waiting.length?waiting.map(b=>{const left=Math.max(0,b.claimBy-now),total=run.cfg.claim;
-    return `<button class="claim-pill${left<4000?' hurry':''}" data-station="${b.location}" aria-label="${euro(b.payout)} waiting in ${city[b.location].name}, ${Math.ceil(left/1000)} seconds">${flagMarkup(b.location,'claim-flag')}${icon('bag')}<b>${euro(b.payout)}</b><span>${Math.ceil(left/1000)}s</span><i style="animation-duration:${total}ms;animation-delay:-${total-left}ms"></i></button>`;}).join('')
-    :`<span class="claims-empty">${icon('bag')} Buses that arrive elsewhere show up here</span>`;
-  // Station tabs: one per station of the level, with its parked buses and any fares waiting to be claimed there.
-  $('station-tabs').innerHTML=stationsInRun().map(id=>{const claims=pendingClaims(id),parked=run.buses.filter(b=>b.status==='idle'&&b.location===id).length;
-    return `<button class="station-tab${id===currentStation?' here':''}${claims.length&&id!==currentStation?' alert':''}" data-station="${id}" aria-label="${city[id].name}: ${parked} buses${claims.length?`, ${claims.length} to claim`:''}">${flagMarkup(id,'tab-flag')}<b>${city[id].name}</b><small>${claims.length?`${icon('bag')} ${secondsLeft(claims)}s`:`${icon('bus')} ${parked}`}</small></button>`;}).join('');}
+  renderClaimsBar(now);renderStationTabs();}
+// Money waiting: a gold pill per bus holding fares at another station (flag, amount, seconds, draining bar); tap one
+// to jump there. Pills are keyed by bus and updated in place: only a new arrival pops in, nothing re-animates.
+// The bar keeps its height when empty so the station view never shifts.
+function renderClaimsBar(now){
+  const bar=$('claims-bar'),total=run.cfg.claim,waiting=run.buses.filter(b=>b.status==='idle'&&b.payout>0&&b.location!==currentStation).sort((a,b)=>a.claimBy-b.claimBy);
+  const keep=new Set(waiting.map(b=>String(b.id)));
+  for(const pill of bar.querySelectorAll('.claim-pill'))if(!keep.has(pill.dataset.bus))pill.remove();
+  if(!waiting.length){if(!bar.querySelector('.claims-empty'))bar.innerHTML=`<span class="claims-empty">${icon('bag')} Buses that arrive elsewhere show up here</span>`;return;}
+  bar.querySelector('.claims-empty')?.remove();
+  for(const b of waiting){const left=Math.max(0,b.claimBy-now),seconds=`${Math.ceil(left/1000)}s`;let pill=bar.querySelector(`[data-bus="${b.id}"]`);
+    if(!pill){pill=document.createElement('button');pill.className='claim-pill';pill.dataset.bus=b.id;pill.dataset.station=b.location;
+      pill.innerHTML=`${flagMarkup(b.location,'claim-flag')}${icon('bag')}<b>${euro(b.payout)}</b><span></span><i style="animation-duration:${total}ms;animation-delay:-${total-left}ms"></i>`;bar.append(pill);}
+    pill.classList.toggle('hurry',left<4000);const span=pill.querySelector('span');if(span.textContent!==seconds)span.textContent=seconds;
+    pill.setAttribute('aria-label',`${euro(b.payout)} waiting in ${city[b.location].name}, ${seconds}`);}}
+// Station tabs: one per station of the level, with its parked buses and any fares waiting to be claimed there.
+// Rebuilt only when the level's stations change; otherwise just their classes and counts are updated.
+function renderStationTabs(){
+  const nav=$('station-tabs'),ids=stationsInRun();
+  if(nav.dataset.ids!==ids.join()){nav.dataset.ids=ids.join();nav.innerHTML=ids.map(id=>`<button class="station-tab" data-station="${id}">${flagMarkup(id,'tab-flag')}<b>${city[id].name}</b><small></small></button>`).join('');}
+  for(const tab of nav.children){const id=tab.dataset.station,claims=pendingClaims(id),parked=run.buses.filter(b=>b.status==='idle'&&b.location===id).length;
+    tab.classList.toggle('here',id===currentStation);tab.classList.toggle('alert',!!claims.length&&id!==currentStation);
+    const small=claims.length?`${icon('bag')} ${secondsLeft(claims)}s`:`${icon('bus')} ${parked}`,line=tab.querySelector('small');if(line.innerHTML!==small)line.innerHTML=small;
+    tab.setAttribute('aria-label',`${city[id].name}: ${parked} buses${claims.length?`, ${claims.length} to claim`:''}`);}}
 // Goal bar: money claimed this level against the target (rolls up as coins land).
 let shownEarned=0;
 function renderGoal(){const target=run.cfg.target,value=Math.min(target,shownEarned);$('goal-fill').style.width=`${Math.min(100,value/target*100).toFixed(1)}%`;$('goal-text').textContent=`${euro(value)} / ${euro(target)}`;$('goal-card').classList.toggle('done',run.earned>=target);}
@@ -373,13 +392,13 @@ function showOverlay(kind){
       <div class="level-card"><small>NEXT SHIFT</small><h1>Level ${game.level}</h1>${levelChips(levelConfig(game.level))}<p>${levelHint(game.level)}</p></div>
       <button class="btn green big" id="play-btn">${icon('play')} PLAY</button>
       <h3 class="shop-title">Boosters <small>bought with the money you earn</small></h3>
-      <div class="shop">${Object.entries(UPGRADES).map(([key,u])=>{const level=game.upgrades[key],max=level>=UPGRADE_MAX,cost=upgradeCost(level);
-        return `<div class="shop-item"><span class="shop-art">${icon(u.icon)}</span><span class="shop-text"><b>${u.name} <em>${level}/${UPGRADE_MAX}</em></b><small>${level?u.effect(level):u.next}</small></span><button class="btn ${max?'locked':game.coins>=cost?'green':'locked'}" data-upgrade="${key}" ${max||game.coins<cost?'disabled':''}>${max?'MAX':shortEuro(cost)}</button></div>`;}).join('')}</div>
+      <div class="shop">${Object.entries(UPGRADES).map(([key,u])=>{const level=game.upgrades[key],max=level>=upgradeMax(key),cost=upgradeCost(key,level);
+        return `<div class="shop-item"><span class="shop-art">${icon(u.icon)}</span><span class="shop-text"><b>${u.name} <em>${level}/${upgradeMax(key)}</em></b><small>${level?u.effect(level):'Not owned yet'}${max?'':` · <i>next ${u.next}</i>`}</small></span><button class="btn ${max?'locked':game.coins>=cost?'green':'locked'}" data-upgrade="${key}" ${max||game.coins<cost?'disabled':''}>${max?'MAX':shortEuro(cost)}</button></div>`;}).join('')}</div>
       <p class="home-best">${icon('crown')} Best combo ${game.bestCombo||0}</p>`;}
   else if(kind==='intro'){
     card.innerHTML=`<small class="eyebrow">SHIFT ${run.n}</small><h1>Level ${run.n}</h1>${levelChips(cfg)}
       ${run.n<=2?`<ol class="how"><li>${icon('bus')}<span><b>Tap a bus</b> to pick its country</span></li><li>${icon('swipe')}<span><b>Tap its travelers</b> fast. Numbers are groups: they must fit!</span></li><li>${icon('play')}<span><b>Tap GO</b> when full, then <b>swipe</b> to where it arrives</span></li><li>${icon('bag')}<span><b>Tap the gold bus</b> in time to cash in</span></li></ol>`:`<p class="intro-hint">${levelHint(run.n)}</p>`}
-      <p class="intro-hearts">${icon('heart','heart full')}${icon('heart','heart full')}${icon('heart','heart full')} <span>A heart is lost when a group doesn't fit or a claim is missed.</span></p>
+      <p class="intro-hearts">${icon('heart','heart full').repeat(run.maxHearts)} <span>A heart is lost when a group doesn't fit or a claim is missed.</span></p>
       <div class="overlay-actions"><button class="btn green big" id="start-btn">${icon('play')} START</button><button class="btn ghost" id="home-btn">${icon('home')}</button></div>`;}
   else if(kind==='pause'){
     card.innerHTML=`<small class="eyebrow">LEVEL ${run.n}</small><h1>Paused</h1><p class="pause-goal">${euro(run.earned)} of ${euro(cfg.target)} · ${clock(run.remaining)} left</p>
@@ -401,7 +420,7 @@ function levelHint(n){const cfg=levelConfig(n),prev=n>1?levelConfig(n-1):null;
   if(cfg.stations.length>prev.stations.length)return `New country: ${city[cfg.stations.at(-1)].name}! More destinations, longer routes, bigger fares.`;
   if(cfg.buses<prev.buses)return `One bus fewer than last time: keep every bus busy.`;
   return 'Higher goal, faster travelers, bigger groups.';}
-function buyUpgrade(key){const level=game.upgrades[key],cost=upgradeCost(level);if(level>=UPGRADE_MAX||game.coins<cost)return;game.coins-=cost;shownCoins=game.coins;game.upgrades[key]++;save();play('purchase',.9);play('buy',.6);if(mode==='home'){prepareRun(game.level);showOverlay('home');}}
+function buyUpgrade(key){const level=game.upgrades[key],cost=upgradeCost(key,level);if(level>=upgradeMax(key)||game.coins<cost)return;game.coins-=cost;shownCoins=game.coins;game.upgrades[key]++;save();play('purchase',.9);play('buy',.6);if(mode==='home'){prepareRun(game.level);showOverlay('home');}}
 // ---------------------------------------------------------------------------------------------------------------
 // 3D scene: a small low-poly station; the sky and the flag on the pole change with the station.
 // ---------------------------------------------------------------------------------------------------------------
