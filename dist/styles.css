@@ -46,3 +46,159 @@
 @keyframes collect-pulse{to{transform:translate(-50%,-100%) scale(1.1)}}
 .float-gain.special-cash{color:#c98a00;font-size:22px}
 .bus-tag .bus-mult{display:inline-block;margin-top:2px;padding:1px 6px;border-radius:999px;background:#ffd34d;color:#6b4a00;font:900 10px/1.3 'Outfit',sans-serif}
+
+/* ===================== v2: icons, fast tapping, claims, swipe ===================== */
+[hidden]{display:none!important}
+.ico{display:inline-block;width:1em;height:1em;flex:none;vertical-align:-.15em;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.brand-icon{font-size:20px}
+.brand-icon .ico{width:22px;height:22px}
+.coin-pill .coin-ico{width:26px;height:26px;color:#f2a91b;filter:drop-shadow(0 2px 0 #d48a12)}
+.round-icon{display:grid;place-items:center}
+.round-icon .ico{width:21px;height:21px}
+.nav-icon .ico{width:17px;height:17px}
+.boost-hud{border:0;font:inherit;color:#2c4c43;text-align:left;cursor:pointer}
+.boost-hud .progress-icon{background:#fff0de;color:#ee9247}
+.boost-hud .progress-icon .ico{width:17px;height:17px}
+.boost-hud b{color:#e0731f}
+.quick-buy{gap:1px}
+.quick-buy .ico{width:20px;height:20px}
+.quick-buy:not(.can-buy){background:#d9cfc2;box-shadow:none}
+.quick-buy.can-buy{animation:buy-glow 1.6s ease-in-out infinite}
+@keyframes buy-glow{50%{box-shadow:0 0 0 5px #f58a4533,0 8px 20px #a6582f61}}
+.station-switch .switch-swipe{margin-left:auto;width:20px;height:20px;color:#8fa99b}
+.station-switch.alert{border-color:#ffd34d;background:#fff6d6;animation:chip-alert .8s ease-in-out infinite alternate}
+.station-switch.alert small{color:#c27c00}
+@keyframes chip-alert{to{box-shadow:0 0 0 4px #ffd34d66,0 8px 24px #254d3930}}
+#station-info .ico{color:#e0a100}
+.scene-callout #scene-hint{display:flex;align-items:center;gap:5px}
+.scene-callout .ico{width:15px;height:15px;color:#ffd166}
+.scene-callout .hint-flag{width:20px;height:14px;border-radius:3px;box-shadow:0 0 0 1px #fff6}
+
+/* Side arrows to the neighbouring stations */
+.side-nav{position:absolute;top:47%;z-index:4;display:grid;justify-items:center;gap:3px;border:0;padding:9px 6px;background:#fffdf3e0;color:#5d8370;box-shadow:0 8px 22px #25616f2b;backdrop-filter:blur(8px);touch-action:manipulation}
+.side-nav.prev{left:0;border-radius:0 14px 14px 0}
+.side-nav.next{right:0;border-radius:14px 0 0 14px}
+.side-nav .nav-arrow{width:16px;height:16px}
+.side-nav .nav-flag{width:24px;height:16px;border-radius:3px;box-shadow:0 0 0 1px #0001}
+.side-nav.alert{background:#ffd34d;color:#6b4a00;animation:chip-alert .7s ease-in-out infinite alternate}
+.nav-claim{display:flex;align-items:center;gap:1px;font:900 10px/1 'Outfit',sans-serif}
+.nav-claim .ico{width:12px;height:12px}
+
+/* Travelers: everyone shows their flag; only the selected bus's country is tappable */
+.traveler-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;min-width:31px;padding:5px;border:2px solid #fff;border-radius:999px;background:#fffdf0f4;box-shadow:0 5px 15px #2f5c4942;pointer-events:auto;touch-action:manipulation;transition:opacity .15s,filter .15s;animation:tag-pop .2s ease-out}
+.traveler-tag:after{content:'';position:absolute;bottom:-6px;left:calc(50% - 4px);height:7px;width:7px;background:#fffdf0;transform:rotate(45deg)}
+.traveler-tag .flag-icon{width:20px;height:14px;border-radius:2px}
+.traveler-tag:not(.faded){border-color:#3cc27a;box-shadow:0 0 0 2px #3cc27a55,0 6px 16px #2f5c4955}
+.traveler-tag:not(.faded):active{transform:translate(-50%,-100%) scale(.88)}
+.traveler-tag.faded{opacity:.42;filter:saturate(.35)}
+.traveler-tag.special{--glow:#ffd34d;border-color:var(--glow);box-shadow:0 0 0 2px var(--glow),0 0 16px var(--glow);animation:tag-pop .2s ease-out,special-pulse .45s ease-in-out .2s infinite alternate}
+.traveler-tag.special.faded{opacity:.55;animation:none}
+.traveler-tag.special-gift{--glow:#ff8fc6}.traveler-tag.special-heart{--glow:#ff7a84}.traveler-tag.special-rush{--glow:#6fd3ff}.traveler-tag.special-diamond{--glow:#a6f0ff}
+.traveler-tag .special-badge{position:absolute;top:-10px;right:-10px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:var(--glow);color:#fff;box-shadow:0 2px 4px #0003}
+.traveler-tag .special-badge .ico{width:12px;height:12px}
+.traveler-tag .life-timer{position:absolute;left:6px;right:6px;bottom:-1px;height:3px;border-radius:3px;background:var(--glow,#3cc27a);transform-origin:left;animation-name:special-timer;animation-timing-function:linear;animation-fill-mode:forwards}
+.traveler-tag.faded .life-timer{background:#9fb5aa}
+.traveler-tag.nope{animation:nope .25s}
+@keyframes tag-pop{from{transform:translate(-50%,-60%) scale(.4);opacity:0}}
+@keyframes nope{25%{transform:translate(-56%,-100%)}75%{transform:translate(-44%,-100%)}}
+
+/* Bus tags: destination flag and country, progress, GO, and the gold claim tag with its countdown */
+.bus-tag .bus-tag-heading{display:flex;align-items:center;justify-content:center;gap:5px}
+.bus-tag .bus-flag{width:22px;height:15px;border-radius:3px;box-shadow:0 0 0 1px #0001}
+.bus-tag .bus-dest{font:900 11px/1 'Outfit',sans-serif;color:#2c4c43}
+.bus-tag.full{display:grid;gap:3px}
+.bus-tag.full .bus-dest{color:#fff}
+.bus-tag.full strong{display:flex;align-items:center;justify-content:center;gap:4px}
+.bus-tag.full strong .ico{width:14px;height:14px}
+.bus-tag.collect{display:grid;gap:3px;padding-bottom:9px;overflow:visible}
+.bus-tag.collect strong{display:flex;align-items:center;justify-content:center;gap:4px}
+.bus-tag.collect strong .ico{width:16px;height:16px}
+.bus-tag.collect .claim-timer{position:absolute;left:8px;right:8px;bottom:4px;height:4px;border-radius:4px;background:#6b4a00;transform-origin:left;animation-name:special-timer;animation-timing-function:linear;animation-fill-mode:forwards}
+.bus-tag.collect.hurry{background:#ff8a5c;box-shadow:0 0 0 3px #ffb08f,0 0 22px #ff6a3d;color:#fff;animation:collect-pulse .25s ease-in-out infinite alternate}
+.bus-tag.collect.hurry:after{background:#ff8a5c}
+.bus-tag.collect.hurry .claim-timer{background:#fff}
+
+/* Combo badge, combo banner and floating gains */
+.combo-hud{min-width:150px}
+.combo-hud b{display:flex;align-items:center;gap:5px}
+.combo-hud b .ico{width:17px;height:17px;color:#f2a91b}
+.combo-hud .combo-mult{font:900 13px/1.2 'Outfit',sans-serif;color:#e0731f}
+.combo-hud small .ico{width:10px;height:10px;color:#1f9ed6}
+.combo-timer{display:block;height:4px;margin-top:4px;border-radius:4px;background:#f58a45;transform-origin:left}
+.combo-timer.frozen{background:#48c8ff}
+.combo-banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:2px;padding:12px 22px;border-radius:20px;background:#fffdf3f2;box-shadow:0 14px 40px #25616f40;color:#e0731f;animation:combo-banner 1.5s ease-out forwards;pointer-events:none}
+.combo-banner small{display:flex;align-items:center;gap:5px;color:#5d8370;font:900 12px/1 'Outfit',sans-serif;letter-spacing:.6px}
+.combo-banner small .ico{width:16px;height:16px;color:#f2a91b}
+.combo-banner b{font:900 34px/1 'Outfit',sans-serif}
+.combo-banner span{color:#8aa597;font-size:11px;font-weight:800}
+@keyframes combo-banner{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+.float-gain{display:flex;align-items:center;gap:3px}
+.float-gain .ico{width:16px;height:16px}
+
+/* Toasts with icons */
+.toast{display:flex;align-items:center;gap:6px}
+.toast .ico{width:15px;height:15px}
+.toast.claim{background:#ffd34d;color:#5a3d00}
+.toast.error-soft{background:#7a5c52}
+
+/* Sheets */
+.boost-card{display:flex;gap:12px;align-items:flex-start;padding:12px;margin-bottom:12px;border-radius:14px;background:#fff4e4;color:#5a4a3a}
+.boost-card>.ico{width:28px;height:28px;color:#ee9247}
+.boost-card>div>b{display:block;color:#e0731f;font:900 16px 'Outfit',sans-serif}
+.boost-card small b{color:#e0731f}
+.boost-card small{display:block;margin-top:3px;font-size:11px;line-height:1.45}
+.fleet-stats{grid-template-columns:repeat(3,1fr)}
+#buy-bus .ico{width:16px;height:16px;margin-right:4px}
+.sheet-row small .ico{width:12px;height:12px}
+
+/* Sliding between stations */
+#game.slide-from-right #scene,#game.slide-from-right #scene-labels{animation:slide-from-right .3s ease-out}
+#game.slide-from-left #scene,#game.slide-from-left #scene-labels{animation:slide-from-left .3s ease-out}
+@keyframes slide-from-right{from{transform:translateX(35%);opacity:.2}}
+@keyframes slide-from-left{from{transform:translateX(-35%);opacity:.2}}
+.bus-tag.full,.bus-tag.full.selected{background:#f58a45;border-color:#fff;color:#fff}
+.bus-tag.full.selected{box-shadow:0 0 0 3px #3cc27a,0 5px 15px #2f5c4942}
+.bus-tag.full:after{background:#f58a45}
+
+/* ===================== fast pace: compact tags, big combo counter, numbers everywhere ===================== */
+.traveler-tag{min-width:26px;padding:3px 4px;border-width:2px}
+.traveler-tag .flag-icon{width:17px;height:12px}
+.traveler-tag:after{bottom:-5px;width:6px;height:6px;left:calc(50% - 3px)}
+.traveler-tag .special-badge{top:-9px;right:-9px;width:17px;height:17px}
+.traveler-tag .special-badge .ico{width:11px;height:11px}
+.traveler-tag.special{animation:tag-pop .15s ease-out,special-pulse .3s ease-in-out .15s infinite alternate}
+
+/* Big combo counter, top centre */
+.combo-hud{left:50%;right:auto;top:calc(max(16px,env(safe-area-inset-top)) + 58px);transform:translateX(-50%);display:grid;grid-template-columns:auto auto;align-items:center;gap:2px 9px;min-width:0;padding:6px 14px 9px 12px;border-radius:18px;animation:none}
+.combo-hud .combo-num{font:900 40px/1 'Outfit',sans-serif;color:#e0731f;text-shadow:0 3px 0 #ffd9b8}
+.combo-hud .combo-side{display:grid;gap:1px}
+.combo-hud .combo-word{display:flex;align-items:center;gap:4px;color:#5d8370;font:900 11px/1 'Outfit',sans-serif;letter-spacing:.8px}
+.combo-hud .combo-word .ico{width:14px;height:14px;color:#f2a91b}
+.combo-hud .combo-mult{font:900 15px/1.1 'Outfit',sans-serif;color:#e0731f}
+.combo-hud .combo-pot{color:#8aa597;font-size:10px;font-weight:800}
+.combo-hud .combo-timer{grid-column:1/-1;margin-top:3px}
+.combo-hud.bump .combo-num{animation:combo-bump .18s ease-out}
+.combo-hud[data-level="1"] .combo-num{color:#f08a1c}
+.combo-hud[data-level="2"] .combo-num{color:#f05a28;text-shadow:0 3px 0 #ffc9b0}
+.combo-hud[data-level="3"] .combo-num{color:#e8335e;text-shadow:0 3px 0 #ffc0d0}
+.combo-hud[data-level="4"] .combo-num{color:#a63ee0;text-shadow:0 3px 0 #e6c8ff}
+.combo-hud[data-level="3"],.combo-hud[data-level="4"]{box-shadow:0 0 0 3px #ffd34d88,0 7px 20px #25616f30}
+@keyframes combo-bump{40%{transform:scale(1.35)}}
+
+/* Floating fares grow with the combo */
+.float-gain{font-size:15px}
+.float-gain em{margin-left:3px;padding:1px 5px;border-radius:999px;background:#f58a45;color:#fff;font:900 11px/1.3 'Outfit',sans-serif;font-style:normal;text-shadow:none}
+.float-gain.special-lvl1{font-size:17px;color:#2f9f5a}
+.float-gain.special-lvl2{font-size:19px;color:#e0731f}
+.float-gain.special-lvl3{font-size:21px;color:#e8335e}
+.float-gain.special-lvl4{font-size:24px;color:#a63ee0}
+.float-gain.special-depart{font-size:16px;color:#e0731f}
+.float-gain.special-cash{font-size:26px}
+
+/* Milestone shouts */
+.shout{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);color:#fff;font:900 34px/1 'Outfit',sans-serif;letter-spacing:1px;-webkit-text-stroke:2px #e0731f;text-shadow:0 4px 0 #e0731f,0 10px 24px #e0731f66;animation:shout .9s ease-out forwards;pointer-events:none;white-space:nowrap}
+@keyframes shout{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(3deg)}35%{transform:translate(-50%,-50%) scale(1) rotate(0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(1.05)}}
+/* The whole traveler is the tap target: the area reaches down over their body. */
+.traveler-tag:before{content:"";position:absolute;inset:-7px -9px -34px -9px;border-radius:14px}
+.traveler-tag.faded{pointer-events:none}
+.traveler-tag:not(.faded){z-index:2}

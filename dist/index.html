@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#bce8e6">
-  <meta name="description" content="Tap passengers, fill your orange Souha Bus vehicles, and grow your station network.">
+  <meta name="description" content="Tap travelers fast, fill your orange Souha Bus coaches, claim the fares and grow your station network.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23f78948'/%3E%3Cpath d='M12 19h35l5 22H10z' fill='white'/%3E%3Ccircle cx='20' cy='45' r='5' fill='%23315f4c'/%3E%3Ccircle cx='43' cy='45' r='5' fill='%23315f4c'/%3E%3C/svg%3E">
   <title>Souha Bus — Station Stories</title>
   <link rel="stylesheet" href="./styles.css">
@@ -12,21 +12,23 @@
 <body>
   <main id="game">
     <canvas id="scene" aria-label="Interactive three dimensional bus station"></canvas>
-    <div id="scene-labels" aria-label="Passengers and buses"></div>
+    <div id="scene-labels" aria-label="Travelers and buses"></div>
 
     <header class="hud-top">
-      <div class="brand"><span class="brand-icon">▰<i>● ●</i></span><span><b>Souha Bus</b><small>STATION STORIES</small></span></div>
-      <div class="top-stats"><div class="coin-pill"><span>€</span><strong id="coins">0</strong></div><button id="sound" class="round-icon" aria-label="Toggle sound">♫</button></div>
+      <div class="brand"><span class="brand-icon"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i></span><span><b>Souha Bus</b><small>STATION STORIES</small></span></div>
+      <div class="top-stats"><div class="coin-pill"><i class="ico coin-ico" style="--i:url(./icons/coin.svg)" aria-hidden="true"></i><strong id="coins">0</strong></div><button id="sound" class="round-icon" aria-label="Toggle sound"></button></div>
     </header>
 
+    <button id="boost-hud" class="progress-hud boost-hud" aria-label="Fare boost from your buses and stations"><span class="progress-icon"><i class="ico" style="--i:url(./icons/boost.svg)" aria-hidden="true"></i></span><span><b id="boost-value">+0%</b><small>fare boost</small></span></button>
 
-    <div id="satisfaction-hud" class="progress-hud" aria-label="100% satisfaction means 100% ticket price. Lower satisfaction means lower ticket prices."><div class="progress-icon">☺</div><div><b id="moved">100%</b><small>satisfaction</small><small id="fare-indicator" class="fare-indicator">Ticket price: 100%</small></div></div>
+    <button id="nav-prev" class="side-nav prev" hidden></button>
+    <button id="nav-next" class="side-nav next" hidden></button>
 
-    <div class="scene-callout"><span class="hand">☝</span><span id="scene-hint">Tap a traveler to board your selected bus</span></div>
-    <button id="quick-buy-bus" class="quick-buy" aria-label="Buy a Souha Bus for €400 at this station"><span>＋</span><b>Bus</b><small>€400</small></button>
+    <div class="scene-callout"><span id="scene-hint">Tap a bus to choose its country</span></div>
+    <button id="quick-buy-bus" class="quick-buy" aria-label="Buy a Souha Bus"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i><b>+ Bus</b><small>€400</small></button>
 
     <section class="bottom-area" aria-label="Station controls">
-      <nav class="game-nav" aria-label="Game menus"><button id="station-switch" class="station-switch"><span id="station-flag" class="station-flag"><img class="flag-station" src="./flags/tn.svg" alt="" aria-hidden="true"></span><span><small id="station-queue">100 / 200 WAITING</small><b id="station-name">Tunis Station</b></span><span class="switch-arrow">⌄</span></button><button id="fleet-button"><span class="nav-icon">▰</span><b>My buses</b></button><button id="build-button"><span class="nav-icon">＋</span><b>Expand</b></button></nav>
+      <nav class="game-nav" aria-label="Game menus"><button id="station-switch" class="station-switch"><span id="station-flag" class="station-flag"></span><span><small id="station-info">3 buses here</small><b id="station-name">Tunis</b></span><i class="ico switch-swipe" style="--i:url(./icons/swipe.svg)" aria-hidden="true"></i></button><button id="fleet-button"><span class="nav-icon"><i class="ico" style="--i:url(./icons/bus.svg)" aria-hidden="true"></i></span><b>My buses</b></button><button id="build-button"><span class="nav-icon"><i class="ico" style="--i:url(./icons/store.svg)" aria-hidden="true"></i></span><b>Expand</b></button></nav>
     </section>
 
     <div id="toast-stack" class="toast-stack" aria-live="polite"></div>

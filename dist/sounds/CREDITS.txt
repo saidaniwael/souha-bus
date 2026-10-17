@@ -29,3 +29,8 @@ Special traveler sounds (all CC0, www.kenney.nl)
   rush.mp3          <- Music Jingles: jingles_PIZZI02.ogg (rising run)
   heart.mp3         <- Interface Sounds: pluck_002.ogg
   combo.mp3         <- Interface Sounds: confirmation_001.ogg
+
+More interface sounds (CC0, www.kenney.nl, Interface Sounds)
+  tick.mp3          <- tick_002.ogg (claim countdown)
+  lost.mp3          <- minimize_006.ogg (fare lost)
+  note.mp3          <- Music Jingles: jingles_STEEL16.ogg (single steel-drum note, trimmed; played up a pentatonic scale as combos grow)
