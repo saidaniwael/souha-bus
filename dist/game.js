@@ -34,7 +34,7 @@ const STRINGS={
   en:{
     waitingIn:(a,c,s)=>`${a} waiting in <b>${c}</b> · ${s}s!`,lostIn:(a,c)=>`${a} lost in ${c}`,wontFit:n=>`${n} won't fit!`,didntFit:n=>`${n} travelers didn't fit!`,
     seats:n=>`${n} seats`,moodMinus:h=>`mood −${h}`,perfect:'PERFECT FIT!',shouts:{10:'NICE!',20:'GREAT!',30:'AMAZING!',45:'INCREDIBLE!',60:'UNSTOPPABLE!',80:'LEGENDARY!'},
-    go:'GO!',combo:'COMBO',onTheBus:'on the bus',levelCaps:n=>`LEVEL ${n}`,level:n=>`Level ${n}`,goalShort:'goal',claimsEmpty:'Buses that arrive elsewhere show up here',
+    go:'GO!',combo:'COMBO',onTheBus:'on the bus',levelCaps:n=>`LEVEL ${n}`,level:n=>`Level ${n}`,goalShort:'goal',
     goal:'GOAL',time:'time',buses:'buses',stations:'stations',sec:n=>`${n}s`,
     boosters:'BOOSTERS',ready:n=>`${n} ready`,howToPlay:'HOW TO PLAY',bestCombo:'Best combo',reset:'RESET PROGRESS',resetConfirm:'TAP AGAIN TO RESET',
     nextShift:'NEXT SHIFT',replay:'REPLAY',shift:n=>`SHIFT ${n}`,start:'START',play:'PLAY',paused:'Paused',pauseGoal:(e,g,l)=>`${e} of ${g} · ${l} left`,
@@ -58,7 +58,7 @@ const STRINGS={
   fr:{
     waitingIn:(a,c,s)=>`${a} vous attendent à <b>${c}</b> · ${s} s !`,lostIn:(a,c)=>`${a} perdus à ${c}`,wontFit:n=>`${n} n'entrent pas !`,didntFit:n=>`${n} voyageurs n'ont pas pu monter !`,
     seats:n=>`${n} places`,moodMinus:h=>`humeur −${h}`,perfect:'PILE POIL !',shouts:{10:'SUPER !',20:'GÉNIAL !',30:'INCROYABLE !',45:'FANTASTIQUE !',60:'IMBATTABLE !',80:'LÉGENDAIRE !'},
-    go:'GO !',combo:'COMBO',onTheBus:'dans le bus',levelCaps:n=>`NIVEAU ${n}`,level:n=>`Niveau ${n}`,goalShort:'objectif',claimsEmpty:'Les bus arrivés ailleurs apparaissent ici',
+    go:'GO !',combo:'COMBO',onTheBus:'dans le bus',levelCaps:n=>`NIVEAU ${n}`,level:n=>`Niveau ${n}`,goalShort:'objectif',
     goal:'OBJECTIF',time:'temps',buses:'bus',stations:'stations',sec:n=>`${n} s`,
     boosters:'BONUS',ready:n=>`${n} dispo`,howToPlay:'COMMENT JOUER',bestCombo:'Meilleur combo',reset:'RÉINITIALISER',resetConfirm:'TOUCHEZ ENCORE POUR CONFIRMER',
     nextShift:'PROCHAIN SERVICE',replay:'REJOUER',shift:n=>`SERVICE ${n}`,start:'C’EST PARTI',play:'JOUER',paused:'Pause',pauseGoal:(e,g,l)=>`${e} sur ${g} · encore ${l}`,
@@ -82,7 +82,7 @@ const STRINGS={
   ar:{
     waitingIn:(a,c,s)=>`${a} بانتظارك في <b>${c}</b> · ${s} ث!`,lostIn:(a,c)=>`ضاع ${a} في ${c}`,wontFit:n=>`${n} لا يتّسع لهم المكان!`,didntFit:n=>`${n} مسافرين لم يتّسع لهم المكان!`,
     seats:n=>`${n} مقاعد`,moodMinus:h=>`المزاج −${h}`,perfect:'مقاس مثالي!',shouts:{10:'رائع!',20:'ممتاز!',30:'مذهل!',45:'خرافي!',60:'لا يُوقَف!',80:'أسطوري!'},
-    go:'انطلق!',combo:'كومبو',onTheBus:'في الحافلة',levelCaps:n=>`المستوى ${n}`,level:n=>`المستوى ${n}`,goalShort:'الهدف',claimsEmpty:'الحافلات التي تصل إلى محطات أخرى تظهر هنا',
+    go:'انطلق!',combo:'كومبو',onTheBus:'في الحافلة',levelCaps:n=>`المستوى ${n}`,level:n=>`المستوى ${n}`,goalShort:'الهدف',
     goal:'الهدف',time:'الوقت',buses:'حافلات',stations:'محطات',sec:n=>`${n} ث`,
     boosters:'المعزّزات',ready:n=>`${n} جاهزة`,howToPlay:'طريقة اللعب',bestCombo:'أفضل كومبو',reset:'إعادة التقدّم',resetConfirm:'اضغط مرة أخرى للتأكيد',
     nextShift:'الرحلة القادمة',replay:'إعادة',shift:n=>`الرحلة ${n}`,start:'ابدأ',play:'العب',paused:'متوقّف',pauseGoal:(e,g,l)=>`${e} من ${g} · بقي ${l}`,
@@ -592,8 +592,7 @@ function renderClaimsBar(now){
   const bar=$('claims-bar'),total=run.cfg.claim,waiting=run.buses.filter(b=>b.status==='idle'&&b.payout>0&&b.location!==currentStation).sort((a,b)=>a.claimBy-b.claimBy);
   const keep=new Set(waiting.map(b=>String(b.id)));
   for(const pill of bar.querySelectorAll('.claim-pill'))if(!keep.has(pill.dataset.bus))pill.remove();
-  if(!waiting.length){if(!bar.querySelector('.claims-empty'))bar.innerHTML=`<span class="claims-empty">${icon('coin-diagonal')} ${t('claimsEmpty')}</span>`;return;}
-  bar.querySelector('.claims-empty')?.remove();
+  if(!waiting.length)return;
   for(const b of waiting){const left=Math.max(0,b.claimBy-now),seconds=`${Math.ceil(left/1000)}s`;let pill=bar.querySelector(`[data-bus="${b.id}"]`);
     if(!pill){pill=document.createElement('button');pill.className='claim-pill';pill.dataset.bus=b.id;pill.dataset.station=b.location;
       pill.innerHTML=`${flagMarkup(b.location,'claim-flag')}<b>${bulk(b.payout)}</b><span class="claim-secs"></span><i style="animation-duration:${total}ms;animation-delay:-${total-left}ms"></i>`;bar.append(pill);}

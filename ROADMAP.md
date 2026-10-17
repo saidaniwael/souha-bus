@@ -111,3 +111,4 @@ Difficulty still climbs (a casual player now loses level 13 on time at 87% inste
 - **Level pill** — the level goal is a small pill in the top bar (purple level number + slim bar + "1.2k/4.5k"; on very narrow phones just the number and bar). Everything else in the HUD is unchanged.
 - **No zoom while tapping** — viewport locked (maximum-scale=1, user-scalable=no), touch-action: manipulation on the page, and iOS pinch/double-tap gestures blocked.
 - **Countdown** — 3-2-1 and GO! use Nunito at its heaviest weight (1000) with the green outline drawn outside the letters.
+- **Claims strip** — the hint "Buses that arrive elsewhere show up here" is gone; the strip stays empty (same height) until a bus waits elsewhere.
