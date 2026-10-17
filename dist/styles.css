@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900;1000&family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap');
 
 /* =====================================================================================================
    Design tokens: a bright, flat, chunky style (Duolingo-like). Buttons and cards have a darker 4px
@@ -1051,3 +1051,7 @@ html,body,#game{touch-action:manipulation}
 /* The level pill shrinks with the room it has: very narrow, it keeps the level number and bar only. */
 .hud-top .goal-card{container-type:inline-size}
 @container (max-width:84px){.goal-body small{display:none}}
+/* 3-2-1 / GO!: same font (Nunito) at its heaviest weight; the outline sits outside the letters (text-shadow ring)
+   instead of a stroke that eats into them, so the glyphs stay fat. */
+.countdown{font-weight:1000;-webkit-text-stroke:0;letter-spacing:1px;
+  text-shadow:0 -4px 0 var(--green-d),4px 0 0 var(--green-d),0 4px 0 var(--green-d),-4px 0 0 var(--green-d),3px 3px 0 var(--green-d),-3px 3px 0 var(--green-d),3px -3px 0 var(--green-d),-3px -3px 0 var(--green-d),0 10px 0 var(--green-d)}
