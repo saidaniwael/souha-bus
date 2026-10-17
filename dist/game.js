@@ -11,13 +11,15 @@ const BUILD=new URL(import.meta.url).searchParams.get('v')||'dev';
 // Stars come from the mood left at the end.
 // The stations and buses of a level are part of its design and its difficulty; coins only buy small boosters.
 // ---------------------------------------------------------------------------------------------------------------
+// accent tints the sky at that station; shirt is the clothing colour of travelers heading there.
 const STATIONS = [
-  {id:'tunis',name:'Tunis',country:'Tunisia',code:'TN',accent:0xf7a86a,shirt:0xe8833f},
-  {id:'paris',name:'Paris',country:'France',code:'FR',accent:0xa5c9ed,shirt:0x5b8fd6},
-  {id:'rome',name:'Rome',country:'Italy',code:'IT',accent:0xeec99b,shirt:0x52a86b},
-  {id:'barcelona',name:'Barcelona',country:'Spain',code:'ES',accent:0xf5bca2,shirt:0xe0b13a},
-  {id:'berlin',name:'Berlin',country:'Germany',code:'DE',accent:0xbbc9da,shirt:0x6d6f78},
-  {id:'istanbul',name:'Istanbul',country:'Türkiye',code:'TR',accent:0xcbb2d6,shirt:0xd2475a}
+  {id:'tunis',name:'Tunis',country:'Tunisia',code:'TN',accent:0xf7a86a,shirt:0xe25d4b},
+  {id:'paris',name:'Paris',country:'France',code:'FR',accent:0xa5c9ed,shirt:0x4f86d9},
+  {id:'amsterdam',name:'Amsterdam',country:'Netherlands',code:'NL',accent:0xf7c28d,shirt:0xf39a2b},
+  {id:'brussels',name:'Brussels',country:'Belgium',code:'BE',accent:0xf3dc8a,shirt:0xf2c94c},
+  {id:'istanbul',name:'Istanbul',country:'Türkiye',code:'TR',accent:0xcbb2d6,shirt:0xc44569},
+  {id:'madrid',name:'Madrid',country:'Spain',code:'ES',accent:0xf5bca2,shirt:0x9b59b6},
+  {id:'rome',name:'Rome',country:'Italy',code:'IT',accent:0xb8dcb0,shirt:0x3fa65f}
 ];
 const city=Object.fromEntries(STATIONS.map(s=>[s.id,s]));
 
@@ -27,7 +29,7 @@ const city=Object.fromEntries(STATIONS.map(s=>[s.id,s]));
 // ---------------------------------------------------------------------------------------------------------------
 const LANGS={en:'English',fr:'Français',ar:'العربية'},LANG_CODES={en:'EN',fr:'FR',ar:'عربي'};
 let lang=(()=>{try{const saved=localStorage.getItem('souha-lang');if(LANGS[saved])return saved;}catch{}return 'en';})();
-const CITY_NAMES={tunis:['Tunis','Tunis','تونس'],paris:['Paris','Paris','باريس'],rome:['Rome','Rome','روما'],barcelona:['Barcelona','Barcelone','برشلونة'],berlin:['Berlin','Berlin','برلين'],istanbul:['Istanbul','Istanbul','إسطنبول']};
+const CITY_NAMES={tunis:['Tunis','Tunis','تونس'],paris:['Paris','Paris','باريس'],amsterdam:['Amsterdam','Amsterdam','أمستردام'],brussels:['Brussels','Bruxelles','بروكسل'],istanbul:['Istanbul','Istanbul','إسطنبول'],madrid:['Madrid','Madrid','مدريد'],rome:['Rome','Rome','روما']};
 const STRINGS={
   en:{
     waitingIn:(a,c,s)=>`${a} waiting in <b>${c}</b> · ${s}s!`,lostIn:(a,c)=>`${a} lost in ${c}`,wontFit:n=>`${n} won't fit!`,didntFit:n=>`${n} travelers didn't fit!`,
@@ -44,6 +46,8 @@ const STRINGS={
     goalsTitle:'Daily goals',goalsSub:'Each goal done: your next level starts with ⚡ +50.',goalDone:'Daily goal done! Next level starts with ⚡ +50',
     goalText:{specials:n=>`Catch ${n} special travelers`,rush:n=>`Trigger ${n} Rush hours`,perfect:n=>`Make ${n} perfect fits`,combo:n=>`Reach a ${n} combo`,buses:n=>`Send ${n} full buses`,levels:n=>`Win ${n} levels`},
     albumTitle:'Sticker album',albumSub:'Catch each special traveler in every country.',newSticker:'New sticker!',bonusRush:'Daily bonus: RUSH HOUR!',
+    howTabs:['Basics','Specials'],specialInfo:{rush:'5 s: everyone boards your bus, fares ×2',magnet:'Boards every matching traveler at once',golden:'This bus pays ×3 when it leaves',gift:'Surprise: coins or a power special',heart:'Travelers smile again: mood +25',vip:'Your combo multiplier ×2'},
+    specialsNote:'Specials glow and fit any bus. They stay about a second: tap fast! Board travelers to fill the ⚡ meter: when it is full, Rush hour starts.',
     howTitle:'How to play',how:['<b>Tap a bus</b> to pick its country','<b>Tap its travelers</b> fast. Numbers are groups: they must fit!','<b>Tap GO</b> when full, then <b>swipe</b> to where it arrives','<b>Tap the gold bus</b> in time to cash in',
       '<b>Keep travelers smiling:</b> each group that doesn\'t fit or missed claim drains the face a step. Empty face, level lost. Each new level only refills it by 25%.'],
     tips:['Stars come from the smile left when you finish. Replays earn stars, not coins.','Tap glowing specials fast: they fit any bus. Fill the ⚡ meter for RUSH HOUR!'],gotIt:'GOT IT',
@@ -66,6 +70,8 @@ const STRINGS={
     goalsTitle:'Objectifs du jour',goalsSub:'Chaque objectif atteint : ⚡ +50 au début du prochain niveau.',goalDone:'Objectif atteint ! ⚡ +50 au prochain niveau',
     goalText:{specials:n=>`Attrapez ${n} voyageurs spéciaux`,rush:n=>`Déclenchez ${n} heures de pointe`,perfect:n=>`Réussissez ${n} remplissages parfaits`,combo:n=>`Atteignez un combo de ${n}`,buses:n=>`Envoyez ${n} bus pleins`,levels:n=>`Gagnez ${n} niveaux`},
     albumTitle:'Album d’autocollants',albumSub:'Attrapez chaque voyageur spécial dans chaque pays.',newSticker:'Nouvel autocollant !',bonusRush:'Bonus du jour : HEURE DE POINTE !',
+    howTabs:['Bases','Spéciaux'],specialInfo:{rush:'5 s : tout le monde monte dans votre bus, recettes ×2',magnet:'Fait monter d’un coup tous les voyageurs du bon pays',golden:'Ce bus rapporte ×3 en partant',gift:'Surprise : des pièces ou un spécial puissant',heart:'Les voyageurs resourient : humeur +25',vip:'Votre multiplicateur de combo ×2'},
+    specialsNote:'Les spéciaux brillent et vont dans n’importe quel bus. Ils restent environ une seconde : touchez vite ! Chaque voyageur embarqué remplit la jauge ⚡ : pleine, c’est l’heure de pointe.',
     howTitle:'Comment jouer',how:['<b>Touchez un bus</b> pour choisir son pays','<b>Touchez ses voyageurs</b> vite. Les chiffres sont des groupes : ils doivent tenir !','<b>Touchez GO</b> quand il est plein, puis <b>glissez</b> vers son arrivée','<b>Touchez le bus doré</b> à temps pour encaisser',
       '<b>Gardez les voyageurs souriants :</b> chaque groupe qui ne rentre pas ou encaissement raté vide le visage d’un cran. Visage vide, niveau perdu. Chaque nouveau niveau ne le remplit que de 25 %.'],
     tips:['Les étoiles dépendent du sourire restant à la fin. Rejouer rapporte des étoiles, pas de pièces.','Touchez vite les voyageurs brillants : ils vont dans n’importe quel bus. Remplissez la jauge ⚡ pour l’HEURE DE POINTE !'],gotIt:'COMPRIS',
@@ -88,6 +94,8 @@ const STRINGS={
     goalsTitle:'أهداف اليوم',goalsSub:'كل هدف تحققه: يبدأ مستواك التالي بـ ⚡ +50.',goalDone:'تحقق هدف اليوم! ⚡ +50 في المستوى التالي',
     goalText:{specials:n=>`التقط ${n} مسافرين مميزين`,rush:n=>`فعّل ساعة الذروة ${n} مرات`,perfect:n=>`حقق ${n} مقاسات مثالية`,combo:n=>`صل إلى كومبو ${n}`,buses:n=>`أرسل ${n} حافلات ممتلئة`,levels:n=>`اربح ${n} مستويات`},
     albumTitle:'ألبوم الملصقات',albumSub:'التقط كل مسافر مميز في كل دولة.',newSticker:'ملصق جديد!',bonusRush:'مكافأة اليوم: ساعة الذروة!',
+    howTabs:['الأساسيات','المميزون'],specialInfo:{rush:'5 ث: الجميع يركب حافلتك، والأرباح ×2',magnet:'يُركب كل المسافرين المطابقين دفعة واحدة',golden:'هذه الحافلة تربح ×3 عند انطلاقها',gift:'مفاجأة: عملات أو مسافر مميز قوي',heart:'يبتسم المسافرون من جديد: مزاج +25',vip:'مضاعف الكومبو ×2'},
+    specialsNote:'المسافرون المميزون يتوهّجون ويركبون أي حافلة. يبقون نحو ثانية: اضغط بسرعة! كل مسافر تُركبه يملأ عدّاد ⚡، وعند امتلائه تبدأ ساعة الذروة.',
     howTitle:'طريقة اللعب',how:['<b>اضغط على حافلة</b> لاختيار وجهتها','<b>اضغط على مسافريها</b> بسرعة. الأرقام مجموعات: يجب أن يتّسع لها المكان!','<b>اضغط انطلق</b> عندما تمتلئ، ثم <b>اسحب</b> إلى محطة وصولها','<b>اضغط على الحافلة الذهبية</b> في الوقت لتحصيل العملات',
       '<b>حافظ على ابتسامة المسافرين:</b> كل مجموعة لا يتّسع لها المكان أو تحصيل فائت يُفرغ الوجه درجة. وجه فارغ يعني خسارة المستوى. كل مستوى جديد يملؤه بـ25% فقط.'],
     tips:['النجوم تأتي من الابتسامة المتبقية عند النهاية. الإعادة تمنح نجومًا لا عملات.','اضغط بسرعة على المسافرين المتوهّجين: يركبون أي حافلة. املأ عدّاد ⚡ لساعة الذروة!'],gotIt:'فهمت',
@@ -202,16 +210,21 @@ function createAudio(){
   const ctx=audioCtx=new AudioCtx();ctx.resume().catch(()=>{});ctx.onstatechange=()=>{if(ctx===audioCtx&&ctx.state==='interrupted')audioStale=true;};
   for(const name of SOUND_NAMES)if(!soundBuffers[name])soundFiles[name].then(data=>data&&ctx.decodeAudioData(data.slice(0))).then(buffer=>{if(buffer)soundBuffers[name]=buffer;}).catch(()=>{});
   loadMusic();return true;}
+// Only events that count as a user gesture may create or resume audio (a touch's pointerdown does not; its touchend
+// does). Browsers without navigator.userActivation are trusted as before.
+const gestureActive=()=>navigator.userActivation?navigator.userActivation.isActive:true;
+const everInteracted=()=>navigator.userActivation?navigator.userActivation.hasBeenActive:true;
 function unlockAudio(){
+  if(!gestureActive())return;
   if(audioCtx&&audioStale){audioStale=false;const old=audioCtx;audioCtx=null;musicTrack=null;try{old.close();}catch{}}
   if(!audioCtx){if(!createAudio())return;}else if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});
   // A silent one-sample blip inside the tap makes sure the output really starts (iOS).
   try{const blip=audioCtx.createBufferSource();blip.buffer=audioCtx.createBuffer(1,1,22050);blip.connect(audioCtx.destination);blip.start(0);}catch{}}
 function backToForeground(){
-  if(!audioCtx)return;const ctx=audioCtx;ctx.resume().catch(()=>{});if(IOS){audioStale=true;return;}
+  if(!audioCtx)return;const ctx=audioCtx;if(everInteracted())ctx.resume().catch(()=>{});if(IOS){audioStale=true;return;}
   const t0=ctx.currentTime;setTimeout(()=>{if(ctx===audioCtx&&(ctx.state!=='running'||ctx.currentTime-t0<.1))audioStale=true;},600);}
 for(const type of ['pointerdown','touchend','click','keydown'])addEventListener(type,unlockAudio,{capture:true});
-function play(name,volume=1,rate=1,delay=0){if(!sound||!audioCtx||!soundBuffers[name])return;if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});const source=audioCtx.createBufferSource(),gain=audioCtx.createGain();source.buffer=soundBuffers[name];source.playbackRate.value=rate;gain.gain.value=volume;source.connect(gain).connect(audioCtx.destination);source.start(audioCtx.currentTime+delay);}
+function play(name,volume=1,rate=1,delay=0){if(!sound||!audioCtx||!soundBuffers[name])return;if(audioCtx.state!=='running'&&gestureActive())audioCtx.resume().catch(()=>{});const source=audioCtx.createBufferSource(),gain=audioCtx.createGain();source.buffer=soundBuffers[name];source.playbackRate.value=rate;gain.gain.value=volume;source.connect(gain).connect(audioCtx.destination);source.start(audioCtx.currentTime+delay);}
 // Music: two CC0 loops on their own gain, under the effects: a calm piano tune on the menus and an island tune in the
 // levels (a touch faster in the last 10 seconds). It ducks under the pause card and makes room for the win/lose jingle.
 const MUSIC={menu:{file:'music-menu',volume:.2},play:{file:'music-play',volume:.2}};
@@ -354,9 +367,9 @@ function ensureDaily(){
 function goalProgress(kind,amount=1,asMax=false){
   const goal=ensureDaily().goals.find(g=>g.kind===kind&&!g.done);if(!goal)return;
   goal.progress=asMax?Math.max(goal.progress,amount):goal.progress+amount;
-  if(goal.progress>=goal.target){goal.progress=goal.target;goal.done=true;game.rushBonus=Math.min(100,(game.rushBonus||0)+50);toast(`${icon('target')} ${t('goalDone')}`,'claim');play('purchase',.7);}
+  if(goal.progress>=goal.target){goal.progress=goal.target;goal.done=true;game.rushBonus=Math.min(100,(game.rushBonus||0)+50);toast(`${icon('trophy')} ${t('goalDone')}`,'claim');play('purchase',.7);}
   save();}
-const albumCount=()=>Object.values(game.album||{}).reduce((sum,list)=>sum+list.length,0),ALBUM_SIZE=Object.keys(SPECIALS).length*STATIONS.length;
+const albumCount=()=>Object.values(game.album||{}).reduce((sum,list)=>sum+list.filter(id=>city[id]).length,0),ALBUM_SIZE=Object.keys(SPECIALS).length*STATIONS.length;
 function addSticker(kind,station){const album=game.album??={},list=album[kind]??=[];if(list.includes(station))return;list.push(station);save();setTimeout(()=>toast(`${icon('album')} ${t('newSticker')} ${albumCount()}/${ALBUM_SIZE}`),700);}
 // Rush meter and Rush hour.
 function addRush(amount){if(!run||rushActive())return;run.rushMeter=Math.min(100,run.rushMeter+amount);if(run.rushMeter>=100)startRush();renderRush();}
@@ -432,7 +445,8 @@ function endCombo(){
   let payout=0;const targets=[];
   for(const [id,share] of Object.entries(shares)){const extra=Math.round(share.fares*(mult-1)+share.bonus*mult),bus=run?.buses.find(b=>b.id===Number(id));if(!bus||extra<=0)continue;
     if(bus.payout>0)bus.payout+=extra;else bus.revenue+=extra;payout+=extra;targets.push(bus.id);}
-  if(payout>0){renderBuses();const from=rectCentre(showComboBanner(count,mult,payout));for(const id of targets)coinsToBus(from,id);play('combo',.8);playCash(payout,0);vibrate([20,40,20]);}
+  // No banner: the combo badge pops, shows the extra, and its coins fly from the badge to the buses.
+  if(payout>0){renderBuses();const badge=$('mult-badge'),box=badge.getBoundingClientRect(),from=rectCentre(box);bump(badge);floatText(from[0],box.bottom+34,`+${bulk(payout)}`,'cash');for(const id of targets)coinsToBus(from,id);play('combo',.8);playCash(payout,0);vibrate([20,40,20]);}
   renderCombo();}
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -504,7 +518,7 @@ function startCountdown(){
     if(count){play('note',.9,1);play('tick',.5,1.2);count--;setTimeout(step,650);}
     else{play('note',.9,2);play('station-open');play('depart',.5,1.4);setTimeout(()=>el.remove(),600);beginPlay();}};
   step();}
-function beginPlay(){setMode('play');run.endsAt=Date.now()+run.remaining;if(!run.started){run.started=Date.now();run.nextSpecialAt=Date.now()+3000;if(game.rushBonus){const bonus=game.rushBonus;game.rushBonus=0;save();if(bonus>=100)setTimeout(()=>{if(mode==='play'){toast(`${icon('target')} ${t('bonusRush')}`,'claim');startRush();}},700);else run.rushMeter=bonus;}}lastSpawn=0;for(let i=0;i<8;i++)spawnTraveler(Date.now());syncSelectedBus();renderBuses();renderCrowd();renderHud();}
+function beginPlay(){setMode('play');run.endsAt=Date.now()+run.remaining;if(!run.started){run.started=Date.now();run.nextSpecialAt=Date.now()+3000;if(game.rushBonus){const bonus=game.rushBonus;game.rushBonus=0;save();if(bonus>=100)setTimeout(()=>{if(mode==='play'){toast(`${icon('trophy')} ${t('bonusRush')}`,'claim');startRush();}},700);else run.rushMeter=bonus;}}lastSpawn=0;for(let i=0;i<8;i++)spawnTraveler(Date.now());syncSelectedBus();renderBuses();renderCrowd();renderHud();}
 // Pausing freezes the level: on resume every deadline moves forward by the paused time; waiting travelers leave.
 function pause(){if(mode!=='play')return;duckMusic(.35);run.pausedAt=Date.now();run.remaining=timeLeft();endCombo();setMode('paused');crowd=[];renderCrowd();showOverlay('pause');}
 function resume(){
@@ -526,7 +540,6 @@ function showShout(text){const el=document.createElement('div');el.className='sh
 // The message rail under the top bar shows one message at a time (newest wins), so it never reaches the buses.
 function showNotice(kind,html,ms=2200){const el=document.createElement('div');el.className='notice notice-'+kind;el.innerHTML=html;$('toast-stack').replaceChildren(el);setTimeout(()=>el.remove(),ms);return el.getBoundingClientRect();}
 const rectCentre=r=>[r.left+r.width/2,r.top+r.height/2];
-function showComboBanner(count,mult,payout){return showNotice('combo',`<span class="notice-art">${icon('crown')}</span><span>${t('combo')} ${count}</span><b>+${bulk(payout)}</b><span class="chip orange">×${mult}</span><span class="chip blue">${icon('bus')} ${t('onTheBus')}</span>`,1800);}
 // Coins fly onto a bus label (only a visual: the money is already on that bus).
 function coinsToBus([x,y],busId,count=4){const tag=document.querySelector(`[data-bus="${busId}"]`);if(tag)flyTo(x,y,tag,'coin-flyer',icon('coin-diagonal'),count,()=>{});}
 // Perfect fit: the bus flashes gold and hops, with a coin burst.
@@ -613,12 +626,12 @@ function showOverlay(kind){
   const card=$('overlay-card'),cfg=run.cfg;$('overlay').classList.remove('hidden');$('overlay').dataset.kind=kind;
   if(kind==='home'){
     homePick=Math.min(homePick??game.level,game.level);const path=Array.from({length:game.level+3},(_,i)=>i+1);
-    card.innerHTML=`<div class="home-brand"><span class="logo big">${icon('bus')}<span class="logo-text"><b>SouSou</b><small>BUS</small></span></span><button class="icon-btn music-btn" id="music-btn" aria-label="${musicOn?'Turn music off':'Turn music on'}">${musicIcon()}</button><div class="coin-pill" id="home-coins">${icon('coin-diagonal','coin-ico')}<strong>${Math.round(shownCoins).toLocaleString('en-US')}</strong></div></div>
+    card.innerHTML=`<div class="home-brand"><span class="brand-logo" role="img" aria-label="SouSou Bus">${brandLogo}</span><button class="icon-btn trophy-btn${ensureDaily().goals.every(g=>g.done)?' complete':''}" id="goals-btn" aria-label="${t('goalsTitle')}">${icon('trophy')}${ensureDaily().goals.some(g=>g.done&&!g.seen)?'<span class="dot"></span>':''}</button><button class="icon-btn music-btn" id="music-btn" aria-label="${musicOn?'Turn music off':'Turn music on'}">${musicIcon()}</button><div class="coin-pill" id="home-coins">${icon('coin-diagonal','coin-ico')}<strong>${Math.round(shownCoins).toLocaleString('en-US')}</strong></div></div>
       <div class="level-path" id="level-path">${path.map(n=>`<button class="path-node${n===homePick?' picked':''}${n===game.level?' next':''}${n>game.level?' locked':''}" data-level="${n}" ${n>game.level?'disabled':''}><b>${n>game.level?icon('lock'):n}</b>${n<=game.level?starsMarkup(game.stars[n]||0,'tiny'):''}</button>`).join('')}</div>
       <div class="level-card" id="level-card">${levelCardMarkup(homePick)}</div>
       <button class="btn green big" id="play-btn">${icon('play')} ${t('play')}</button>
       <div class="home-tools"><button class="btn purple${affordableBoosters()?' ready':''}" id="boosters-btn">${icon('boost')} ${t('boosters')}${affordableBoosters()?`<span class="ready-text">${t('ready',affordableBoosters())}</span><span class="badge">${affordableBoosters()}</span>`:''}</button><button class="btn blue" id="howto-btn">${icon('help')} ${t('howToPlay')}</button></div>
-      <div class="home-meta"><span class="home-best">${icon('crown')} ${t('bestCombo')} ${game.bestCombo||0}</span><button class="meta-pill${ensureDaily().goals.every(g=>g.done)?' complete':''}" id="goals-btn">${icon('target')} ${ensureDaily().goals.filter(g=>g.done).length}/3 · ${icon('album')} ${albumCount()}/${ALBUM_SIZE}</button></div>
+      <div class="home-meta"><span class="home-best">${icon('crown')} ${t('bestCombo')} ${game.bestCombo||0}</span></div>
       <div class="home-foot"><button class="lang-btn" id="lang-btn">${icon('globe')} ${LANG_CODES[lang]}</button><button class="reset-btn" id="reset-btn">${icon('retry')} ${t('reset')}</button></div>`;
     setupLevelPath();}
   else if(kind==='intro'){
@@ -639,6 +652,8 @@ function showOverlay(kind){
         <p class="kept">${run.replay?t('keptReplay'):t('kept',bulk(run.paid))}</p>
         <div class="overlay-actions"><button class="btn orange big" id="retry-btn">${icon('retry')} ${t('retry')}</button><button class="btn ghost" id="home-btn">${icon('home')}</button></div>`;
     if(r.won)card.querySelectorAll('.stars.reveal .star').forEach((star,i)=>setTimeout(()=>{star.classList.add('shown');if(star.classList.contains('on')){play('ping',.8,1+i*.25);play('vip',.6,1+i*.15);}},500+i*350));}}
+// Game logo: the SVG file is inlined so its lettering can fall back to the page font on phones without Arial Black.
+let brandLogo='';fetch(`./sousoubus-logo-outlined.svg?v=${BUILD}`).then(r=>r.ok?r.text():'').then(svg=>{brandLogo=svg.slice(Math.max(0,svg.indexOf('<svg')));for(const el of document.querySelectorAll('.brand-logo'))el.innerHTML=brandLogo;}).catch(()=>{});
 // Home level picker: dragging the strip only scrolls it; tapping a level picks it and brings it to the middle.
 let homePick=null;
 function levelCardMarkup(n){const done=n<game.level;
@@ -666,7 +681,7 @@ function resetProgress(button){
     setTimeout(()=>{if(Date.now()-resetArmed>=3000&&button.isConnected){button.classList.remove('armed');button.innerHTML=`${icon('retry')} ${t('reset')}`;}},3050);return;}
   resetArmed=0;for(const key of Object.keys(game))delete game[key];Object.assign(game,freshGame());save();shownCoins=0;homePick=null;run=null;goHome();}
 // Bottom sheets (boosters, how to play) slide up over the home or intro card; tap outside or × to close.
-let sheetKind=null,sheetSeen=false;
+let sheetKind=null,sheetSeen=false,howTab=0;
 const affordableBoosters=()=>Object.keys(UPGRADES).filter(key=>game.upgrades[key]<upgradeMax(key)&&game.coins>=upgradeCost(key,game.upgrades[key])).length;
 function sheetMarkup(kind){
   if(kind==='boosters')return `<div class="sheet-head"><h2>${icon('boost')} ${t('boostersTitle')}</h2><div class="coin-pill">${icon('coin-diagonal','coin-ico')}<strong>${Math.round(game.coins).toLocaleString('en-US')}</strong></div><button class="icon-btn" id="sheet-close" aria-label="Close">${icon('close')}</button></div>
@@ -674,20 +689,23 @@ function sheetMarkup(kind){
     <div class="shop">${Object.entries(UPGRADES).map(([key,u])=>{const level=game.upgrades[key],max=level>=upgradeMax(key),cost=upgradeCost(key,level);
       return `<div class="shop-item"><span class="shop-art">${icon(u.icon)}</span><span class="shop-text"><b>${t('up')[key][0]} <em>${level}/${upgradeMax(key)}</em></b><small>${level?t('up')[key][1](level):t('notOwned')}${max?'':` · <i>${t('next',t('up')[key][2])}</i>`}</small></span><button class="btn ${max?'locked':game.coins>=cost?'green':'locked'}" data-upgrade="${key}" ${max||game.coins<cost?'disabled':''}>${max?t('max'):shortCoins(cost)}</button></div>`;}).join('')}</div>`;
   return `<div class="sheet-head"><h2>${icon('help')} ${t('howTitle')}</h2><button class="icon-btn" id="sheet-close" aria-label="Close">${icon('close')}</button></div>
-    <ol class="how">${['bus','swipe','play','coin-diagonal',MOOD_FACE].map((name,i)=>`<li${i===4?' class="mood-step"':''}>${icon(name)}<span>${t('how')[i]}</span></li>`).join('')}</ol>
-    <ul class="how-tips"><li>${icon('star')} ${t('tips')[0]}</li><li>${icon('flash')} ${t('tips')[1]}</li></ul>
+    <div class="how-tabs">${t('howTabs').map((label,i)=>`<button class="how-tab${(howTab===i)?' on':''}" data-howtab="${i}">${label}</button>`).join('')}</div>
+    ${howTab===0?`<ol class="how">${['bus','swipe','play','coin-diagonal',MOOD_FACE].map((name,i)=>`<li${i===4?' class="mood-step"':''}>${icon(name)}<span>${t('how')[i]}</span></li>`).join('')}</ol>
+    <ul class="how-tips"><li>${icon('star')} ${t('tips')[0]}</li></ul>`
+    :`<ul class="special-list">${Object.entries(SPECIALS).map(([kind,sp])=>`<li><span class="special-chip" style="--c:${SPECIAL_CSS[kind]}">${icon(sp.icon)}</span><span><b>${t('specials')[kind].split(' · ')[0]}</b><small>${t('specialInfo')[kind]}</small></span></li>`).join('')}</ul>
+    <p class="specials-note">${icon('flash')} ${t('specialsNote')}</p>`}
     <button class="btn green big" id="sheet-ok">${t('gotIt')}</button>`;}
 function langSheetMarkup(){return `<div class="sheet-head"><h2>${icon('globe')} ${t('language')}</h2><button class="icon-btn" id="sheet-close" aria-label="Close">${icon('close')}</button></div>
   <div class="lang-list">${Object.entries(LANGS).map(([code,name])=>`<button class="btn ${code===lang?'green':'ghost'} lang-option" data-lang="${code}" lang="${code}">${name}</button>`).join('')}</div>`;}
 function setLanguage(code){if(!LANGS[code]||code===lang){closeSheet();return;}lang=code;try{localStorage.setItem('souha-lang',code);}catch{}applyLanguage();
   for(const tag of tagElements.values())tag.sig=null;$('station-tabs').dataset.ids='';$('mult-label').textContent=t('combo');shownCombo=-1;closeSheet();renderBuses();renderHud();showOverlay($('overlay').dataset.kind);}
 function goalsSheetMarkup(){const daily=ensureDaily(),stations=STATIONS;
-  return `<div class="sheet-head"><h2>${icon('target')} ${t('goalsTitle')}</h2><button class="icon-btn" id="sheet-close" aria-label="Close">${icon('close')}</button></div>
+  return `<div class="sheet-head"><h2>${icon('trophy')} ${t('goalsTitle')}</h2><button class="icon-btn" id="sheet-close" aria-label="Close">${icon('close')}</button></div>
   <p class="sheet-sub">${t('goalsSub')}</p>
-  <div class="goal-list">${daily.goals.map(g=>`<div class="goal-row${g.done?' done':''}"><span class="goal-check">${icon(g.done?'star':'target')}</span><span class="goal-body"><b>${t('goalText')[g.kind](g.target)}</b><span class="goal-bar"><i style="width:${g.progress/g.target*100}%"></i></span></span><em>${g.progress}/${g.target}</em></div>`).join('')}</div>
+  <div class="goal-list">${daily.goals.map(g=>`<div class="goal-row${g.done?' done':''}"><span class="goal-check">${icon(g.done?'star':'trophy')}</span><span class="goal-body"><b>${t('goalText')[g.kind](g.target)}</b><span class="goal-bar"><i style="width:${g.progress/g.target*100}%"></i></span></span><em>${g.progress}/${g.target}</em></div>`).join('')}</div>
   <h3 class="album-title">${icon('album')} ${t('albumTitle')} <em>${albumCount()}/${ALBUM_SIZE}</em></h3><p class="sheet-sub">${t('albumSub')}</p>
   <div class="album-grid" style="--cols:${stations.length}">${Object.entries(SPECIALS).map(([kind,sp])=>`<span class="album-kind" style="--c:${SPECIAL_CSS[kind]}">${icon(sp.icon)}</span>${stations.map(st=>{const got=(game.album?.[kind]||[]).includes(st.id);return `<span class="sticker${got?' got':''}" style="--c:${SPECIAL_CSS[kind]}">${flagMarkup(st.id,'sticker-flag')}</span>`;}).join('')}`).join('')}</div>`;}
-function openSheet(kind){sheetKind=kind;$('sheet-panel').innerHTML=kind==='lang'?langSheetMarkup():kind==='goals'?goalsSheetMarkup():sheetMarkup(kind);$('sheet').classList.remove('hidden');$('sheet').dataset.kind=kind;}
+function openSheet(kind,tab=0){sheetKind=kind;if(kind==='howto')howTab=tab;$('sheet-panel').innerHTML=kind==='lang'?langSheetMarkup():kind==='goals'?goalsSheetMarkup():sheetMarkup(kind);$('sheet').classList.remove('hidden');$('sheet').dataset.kind=kind;}
 function closeSheet(){sheetKind=null;$('sheet').classList.add('hidden');}
 function buyUpgrade(key){const level=game.upgrades[key],cost=upgradeCost(key,level);if(level>=upgradeMax(key)||game.coins<cost)return;game.coins-=cost;shownCoins=game.coins;game.upgrades[key]++;save();play('purchase',.9);if(sheetKind==='boosters')$('sheet-panel').innerHTML=sheetMarkup('boosters');if(mode==='home'){prepareRun(homePick??game.level);showOverlay('home');}}
 // ---------------------------------------------------------------------------------------------------------------
@@ -700,7 +718,7 @@ scene.add(new THREE.HemisphereLight(0xffffff,0x93bfa3,2.1));const sunlight=new T
 const staticGroup=new THREE.Group(),busGroup=new THREE.Group(),crowdGroup=new THREE.Group(),departureEffects=[],entryEffects=[],smokeEffects=[],boardingEffects=[],vanishEffects=[];const pendingMoves={};scene.add(staticGroup,busGroup,crowdGroup);
 const material=(color,more={})=>new THREE.MeshLambertMaterial({color,flatShading:true,...more});
 const mats={grass:material(0x9bd49e),grass2:material(0xb7dca5),platform:material(0xf7eacb),tile:material(0xfff4df),road:material(0x80a9a6),stripe:material(0xfff5dc),orange:material(0xf7863e),orangeDark:material(0xdd6d2c),cream:material(0xfffaf0),glass:material(0x6fb7bc),coachGlass:material(0x2b5962,{side:THREE.DoubleSide}),glassShine:material(0x83aeb4,{side:THREE.DoubleSide}),dark:material(0x405b5e),trim:material(0x2f3d40),wheel:material(0x344347),wheelHub:material(0xdfd8c4),trunk:material(0x997c56),leaf:material(0x71b885),leaf2:material(0x84c99a),skin:material(0xf3c29f),hair:material(0x624d3c),pole:material(0xe9e4d6)};
-const shirtMats=Object.fromEntries([...STATIONS.map(s=>[s.id,material(s.shirt)]),...Object.entries(SPECIALS).map(([kind,s])=>[kind,material(s.color)])]);
+const shirtMats=Object.fromEntries([...STATIONS.map(s=>[s.id,material(s.shirt)]),...Object.entries(SPECIALS).map(([kind,sp])=>[kind,material(sp.color)])]);
 const sharedMats=new Set([...Object.values(mats),...Object.values(shirtMats)]);
 function put(group,geometry,mat,x=0,y=0,z=0){const m=new THREE.Mesh(geometry,mat);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m;}
 function box(group,w,h,d,mat,x,y,z){return put(group,new THREE.BoxGeometry(w,h,d),mat,x,y,z);}
@@ -719,8 +737,7 @@ function stepBusSprings(dt,now){
     if(still)busSprings.delete(id);}
   // Engines idle: a faint shiver on every parked bus, out of step with each other.
   const apply=g=>{const body=g.userData.body;if(!body)return;const id=g.userData.pick?.id,sp=busSprings.get(id),idle=Math.sin(now*.05+id*1.7)*.004;
-    body.position.y=(sp?sp.y:0)+idle;body.rotation.set(sp?sp.pitch:0,sp?sp.yaw:0,sp?sp.roll:0);
-    for(const child of body.children)if(child.userData.roofFlag)child.rotation.z=Math.sin(now*.009+id)*.08-(sp?sp.pitch*2:0);};
+    body.position.y=(sp?sp.y:0)+idle;body.rotation.set(sp?sp.pitch:0,sp?sp.yaw:0,sp?sp.roll:0);};
   for(const g of busGroup.children)apply(g);for(const effect of departureEffects)apply(effect.model);}
 // Coins: gold discs thrown up out of a claimed bus; gravity, spin, a few damped bounces with a soft clink, then gone.
 const coinGeometry=new THREE.CylinderGeometry(.15,.15,.04,16);coinGeometry.userData.shared=true;
@@ -742,18 +759,22 @@ function stepWind(now){const gust=.55+.45*Math.sin(now*.00031)*Math.sin(now*.000
 function busModel(id){return busGroup.children.find(child=>child.userData.pick?.id===id)||departureEffects.find(effect=>effect.model.userData.pick?.id===id)?.model;}
 function clearBoardingAnimations(){for(const effect of [...boardingEffects,...vanishEffects]){scene.remove(effect.model);disposeTree(effect.model);}boardingEffects.length=0;vanishEffects.length=0;}
 function detachPerson(id){const model=crowdGroup.children.find(child=>child.userData.travelerId===id);if(!model)return null;crowdGroup.remove(model);scene.add(model);return model;}
-function launchBoardingAnimation(travelerId,busId,size=1,special=null){const model=detachPerson(travelerId),bus=busModel(busId);if(!model||!bus)return;const materials=[];model.traverse(child=>{if(!child.isMesh)return;child.material=child.material.clone();child.material.transparent=true;child.material.depthWrite=false;materials.push(child.material);});boardingEffects.push({model,busId,size,special,from:model.position.clone(),to:new THREE.Vector3(),materials,started:performance.now()});}
+// Screen position of a point on a 3D object.
+function screenOf(object,local){const r=canvas.getBoundingClientRect(),p=object.localToWorld(local.clone()).project(camera);return [r.left+(p.x*.5+.5)*r.width,r.top+(-p.y*.5+.5)*r.height];}
+// Boarding: a copy of the traveler's icon hops in an arc to the bus door, shrinking; when it lands the bus dips.
+function launchBoardingAnimation(travelerId,busId,size=1,special=null){
+  const tag=tagElements.get('t'+travelerId)?.el,bus=busModel(busId);if(!tag||!bus)return;const from=tag.getBoundingClientRect(),[tx,ty]=screenOf(bus,new THREE.Vector3(-.58,.55,1.18));
+  const fly=document.createElement('div');fly.className='board-flyer '+tag.className.replace(/\bfaded\b|\bleaving\b/g,'');fly.innerHTML=tag.innerHTML;fly.style.left=from.left+from.width/2+'px';fly.style.top=from.top+from.height+'px';floatLayer.appendChild(fly);
+  const dx=tx-(from.left+from.width/2),dy=ty-(from.top+from.height);
+  fly.animate([{transform:'translate(-50%,-100%) scale(1)',opacity:1},{transform:`translate(calc(-50% + ${dx*.5}px),calc(-100% + ${dy*.5-46}px)) scale(.85)`,opacity:1,offset:.5},{transform:`translate(calc(-50% + ${dx}px),calc(-100% + ${dy}px)) scale(.35)`,opacity:0}],{duration:280,easing:'ease-in-out'}).onfinish=()=>fly.remove();
+  setTimeout(()=>{const push=Math.sqrt(size)*(special?1.4:1);kickBus(busId,{y:-.7*push,roll:.62*push,pitch:.22*push});},260);}
 // A traveler who gives up shrinks away in a blink.
-function launchVanish(travelerId){const model=detachPerson(travelerId);if(model)vanishEffects.push({model,started:performance.now()});}
+function launchVanish(travelerId){const tag=tagElements.get('t'+travelerId)?.el;if(!tag)return;const r=tag.getBoundingClientRect(),ghost=document.createElement('div');ghost.className='tag-vanish '+tag.className;ghost.innerHTML=tag.innerHTML;ghost.style.left=r.left+r.width/2+'px';ghost.style.top=r.top+r.height+'px';floatLayer.appendChild(ghost);setTimeout(()=>ghost.remove(),200);}
 function launchVisualDeparture(id){const model=busGroup.children.find(child=>child.userData.pick?.id===id);if(!model)return;for(const child of [...model.children])if(child.userData.selectionPad){model.remove(child);disposeTree(child);}kickBus(id,{pitch:-.75,y:.25});busGroup.remove(model);scene.add(model);departureEffects.push({model,started:performance.now(),x:model.position.x,lastSmoke:0});}
 function emitDust(model,now){for(const side of [-1,1]){const p=model.localToWorld(new THREE.Vector3(side*.5,.12,1.2));const puff=new THREE.Mesh(new THREE.IcosahedronGeometry(.13+Math.random()*.06,0),new THREE.MeshBasicMaterial({color:0xf3ead6,transparent:true,opacity:.75,depthWrite:false}));puff.position.copy(p);scene.add(puff);smokeEffects.push({puff,started:now,vx:side*-.6});}}
 function emitSmoke(model,now){for(let i=0;i<3;i++){const p=model.localToWorld(new THREE.Vector3((i-1)*.35,.3,-1.68));const puff=new THREE.Mesh(new THREE.IcosahedronGeometry(.17+Math.random()*.07,0),new THREE.MeshBasicMaterial({color:0xe5e9df,transparent:true,opacity:.72,depthWrite:false}));puff.position.copy(p);scene.add(puff);smokeEffects.push({puff,started:now,vx:(Math.random()-.5)*.5});}}
 function tree(group,x,z,s=1){put(group,new THREE.CylinderGeometry(.1*s,.15*s,.78*s,6),mats.trunk,x,.4*s,z);const crown=put(group,new THREE.IcosahedronGeometry(.58*s,0),Math.random()>.5?mats.leaf:mats.leaf2,x,1.18*s,z);crown.userData.sway={x,phase:Math.random()*6.3};foliage.push(crown);}
 function textTexture(text,color='#416358',background='#fff6e5'){const el=document.createElement('canvas');el.width=768;el.height=140;const cx=el.getContext('2d');cx.fillStyle=background;cx.fillRect(0,0,768,140);cx.fillStyle=color;cx.textAlign='center';cx.textBaseline='middle';cx.font='bold 76px Arial';cx.fillText(text,384,75);const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;return texture;}
-// Flag textures are drawn from the SVG flags once they load.
-const flagTextures={};
-function flagTexture(id){if(flagTextures[id])return flagTextures[id];const el=document.createElement('canvas');el.width=192;el.height=128;const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;const img=new Image();img.onload=()=>{el.getContext('2d').drawImage(img,0,0,192,128);texture.needsUpdate=true;};img.src=`./flags/${city[id].code.toLowerCase()}.svg`;return flagTextures[id]=texture;}
-let stationFlag=null;
 function buildStatic(){
   clear(staticGroup);foliage.length=0;const sky=new THREE.Color(0xbbe3e5).lerp(new THREE.Color(city[currentStation].accent),.28);scene.background=sky;scene.fog.color=sky;
   const ground=put(staticGroup,new THREE.PlaneGeometry(100,100),mats.grass,0,-.13,0);ground.rotation.x=-Math.PI/2;ground.castShadow=false;
@@ -774,21 +795,27 @@ function buildStatic(){
   for(const x of [-6.5,-3.7,3.7,6.5])tree(staticGroup,x,5.35,.92+Math.random()*.16);
   for(const x of [-5.5,5.5]){put(staticGroup,new THREE.CylinderGeometry(.21,.24,.32,6),mats.cream,x,.16,5.3);put(staticGroup,new THREE.IcosahedronGeometry(.35,0),mats.leaf2,x,.52,5.3);}
   for(let i=0;i<24;i++){const x=-7.2+Math.random()*14.4,z=-5+Math.random()*11;if(Math.abs(z)<3.4||Math.abs(x)<2.5&&z>3.4)continue;const flower=put(staticGroup,new THREE.IcosahedronGeometry(.05,0),material(i%2?0xffd694:0xffffff),x,.13,z);flower.castShadow=false;}
-  // The station's flag waves on a pole behind the road.
-  put(staticGroup,new THREE.CylinderGeometry(.035,.045,2.6,8),mats.pole,1.5,1.3,-4.35);
-  stationFlag=put(staticGroup,new THREE.PlaneGeometry(1.05,.7,8,1),new THREE.MeshLambertMaterial({map:flagTexture(currentStation),side:THREE.DoubleSide}),2.05,2.2,-4.35);stationFlag.castShadow=false;
 }
-const busTexture=textTexture('SouSou Bus','#bd5a28','#fff9e9');
-function sideBrandTexture(){const el=document.createElement('canvas');el.width=768;el.height=160;const ctx=el.getContext('2d');ctx.clearRect(0,0,768,160);ctx.fillStyle='#fff8e9';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 112px Arial';ctx.lineJoin='round';ctx.lineWidth=14;ctx.strokeStyle='#b4521f';ctx.strokeText('SouSou Bus',384,83);ctx.fillText('SouSou Bus',384,83);const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;return texture;}
-const sideBrand=sideBrandTexture();
+// Bus decal: the game logo (SOU / BUS) in white, drawn with the same lettering as sousoubus-logo.svg (redrawn once the
+// page font has loaded, so phones without Arial Black match the logo on the home screen).
+function logoTexture(){
+  const el=document.createElement('canvas');el.width=400;el.height=244;const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=4;
+  const draw=()=>{const ctx=el.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,400,244);ctx.setTransform(2,0,0,2,0,0);
+    ctx.font="900 72px 'Arial Black', Nunito, Impact, sans-serif";ctx.textAlign='center';if('letterSpacing' in ctx)ctx.letterSpacing='-4px';
+    ctx.fillStyle=ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.lineJoin='round';for(const [text,y] of [['SOU',63],['BUS',115]]){ctx.strokeText(text,100,y);ctx.fillText(text,100,y);}texture.needsUpdate=true;};
+  draw();document.fonts?.load("900 72px Nunito").then(draw).catch(()=>{});return texture;}
+const busLogo=logoTexture();
 // Low-poly Irizar i6 coach: flat-colour parts are named in the GLB and mapped to the game palette.
-const COACH_PARTS={Body:mats.orange,Trim:mats.trim,Chrome:mats.wheelHub,Glass:mats.coachGlass,Lights:mats.cream,Tire:mats.wheel,Rim:mats.wheelHub};
+// Bus paint: the UI's vivid orange (#ff9600). It skips the scene's filmic tone mapping (which washes oranges out)
+// and its base colour is scaled so lit sides come out at that orange on screen.
+const busPaint=new THREE.MeshLambertMaterial({color:0xff9000,flatShading:true,toneMapped:false});sharedMats.add(busPaint);
+const COACH_PARTS={Body:busPaint,Trim:mats.trim,Chrome:mats.wheelHub,Glass:mats.coachGlass,Lights:mats.cream,Tire:mats.wheel,Rim:mats.wheelHub};
 let coachTemplate=null;
 const coachTemplatePromise=new GLTFLoader().loadAsync(`./models/souha-bus.glb?v=${BUILD}`).then(gltf=>{const model=gltf.scene;model.scale.set(.325,.25,.25);model.traverse(o=>{if(!o.isMesh)return;o.material=COACH_PARTS[o.material.name]||mats.dark;o.geometry.userData.shared=true;o.castShadow=true;o.receiveShadow=true;});return model;}).catch(error=>{console.warn('SouSou Bus model failed to load; using the built-in coach.',error);return null;});
 function addModelCoach(g){
   g.add(coachTemplate.clone());
-  for(const side of [-1,1]){const brand=put(g,new THREE.PlaneGeometry(1.75,.29),new THREE.MeshBasicMaterial({map:sideBrand,transparent:true,side:THREE.DoubleSide,depthWrite:false}),side*.475,.42,-.05);brand.rotation.y=side*Math.PI/2;brand.castShadow=false;}
-  const frontBrand=put(g,new THREE.PlaneGeometry(.5,.1),new THREE.MeshBasicMaterial({map:busTexture,side:THREE.DoubleSide}),0,.22,1.715);frontBrand.castShadow=false;
+  for(const side of [-1,1]){const brand=put(g,new THREE.PlaneGeometry(.6,.366),new THREE.MeshBasicMaterial({map:busLogo,transparent:true,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}),side*.475,.4,-.05);brand.rotation.y=side*Math.PI/2;brand.castShadow=false;}
+  const frontBrand=put(g,new THREE.PlaneGeometry(.2,.122),new THREE.MeshBasicMaterial({map:busLogo,transparent:true,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}),0,.22,1.715);frontBrand.castShadow=false;
 }
 function coachPanel(group,points,mat){const geometry=new THREE.BufferGeometry(),vertices=[...points[0],...points[1],...points[2],...points[0],...points[2],...points[3]];geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geometry.computeVertexNormals();return put(group,geometry,mat);}
 function buildBus(bus,x,z){
@@ -797,8 +824,6 @@ function buildBus(bus,x,z){
   if(coachTemplate)addModelCoach(body);else addBuiltInCoach(body);
   if(bus.id===selectedBus&&!bus.payout)addSelectionPad(g,0x6fdc9c,0x22b866);
   else if(bus.payout>0)addSelectionPad(g,0xffe08a,0xf2b705);
-  // The destination flag rides on the roof so you can read each bus's country at a glance.
-  if(bus.dest){const flag=put(body,new THREE.PlaneGeometry(.54,.36),new THREE.MeshBasicMaterial({map:flagTexture(bus.dest),side:THREE.DoubleSide}),0,1.28,.9);flag.rotation.y=-Math.PI/2;flag.castShadow=false;flag.userData.roofFlag=true;}
   const hit=put(g,new THREE.BoxGeometry(1.38,1.45,3.55),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}),0,.7,0);hit.castShadow=false;hit.receiveShadow=false;
   return g;
 }
@@ -818,15 +843,15 @@ function addBuiltInCoach(g){
   // The long side profile and angled nose follow a modern touring coach.
   box(g,1.01,.19,3.02,mats.dark,0,.25,-.01);
   const profile=new THREE.Shape();profile.moveTo(-1.53,.26);profile.lineTo(1.37,.26);profile.lineTo(1.58,.4);profile.lineTo(1.65,.61);profile.lineTo(1.5,1.12);profile.lineTo(1.29,1.24);profile.lineTo(-1.43,1.24);profile.lineTo(-1.55,1.1);profile.closePath();
-  const body=new THREE.ExtrudeGeometry(profile,{depth:1.08,bevelEnabled:false});body.rotateY(-Math.PI/2);body.translate(.54,0,0);put(g,body,mats.orange);
+  const body=new THREE.ExtrudeGeometry(profile,{depth:1.08,bevelEnabled:false});body.rotateY(-Math.PI/2);body.translate(.54,0,0);put(g,body,busPaint);
   box(g,.99,.07,2.74,mats.orangeDark,0,1.25,-.08);
   coachPanel(g,[[-.46,1.15,1.51],[.46,1.15,1.51],[.47,.65,1.64],[-.47,.65,1.64]],mats.coachGlass);
   for(const side of [-1,1]){
     const xx=side*.555;box(g,.014,.4,2.55,mats.coachGlass,xx,.97,-.16);
-    const brand=put(g,new THREE.PlaneGeometry(1.7,.27),new THREE.MeshBasicMaterial({map:sideBrand,transparent:true,side:THREE.DoubleSide,depthWrite:false}),side*.575,.55,-.29);brand.rotation.y=side*Math.PI/2;brand.castShadow=false;
+    const brand=put(g,new THREE.PlaneGeometry(.6,.366),new THREE.MeshBasicMaterial({map:busLogo,transparent:true,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}),side*.575,.55,-.29);brand.rotation.y=side*Math.PI/2;brand.castShadow=false;
     for(const zz of [-1.08,.9]){const wheel=put(g,new THREE.CylinderGeometry(.22,.22,.09,14),mats.wheel,side*.6,.22,zz);wheel.rotation.z=Math.PI/2;}
   }
-  const frontBrand=put(g,new THREE.PlaneGeometry(.53,.12),new THREE.MeshBasicMaterial({map:busTexture,side:THREE.DoubleSide}),0,.42,1.7);frontBrand.castShadow=false;
+  const frontBrand=put(g,new THREE.PlaneGeometry(.2,.122),new THREE.MeshBasicMaterial({map:busLogo,transparent:true,side:THREE.DoubleSide,depthWrite:false,toneMapped:false}),0,.42,1.7);frontBrand.castShadow=false;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -841,13 +866,9 @@ for(let attempts=0;CROWD_SPOTS.length<240&&attempts<60000;attempts++){const x=-7
 let onScreenSpots=null;
 function computeOnScreenSpots(){const v=new THREE.Vector3(),w=innerWidth,h=innerHeight,top=$('mult-badge').getBoundingClientRect().bottom+46,bottom=document.querySelector('.bottom-area').getBoundingClientRect().top-6;
   return new Set(CROWD_SPOTS.map(([x,z],i)=>{v.set(x,.4,z).project(camera);const px=(v.x*.5+.5)*w,py=(-v.y*.5+.5)*h;return px>52&&px<w-52&&py>top&&py<bottom?i:-1;}).filter(i=>i>=0));}
-function buildPerson(traveler){
-  const [x,z]=CROWD_SPOTS[traveler.spot],g=new THREE.Group();g.position.set(x,.1,z);g.scale.setScalar(PERSON_SCALE);g.userData.travelerId=traveler.id;crowdGroup.add(g);
-  // Shirts show the traveler's country (or their bonus colour), and faded travelers stand slightly smaller.
-  const offsets=[[0,0],[-.34,.18],[.34,.14]].slice(0,Math.min(3,traveler.size||1));
-  for(const [ox,oz] of offsets){put(g,new THREE.CylinderGeometry(.11,.16,.33,6),shirtMats[traveler.special||traveler.dest],ox,.3,oz);put(g,new THREE.IcosahedronGeometry(.14,0),mats.skin,ox,.61,oz);put(g,new THREE.IcosahedronGeometry(.145,0),mats.hair,ox,.69,oz-.045);
-    for(const xx of [-.075,.075])put(g,new THREE.CylinderGeometry(.035,.04,.18,5),mats.dark,ox+xx,.08,oz);}
-  g.userData.pop=performance.now();return g;}
+// Travelers are drawn as person icons (HTML tags) standing on their sidewalk spot: no 3D people, no shadows, and the
+// tags are only re-measured when they appear or the screen changes. The 3D object is just an invisible anchor.
+function buildPerson(traveler){const [x,z]=CROWD_SPOTS[traveler.spot],g=new THREE.Group();g.position.set(x,.1,z);g.userData.travelerId=traveler.id;crowdGroup.add(g);return g;}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Rendering buses, travelers and their HTML tags
@@ -863,7 +884,7 @@ function renderCrowd(){
   const known=new Set(crowd.map(p=>p.id));
   for(const child of [...crowdGroup.children])if(!known.has(child.userData.travelerId)){crowdGroup.remove(child);disposeTree(child);}
   const built=new Set(crowdGroup.children.map(c=>c.userData.travelerId));for(const p of crowd)if(!built.has(p.id))buildPerson(p);
-  crowdLabels=crowd.map(p=>({kind:'traveler',id:p.id,object:crowdGroup.children.find(c=>c.userData.travelerId===p.id),anchor:new THREE.Vector3(0,.96,0)}));
+  crowdLabels=crowd.map(p=>({kind:'traveler',id:p.id,object:crowdGroup.children.find(c=>c.userData.travelerId===p.id),anchor:new THREE.Vector3(0,.05,0)}));
   renderLabels();}
 // Tags are kept and updated in place (keyed by kind and id), so their pop-in and countdown animations never restart.
 const tagElements=new Map();
@@ -879,15 +900,16 @@ function renderLabels(){
     if(!tag){const el=document.createElement('button');el.dataset[attr]=id;host.appendChild(el);tag={el,sig:null};tagElements.set(key,tag);}
     if(tag.sig!==sig){tag.el.innerHTML=html;tag.sig=sig;}if(tag.el.className!==className)tag.el.className=className;tag.el.setAttribute('aria-label',label);return tag.el;};
   for(const entry of busLabels){const b=run.buses.find(x=>x.id===entry.id);if(!b)continue;const m=busTagMarkup(b,now);entry.el=upsert('bus'+b.id,'bus',b.id,m.className,m.label,m.html,m.sig);}
-  for(const entry of crowdLabels){const p=crowd.find(x=>x.id===entry.id);if(!p)continue;const special=p.special&&SPECIALS[p.special],faded=special?!tappableDest:p.dest!==tappableDest,life=p.until-p.born,leaving=!special&&!faded&&p.until-now<900;
+  for(const entry of crowdLabels){const p=crowd.find(x=>x.id===entry.id);if(!p)continue;const special=p.special&&SPECIALS[p.special],faded=special?!tappableDest:p.dest!==tappableDest,life=p.until-p.born,leaving=!special&&!faded&&p.until-now<650;
     const size=p.size||1,tooBig=!faded&&!special&&size>freeSeats;
     entry.el=upsert('t'+p.id,'traveler',p.id,`traveler-tag${faded?' faded':''}${special?` special special-${p.special}`:''}${size>1?' group':''}${tooBig?' too-big':''}${leaving?' leaving':''}`,`${special?t('specials')[p.special]+' ':''}${size>1?`group of ${size} `:''}traveler to ${city[p.dest].name}${faded?', board a bus to that country first':tooBig?', does not fit':''}`,
-      `${special?`<span class="special-glow"></span><span class="special-icon">${icon(special.icon)}</span><span class="special-ring" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`:flagMarkup(p.dest)}${size>1?`<span class="group-badge">${size}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,`${p.dest}-${p.special}-${size}-${p.until}`);}
+      `${special?`<span class="special-glow"></span><span class="special-icon">${icon(special.icon)}</span><span class="special-ring" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`:`<span class="person-icon" style="--c:#${new THREE.Color(city[p.dest].shirt).getHexString()}">${icon('person').repeat(Math.min(2,size))}</span>${faded?'':flagMarkup(p.dest,'mini-flag')}`}${size>1?`<span class="group-badge">${size}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,`${p.dest}-${p.special}-${size}-${p.until}-${faded?1:0}`);}
   for(const [key,tag] of tagElements)if(!seen.has(key)){tag.el.remove();tagElements.delete(key);}
   positionLabels();}
+let labelEpoch=0;const placedTags=new WeakMap();
 function positionLabels(){
   const r=canvas.getBoundingClientRect();
-  for(const entry of [...busLabels,...crowdLabels]){const el=entry.el;if(!entry.object||!el)continue;const p=entry.object.localToWorld(entry.anchor.clone()).project(camera);let x=(p.x*.5+.5)*r.width,y=(-p.y*.5+.5)*r.height;const half=el.offsetWidth/2;x=THREE.MathUtils.clamp(x,half+5,r.width-half-5);y=THREE.MathUtils.clamp(y,el.offsetHeight+8,r.height-5);el.style.left=x+'px';el.style.top=y+'px';}}
+  for(const entry of [...busLabels,...crowdLabels]){const el=entry.el;if(!entry.object||!el)continue;if(entry.kind==='traveler'){if(placedTags.get(el)===labelEpoch)continue;placedTags.set(el,labelEpoch);}const p=entry.object.localToWorld(entry.anchor.clone()).project(camera);let x=(p.x*.5+.5)*r.width,y=(-p.y*.5+.5)*r.height;const half=el.offsetWidth/2;x=THREE.MathUtils.clamp(x,half+5,r.width-half-5);y=THREE.MathUtils.clamp(y,el.offsetHeight+8,r.height-5);el.style.left=x+'px';el.style.top=y+'px';}}
 // The camera frames the station in the free space between the HUD and the bottom bar on any screen: all three buses
 // fully visible (with room above for their labels) and the sidewalk where travelers wait just above the bottom bar.
 const FRAME_BUSES=BAYS.flatMap(b=>[[b.x-1.75,0,b.z-.5],[b.x+1.75,0,b.z+.5],[b.x-1.75,1.35,b.z],[b.x+1.75,1.35,b.z]]),FRAME_WALK=[[-3.2,0,6.3],[0,0,6.3],[3.2,0,6.3]];
@@ -900,7 +922,7 @@ function frameCamera(w,h){
   const cx=(xMin+xMax)/2,cy=(yMin+yMax)/2-halfH*(1-(top+bottom)/h);
   camera.left=cx-halfW;camera.right=cx+halfW;camera.top=cy+halfH;camera.bottom=cy-halfH;camera.updateProjectionMatrix();}
 function resize(){
-  const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);frameCamera(w,h);
+  labelEpoch++;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);frameCamera(w,h);
   onScreenSpots=computeOnScreenSpots();crowd=crowd.filter(p=>onScreenSpots.size<8||onScreenSpots.has(p.spot));if(run)renderCrowd();}
 addEventListener('resize',resize);
 
@@ -921,13 +943,13 @@ $('claims-bar').addEventListener('pointerdown',e=>{const pill=e.target.closest('
 $('pause-btn').addEventListener('click',()=>{play('select',.8);pause();});
 $('sheet').addEventListener('click',e=>{
   const button=e.target.closest('button');if(!button){if(e.target.id==='sheet')closeSheet();return;}play('select',.8);
-  if(button.dataset.lang)setLanguage(button.dataset.lang);else if(button.dataset.upgrade)buyUpgrade(button.dataset.upgrade);else if(button.id==='sheet-close'||button.id==='sheet-ok')closeSheet();});
+  if(button.dataset.howtab){howTab=Number(button.dataset.howtab);$('sheet-panel').innerHTML=sheetMarkup('howto');}else if(button.dataset.lang)setLanguage(button.dataset.lang);else if(button.dataset.upgrade)buyUpgrade(button.dataset.upgrade);else if(button.id==='sheet-close'||button.id==='sheet-ok')closeSheet();});
 $('overlay').addEventListener('click',e=>{
   // Every button click makes the same short click sound.
   const button=e.target.closest('button');if(!button)return;if(button.id!=='reset-btn')play('select',.8);
   if(button.id==='play-btn')openLevel(homePick??game.level);else if(button.id==='start-btn')startCountdown();else if(button.id==='resume-btn')resume();
   else if(button.id==='restart-btn'||button.id==='retry-btn')openLevel(run.n);else if(button.id==='next-btn')openLevel(Math.min(run.n+1,game.level));else if(button.id==='home-btn')goHome();
-  else if(button.id==='music-btn')toggleMusic();else if(button.id==='boosters-btn')openSheet('boosters');else if(button.id==='howto-btn')openSheet('howto');else if(button.id==='lang-btn')openSheet('lang');else if(button.id==='goals-btn')openSheet('goals');else if(button.id==='reset-btn')resetProgress(button);else if(button.dataset.level)pickLevel(Number(button.dataset.level),true);else if(button.dataset.upgrade)buyUpgrade(button.dataset.upgrade);});
+  else if(button.id==='music-btn')toggleMusic();else if(button.id==='boosters-btn')openSheet('boosters');else if(button.id==='howto-btn')openSheet('howto');else if(button.id==='lang-btn')openSheet('lang');else if(button.id==='goals-btn'){openSheet('goals');for(const g of ensureDaily().goals)if(g.done)g.seen=true;save();button.querySelector('.dot')?.remove();}else if(button.id==='reset-btn')resetProgress(button);else if(button.dataset.level)pickLevel(Number(button.dataset.level),true);else if(button.dataset.upgrade)buyUpgrade(button.dataset.upgrade);});
 addEventListener('keydown',e=>{if(e.key==='Escape')mode==='play'?pause():mode==='paused'&&resume();if(mode==='play'&&e.key==='ArrowRight')switchStation(neighbour(1),1);if(mode==='play'&&e.key==='ArrowLeft')switchStation(neighbour(-1),-1);});
 function renderSoundButton(){$('sound').innerHTML=icon(sound?'sound-on':'sound-off');$('sound').setAttribute('aria-label',sound?'Mute sound':'Turn sound on');}
 $('sound').addEventListener('click',()=>{sound=!sound;localStorage.setItem('souha-sound',sound?'on':'off');renderSoundButton();applyMusicVolume();play('select',.8);});
@@ -946,9 +968,7 @@ function animate(){
   if(mode==='play'){if(combo.count&&clockNow-combo.last>run.cfg.combo&&clockNow>combo.frozenUntil)endCombo();renderCombo(clockNow);}
   const dt=Math.min(.033,(now-(lastFrame||now))/1000);lastFrame=now;stepBusSprings(dt,now);stepCoins(dt,now);stepWind(now);
   for(const pad of pads){const pulse=Math.sin(now/260);pad.scale.set(1+pulse*.025,1,1+pulse*.012);pad.userData.fill.opacity=.42+pulse*.12;}
-  if(stationFlag){const pos=stationFlag.geometry.attributes.position;for(let i=0;i<pos.count;i++){const x=pos.getX(i)+.525;pos.setZ(i,Math.sin(now/260+x*5)*.06*x);}pos.needsUpdate=true;}
   // New travelers pop in with a little bounce.
-  for(const g of crowdGroup.children){const t=Math.min(1,(now-g.userData.pop)/220);g.scale.setScalar(PERSON_SCALE*(t<1?1-Math.pow(1-t,3)*(1-Math.sin(t*Math.PI)*.4):1));}
   for(let i=departureEffects.length-1;i>=0;i--){const effect=departureEffects[i],t=Math.min(1,(now-effect.started)/450),ease=1-(1-t)**3;effect.model.position.x=THREE.MathUtils.lerp(effect.x,10.5,ease);if(now-effect.lastSmoke>45&&t<.85){emitSmoke(effect.model,now);effect.lastSmoke=now;}if(t>=1){scene.remove(effect.model);disposeTree(effect.model);departureEffects.splice(i,1);}}
   let entriesFinished=false;for(let i=entryEffects.length-1;i>=0;i--){const effect=entryEffects[i],t=THREE.MathUtils.clamp((now-effect.started)/550,0,1),ease=1-(1-t)**3;effect.model.position.x=THREE.MathUtils.lerp(effect.fromX,effect.toX,ease);effect.model.position.z=THREE.MathUtils.lerp(effect.fromZ,effect.toZ,ease);if(t>=1){entryEffects.splice(i,1);entriesFinished=true;kickBus(effect.id,{pitch:.85,y:-.3});emitDust(effect.model,now);}}if(entriesFinished&&!entryEffects.length){renderLabels();renderHud();}
   for(let i=boardingEffects.length-1;i>=0;i--){const effect=boardingEffects[i],t=THREE.MathUtils.clamp((now-effect.started)/260,0,1),ease=t*t*(3-2*t),bus=busModel(effect.busId);if(bus)effect.to.copy(bus.localToWorld(new THREE.Vector3(-.58,.55,1.18)));effect.model.position.lerpVectors(effect.from,effect.to,ease);effect.model.position.y+=Math.sin(Math.PI*t)*.9;const stretch=Math.sin(Math.PI*t),shrink=PERSON_SCALE*(1-.18*t);effect.model.scale.set(shrink*(1-.14*stretch),shrink*(1+.3*stretch),shrink*(1-.14*stretch));const fade=t<.35?1:(1-t)/.65;for(const m of effect.materials)m.opacity=fade;if(t>=1){const push=Math.sqrt(effect.size)*(effect.special?1.4:1);kickBus(effect.busId,{y:-.7*push,roll:.62*push,pitch:.22*push});scene.remove(effect.model);disposeTree(effect.model);boardingEffects.splice(i,1);}}
@@ -956,7 +976,7 @@ function animate(){
   for(let i=smokeEffects.length-1;i>=0;i--){const effect=smokeEffects[i],t=Math.min(1,(now-effect.started)/620);effect.puff.position.y+=.006;effect.puff.position.x+=effect.vx*.016;effect.puff.scale.setScalar(1+t*2.5);effect.puff.material.opacity=.82*(1-t);if(t>=1){scene.remove(effect.puff);effect.puff.geometry.dispose();effect.puff.material.dispose();smokeEffects.splice(i,1);}}
   // Claim countdowns tick down on the gold tags without re-rendering them.
   if(run)for(const el of document.querySelectorAll('.claim-left')){const bus=run.buses.find(b=>b.id===Number(el.closest('[data-bus]').dataset.bus));if(bus){const s=Math.max(0,Math.ceil((bus.claimBy-clockNow)/1000));if(el.textContent!==String(s))el.textContent=s;el.closest('.bus-tag').classList.toggle('hurry',bus.claimBy-clockNow<3500);}}
-  if(run&&mode==='play'){for(const p of crowd){const tag=tagElements.get('t'+p.id);if(tag)tag.el.classList.toggle('leaving',!p.special&&!tag.el.classList.contains('faded')&&p.until-clockNow<900);}if(rushActive(clockNow))renderRush(clockNow);}
+  if(run&&mode==='play'){for(const p of crowd){const tag=tagElements.get('t'+p.id);if(tag)tag.el.classList.toggle('leaving',!p.special&&!tag.el.classList.contains('faded')&&p.until-clockNow<650);}if(rushActive(clockNow))renderRush(clockNow);}
   positionLabels();renderer.render(scene,camera);}
 
 coachTemplate=await coachTemplatePromise;

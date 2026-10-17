@@ -870,3 +870,129 @@ html[dir="rtl"] .rush-meter{right:auto;left:12px}
 .sticker.got{background:#fff;box-shadow:inset 0 0 0 2px var(--c),0 0 8px color-mix(in srgb,var(--c) 50%,transparent)}
 .sticker.got .sticker-flag{filter:none;opacity:1}
 @media (max-height:700px){.goal-row{padding:6px 10px}.sticker,.album-kind{height:24px}.album-kind{width:24px}}
+
+/* How to play: Basics / Specials tabs */
+.how-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--snow)}
+.how-tab{padding:9px;border:0;border-radius:11px;background:none;font:inherit;font-size:14px;font-weight:900;color:var(--muted)}
+.how-tab.on{background:var(--white);color:var(--blue);box-shadow:0 2px 0 var(--line)}
+.special-list{display:grid;gap:7px;margin:0;padding:0;list-style:none;text-align:start}
+.special-list li{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:14px;background:var(--snow)}
+.special-chip{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:11px;background:var(--c);box-shadow:0 3px 0 #0002,0 0 10px color-mix(in srgb,var(--c) 45%,transparent)}
+.special-chip .ico{width:20px;height:20px;color:#fff}
+.special-list li>span:last-child{display:grid;gap:1px}
+.special-list b{font-size:14px;font-weight:900}
+.special-list small{font-size:12px;font-weight:800;color:var(--muted);line-height:1.3}
+.specials-note{display:flex;gap:8px;margin:0;font-size:12px;font-weight:800;color:var(--muted);line-height:1.35;text-align:start}
+.specials-note .ico{flex:none;width:16px;height:16px;margin-top:1px;color:var(--blue)}
+@media (max-height:700px){.special-list li{padding:5px 10px}.special-chip{width:30px;height:30px}.how-tab{padding:7px}}
+/* Rush hour reads as a reward: purple glow (not a warning colour). */
+.rush-vignette{box-shadow:inset 0 0 70px 18px #b46cffb0;background:radial-gradient(ellipse at center,transparent 55%,#ce82ff33)}
+@keyframes rush-glow{to{box-shadow:inset 0 0 90px 26px #a050ffc0}}
+.rush-meter.active{border-color:var(--purple-d);background:var(--purple)}
+
+/* Trophy button (daily goals + album) next to the music button. */
+.home-brand .trophy-btn{position:relative;margin-left:auto;margin-right:8px;width:46px;height:46px;color:var(--gold)}
+.home-brand .trophy-btn .ico{width:24px;height:24px;filter:drop-shadow(0 2px 0 var(--gold-d))}
+.home-brand .trophy-btn.complete{border-color:var(--gold)}
+.home-brand .trophy-btn .dot{position:absolute;top:-4px;right:-4px;width:14px;height:14px;border:2px solid #fff;border-radius:50%;background:var(--red)}
+.home-brand .music-btn{margin-left:0}
+html[dir="rtl"] .home-brand .trophy-btn{margin-left:8px;margin-right:auto}
+.sheet-head h2 .ico{color:var(--purple)}
+.sheet[data-kind="goals"] .sheet-head h2 .ico{color:var(--gold);filter:drop-shadow(0 2px 0 var(--gold-d))}
+.goal-check{background:var(--gold-l);color:var(--gold-d)}
+.home-brand{gap:8px}
+.home-brand .music-btn,.home-brand .trophy-btn,html[dir="rtl"] .home-brand .trophy-btn{margin:0}
+.home-brand .trophy-btn{margin-inline-start:auto}
+@media (max-width:380px){
+  .home-brand{gap:6px}
+  .home-brand .music-btn,.home-brand .trophy-btn{width:40px;height:40px}
+  .home-brand .music-btn .ico,.home-brand .trophy-btn .ico{width:21px;height:21px}
+  .home-brand .coin-pill{height:40px;padding:0 9px 0 6px}
+  .home-brand .coin-pill strong{font-size:14px}
+  .home-brand .logo.big{transform:scale(.88);transform-origin:left center;margin-inline-end:-14px}
+  html[dir="rtl"] .home-brand .logo.big{transform-origin:right center}
+}
+/* Narrow phones: a smaller logo (sized, not scaled) so logo, trophy, music and coins always fit in one row. */
+@media (max-width:380px){
+  .home-brand .logo.big,html[dir="rtl"] .home-brand .logo.big{transform:none;margin:0;height:42px;padding:0 9px 0 7px;border-radius:14px;gap:4px}
+  .home-brand .logo.big .ico{width:22px;height:22px}
+  .home-brand .logo.big .logo-text b{font-size:15px}
+  .home-brand .logo.big .logo-text small{font-size:8px;letter-spacing:2px}
+  .home-brand .music-btn,.home-brand .trophy-btn,.home-brand .coin-pill{height:42px}
+  .home-brand .music-btn,.home-brand .trophy-btn{width:42px}
+  .home-brand .coin-pill{min-width:0;flex:0 1 auto}
+}
+@media (max-width:340px){.home-brand .coin-pill .coin-ico{width:18px;height:18px}.home-brand .coin-pill strong{font-size:13px}.home-brand{gap:5px}}
+@media (max-width:420px){
+  .home-brand{gap:6px}
+  .home-brand .logo.big,html[dir="rtl"] .home-brand .logo.big{transform:none;margin:0;height:44px;padding:0 10px 0 8px;border-radius:15px;gap:5px}
+  .home-brand .logo.big .ico{width:24px;height:24px}
+  .home-brand .logo.big .logo-text b{font-size:16px}
+  .home-brand .logo.big .logo-text small{font-size:9px;letter-spacing:2px}
+  .home-brand .music-btn,.home-brand .trophy-btn{width:44px;height:44px}
+  .home-brand .coin-pill{height:44px;min-width:0;flex:0 1 auto}
+}
+@media (max-width:380px){.home-brand .logo.big,html[dir="rtl"] .home-brand .logo.big{height:42px}.home-brand .logo.big .logo-text b{font-size:15px}.home-brand .music-btn,.home-brand .trophy-btn{width:42px;height:42px}.home-brand .coin-pill{height:42px}}
+@media (max-width:340px){.home-brand .coin-pill{padding:0 7px 0 5px;gap:4px}.home-brand .coin-pill .coin-ico{width:16px;height:16px}.home-brand .coin-pill strong{font-size:12px}.home-brand .music-btn,.home-brand .trophy-btn{width:38px}}
+@media (max-width:340px){.home-brand{gap:4px}.home-brand .coin-pill{flex:none}.home-brand .logo.big,html[dir="rtl"] .home-brand .logo.big{padding:0 7px 0 6px}.home-brand .logo.big .logo-text b{font-size:14px}}
+
+/* Game logo (sousoubus-logo.svg) at the top left of the home screen. */
+.brand-logo{display:block;flex:none;height:54px;aspect-ratio:200/122}
+.brand-logo svg{display:block;width:100%;height:100%;overflow:visible}
+.brand-logo text{font-family:'Arial Black','Nunito',Impact,sans-serif;font-weight:900}
+@media (max-width:380px){.brand-logo{height:48px}}
+html[lang="ar"] .brand-logo *{letter-spacing:-4px!important}
+/* App logo (outlined SVG) is exactly as tall as the header buttons. */
+.brand-logo{height:46px;aspect-ratio:220/142}
+@media (max-width:420px){.brand-logo{height:44px}}
+@media (max-width:380px){.brand-logo{height:42px}}
+/* Station tabs: same design language as the home buttons (filled 3D card for the station you are at, white 3D cards
+   for the others, gold when money waits there) with a bigger flag, bold name and a clear count chip. */
+.station-tabs{gap:8px}
+.station-tab{gap:4px;padding:8px 4px 7px;border:2px solid var(--line);border-bottom-width:5px;border-radius:18px;background:var(--white);box-shadow:none;transition:transform .1s}
+.station-tab .tab-flag{width:36px;height:24px;border-radius:5px;box-shadow:0 0 0 2px #fff,0 2px 4px #0002}
+.station-tab b{font-size:14px;line-height:1.1;color:var(--ink)}
+.station-tab small{gap:4px;padding:2px 9px;border-radius:999px;background:var(--orange-l);color:var(--orange-d);font-size:12px;line-height:1.3}
+.station-tab small .ico{width:14px;height:14px}
+.station-tab.here{border-color:var(--blue-d);background:var(--blue)}
+.station-tab.here b{color:#fff}
+.station-tab.here small{background:#ffffff33;color:#fff}
+.station-tab.alert{border-color:var(--gold-d);background:var(--gold);animation:none}
+.station-tab.alert b{color:#6b4a00}
+.station-tab.alert small{background:#fff;color:#a06d00}
+.station-tab.alert small .ico{color:var(--gold)}
+.station-tab:active{transform:translateY(3px);border-bottom-width:2px;margin-top:3px}
+@media (max-width:380px){.station-tab b{font-size:12px}.station-tab .tab-flag{width:30px;height:20px}.station-tab small{padding:1px 7px;font-size:11px}}
+/* Five or six stations: tighter tabs so long names (Barcelona, Istanbul) fit. */
+.station-tabs:has(.station-tab:nth-child(5)){gap:5px}
+.station-tabs:has(.station-tab:nth-child(5)) .station-tab{padding:7px 2px 6px;min-width:0}
+.station-tabs:has(.station-tab:nth-child(5)) .station-tab b{font-size:11px;letter-spacing:-.3px}
+.station-tabs:has(.station-tab:nth-child(5)) .station-tab .tab-flag{width:30px;height:20px}
+.station-tabs:has(.station-tab:nth-child(5)) .station-tab small{padding:1px 6px;font-size:11px}
+.station-tabs:has(.station-tab:nth-child(6)) .station-tab b{font-size:10px;letter-spacing:-.4px}.station-tabs:has(.station-tab:nth-child(6)){gap:4px}.station-tabs:has(.station-tab:nth-child(6)) .station-tab{padding-left:1px;padding-right:1px}
+/* Seven stations: flags only (names would not fit; the flag is what travelers show too). */
+.station-tabs:has(.station-tab:nth-child(7)) .station-tab b{display:none}
+.station-tabs:has(.station-tab:nth-child(7)) .station-tab{gap:5px;padding:9px 1px 7px}
+.station-tabs:has(.station-tab:nth-child(7)) .station-tab .tab-flag{width:32px;height:22px}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Travelers as person icons: a white tag with a person in the destination's colour (two for a group), a small flag
+   badge when it can board the selected bus, standing on its spot with a soft ground shadow.
+   --------------------------------------------------------------------------------------------------------------- */
+.traveler-tag{padding:4px 5px 3px;border-radius:13px}
+.traveler-tag .person-icon{display:flex;align-items:flex-end;color:var(--c)}
+.traveler-tag .person-icon .ico{width:22px;height:22px}
+.traveler-tag .person-icon .ico+.ico{margin-left:-9px}
+.traveler-tag .mini-flag{position:absolute;bottom:-5px;left:-6px;width:16px;height:11px;border-radius:3px;box-shadow:0 0 0 2px #fff,0 1px 3px #0003}
+.traveler-tag.faded .person-icon{color:#9aa5ab}
+.traveler-tag:not(.special) .life-timer{left:6px;right:6px}
+.traveler-tag:after{display:block!important;content:'';position:absolute;left:50%;bottom:-7px;width:26px;height:6px;margin-left:-13px;border:0!important;border-radius:50%;background:#0000001f;transform:none!important}
+.traveler-tag.faded:after{opacity:.5}
+.board-flyer,.tag-vanish{position:fixed;z-index:6;transform:translate(-50%,-100%);pointer-events:none;display:flex;align-items:center;justify-content:center;padding:4px 5px 3px;border:2px solid var(--green);border-bottom-width:3px;border-radius:13px;background:#fff}
+.board-flyer .life-timer,.tag-vanish .life-timer,.board-flyer .mini-flag,.tag-vanish .mini-flag,.board-flyer .special-ring,.tag-vanish .special-ring{display:none}
+.board-flyer .person-icon,.tag-vanish .person-icon{display:flex;color:var(--c)}
+.board-flyer .ico,.tag-vanish .ico{width:22px;height:22px}
+.board-flyer.special{background:var(--glow);border-color:var(--glow)}
+.tag-vanish{border-color:var(--line);animation:tag-vanish .2s ease-in forwards}
+@keyframes tag-vanish{to{transform:translate(-50%,-80%) scale(.3);opacity:0}}
+.traveler-tag .mini-flag{top:-6px;bottom:auto;left:-7px}

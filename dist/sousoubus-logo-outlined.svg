@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="142" viewBox="0 0 220 142" role="img" aria-labelledby="title desc">
+  <title id="title">SOU BUS orange logo with white outline</title>
+  <desc id="desc">Heavy orange SOU and BUS lettering on a solid white shape with a connected white border.</desc>
+
+  <!-- Fill every gap inside the combined lettering silhouette. -->
+  <rect x="34" y="30" width="152" height="99" rx="7" fill="#fff"/>
+
+  <g font-family="'Arial Black',Impact,sans-serif" font-size="72" font-weight="900" text-anchor="middle" letter-spacing="-4" stroke-linejoin="round" paint-order="stroke fill">
+    <!-- The wide white layer joins into one outline behind both words. -->
+    <g fill="#fff" stroke="#fff" stroke-width="17">
+      <text x="110" y="73">SOU</text>
+      <text x="110" y="125">BUS</text>
+    </g>
+    <g fill="#ff9600" stroke="#ff9600" stroke-width="1.5">
+      <text x="110" y="73">SOU</text>
+      <text x="110" y="125">BUS</text>
+    </g>
+  </g>
+</svg>

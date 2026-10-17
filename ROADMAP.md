@@ -77,3 +77,27 @@ Difficulty still climbs (a casual player now loses level 13 on time at 87% inste
   countdown on a first-ever level; traveler tags now refresh when their destination changes.
 - **Audio fix** — sound could stay silent after switching tabs/apps on mobile. A possibly stale audio context
   (always on iOS, or when time stops moving elsewhere) is now rebuilt inside the next tap; music restarts.
+- **How to play** — new "Specials" tab: each special traveler with its icon and effect, plus the Rush meter rule (EN/FR/AR).
+- **Audio warning fix** — on touch screens the sound engine was created on `pointerdown`, which browsers don't count
+  as a gesture ("AudioContext was not allowed to start"). Audio now only starts/resumes during real gestures (`touchend`/click).
+- **Look** — Rush hour glow is purple (gold/red read like a warning). Daily goals use a trophy icon, opened from a new
+  icon-only trophy button next to the music button (red dot when a goal is newly done); the pill under Best combo is gone.
+  Header sized to fit logo + trophy + music + coins (up to 6 digits) on 320–430 px screens.
+- **Logo** — the home header uses `dist/sousoubus-logo.svg` (inlined so it can fall back to the Nunito font on phones without Arial Black).
+- **Bus look** — buses are painted the UI's vivid orange (#ff9600 on screen; the paint skips the filmic tone mapping that
+  washed it out) and carry the SOU/BUS logo in white on both sides and the front. The home logo is the same orange.
+- **Logo** — the home header now uses `dist/sousoubus-logo-outlined.svg` (orange set to #ff9600), exactly as tall as the header buttons (46 / 44 / 42 px by screen width).
+- **Station tabs** — redesigned like the home buttons: the current station is a filled blue 3D card, others white 3D cards,
+  gold when money waits; bigger flags, bold names, a clear bus-count / claim-time chip; names fit with 5–6 stations.
+  The red "leaving soon" pulse now starts 0.65 s before a traveler leaves (was 0.9 s) so fewer tags are red at once.
+- **Scene** — the waving flag on its pole and the flags on bus roofs are gone; scene colours unchanged (a fully white
+  scene was tried and reverted).
+- **Cities** — stations are now Tunis, Paris, Amsterdam, Brussels, Istanbul, Madrid, Rome (unlocked in that order, 7th at
+  level 16); new NL/BE flags; names in EN/FR/AR; with 7 stations the tabs show flags only. Album = 6 specials × 7 cities.
+- **Travelers** — redesigned: chunky low-poly people with a rounded body in their destination's colour, five skin tones,
+  hair or a cap, dot eyes, dark trousers, and often a colourful suitcase (all shared geometry, cheap for big crowds).
+- **Combo banner removed** — when a combo ends, the combo badge pops, shows "+coins" under it and its coins fly to the buses.
+- **Travelers as icons (performance)** — the 3D people are gone: each traveler is a "User Full Body" icon in its
+  destination's colour (two icons for a group, with the count badge), a small flag badge only when it can board the
+  selected bus, and a soft ground shadow. Boarding: the icon hops in an arc into the bus door (the bus still dips);
+  leaving: it pops away. Traveler tags are measured only when they appear or the screen changes (not every frame).

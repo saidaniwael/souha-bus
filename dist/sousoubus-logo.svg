@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="122" viewBox="0 0 200 122" role="img" aria-labelledby="title desc">
+  <title id="title">SOU BUS</title>
+  <desc id="desc">Heavy orange SOU and BUS lettering stacked closely on a transparent background.</desc>
+
+  <g font-family="'Arial Black',Impact,sans-serif" font-size="72" font-weight="900" text-anchor="middle" letter-spacing="-4" fill="#ff9600" stroke="#ff9600" stroke-width="1.5" stroke-linejoin="round" paint-order="stroke fill">
+    <text x="100" y="63">SOU</text>
+    <text x="100" y="115">BUS</text>
+  </g>
+</svg>

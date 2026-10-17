@@ -5,3 +5,5 @@ crown, left, right, pin, store, boost, route, pause, play, home, retry, lock.
 Also: coin-diagonal, smiley-very-happy-1, smiley-happy, smiley-indiferent, smiley-worried, smiley-crying-1,
 music-note-1, music-note-off-1, help (alert-help-question), close (delete-1), globe.
 Also: magnet, ticket (ticket-star), target (target-2), album (book-reading).
+Also: trophy.
+Also: person (user-full-body).
