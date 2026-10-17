@@ -2,3 +2,5 @@ Icons: Streamline "Plump Solid" set (https://www.streamlinehq.com), from the pro
 Streamline's free icons require attribution ("Icons by Streamline"); check your Streamline plan for the exact terms.
 Files are renamed copies: star, gift, diamond, flash, heart, coin, bag, bus, add, sound-on, sound-off, timer, swipe,
 crown, left, right, pin, store, boost, route, pause, play, home, retry, lock.
+Also: coin-diagonal, smiley-very-happy-1, smiley-happy, smiley-indiferent, smiley-worried, smiley-crying-1,
+music-note-1, music-note-off-1, help (alert-help-question), close (delete-1), globe.

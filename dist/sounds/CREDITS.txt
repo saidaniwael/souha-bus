@@ -42,3 +42,11 @@ Claim and purchase sounds (all CC0)
   ping.mp3          <- "plingy coin" by Fupi, OpenGameArt.org (https://opengameart.org/content/plingy-coin); played as a rising 5-note cascade
   coin-jingle.mp3   <- Kenney "RPG Audio": handleCoins.ogg (www.kenney.nl)
   purchase.mp3      <- "Purchasing Sound Effect" by Spring Spring, OpenGameArt.org (https://opengameart.org/content/purchasing-sound-effect), trimmed to 1 s
+
+Music and level jingles (all CC0, public domain) - MintoDog's "Cozy Puzzle" set, OpenGameArt.org
+(https://opengameart.org/content/for-puzzle-game-mintodogs-music)
+  music-menu.mp3    <- "Cozy Puzzle Stage Select" (https://opengameart.org/content/cozy-puzzle-stage-select)
+  music-play.mp3    <- "Cozy Puzzle In-Game 1" (https://opengameart.org/content/cozy-puzzle-in-game-1)
+  win.mp3           <- "Cozy Puzzle Clear (Jingle)" (https://opengameart.org/content/cozy-puzzle-jingle-result)
+  lose.mp3          <- "Cozy Puzzle Failure (Jingle)" (same page)
+  Converted to mono MP3.

@@ -16,15 +16,15 @@
 
     <header class="hud-top">
       <button id="pause-btn" class="icon-btn" aria-label="Pause"><i class="ico" style="--i:url(./icons/pause.svg)" aria-hidden="true"></i></button>
-      <div id="hearts" class="hearts" aria-label="Hearts left"></div>
+      <div id="mood" class="mood" data-state="great" role="meter" aria-label="Travelers' mood"><i class="ico mood-face" style="--i:url(./icons/smiley-very-happy-1.svg)" aria-hidden="true"></i></div>
       <span class="hud-spacer"></span>
       <div id="timer" class="timer-pill" aria-label="Time left"><i class="ico" style="--i:url(./icons/timer.svg)" aria-hidden="true"></i><b id="timer-text">1:00</b></div>
       <button id="sound" class="icon-btn" aria-label="Toggle sound"></button>
     </header>
 
     <div class="hud-row">
-      <div id="goal-card" class="goal-card" aria-label="Level goal"><span class="goal-head"><b id="goal-level">LEVEL 1</b><small id="goal-text">€0 / €650</small></span><span class="goal-track"><i id="goal-fill"></i></span></div>
-      <button id="mult-badge" class="mult-badge" data-level="0" aria-label="Money multiplier and combo"><small id="mult-label">COMBO</small><b id="mult-value">×1</b><span id="mult-boost">goal €650</span><i id="mult-timer"></i></button>
+      <div id="goal-card" class="goal-card" aria-label="Level goal"><span class="goal-head"><b id="goal-level">LEVEL 1</b><small id="goal-text">0 / 650</small></span><span class="goal-track"><i id="goal-fill"></i></span></div>
+      <button id="mult-badge" class="mult-badge" data-level="0" aria-label="Money multiplier and combo"><small id="mult-label"></small><b id="mult-value">×1</b><span id="mult-boost">goal 650</span><i id="mult-timer"></i></button>
     </div>
 
     <section class="bottom-area" aria-label="Stations">
@@ -34,6 +34,7 @@
 
     <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
     <div id="overlay" class="overlay hidden"><div id="overlay-card" class="overlay-card" role="dialog" aria-modal="true"></div></div>
+    <div id="sheet" class="sheet hidden"><div id="sheet-panel" class="sheet-panel" role="dialog" aria-modal="true"></div></div>
   </main>
   <script type="module" src="./game.js?v=__BUILD__"></script>
 </body>

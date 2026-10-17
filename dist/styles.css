@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap');
 
 /* =====================================================================================================
    Design tokens: a bright, flat, chunky style (Duolingo-like). Buttons and cards have a darker 4px
@@ -25,6 +25,9 @@ button:disabled{cursor:not-allowed}
 
 /* Icons: single-colour SVG masks that take the text colour */
 .ico{display:inline-block;width:1em;height:1em;flex:none;vertical-align:-.15em;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+/* Coin amounts: icon + number kept together; gold coins on light surfaces, text-coloured on gold or coloured ones. */
+.amt{display:inline-flex;align-items:center;gap:.2em;white-space:nowrap;vertical-align:bottom}
+.amt .ico{width:1.05em;height:1.05em;vertical-align:0;color:var(--gold);filter:drop-shadow(0 1px 0 var(--gold-d))}
 
 /* Flags */
 .flag-icon,.flag-large,.flag-station,.nav-flag,.bus-flag,.hint-flag{display:inline-block;flex:none;object-fit:cover;border-radius:4px;box-shadow:0 0 0 2px #0000000f}
@@ -160,7 +163,7 @@ button:disabled{cursor:not-allowed}
 .traveler-tag.special{--glow:var(--gold);border-color:var(--glow);background:var(--glow);box-shadow:0 0 14px var(--glow);animation:tag-pop .08s ease-out,special-pulse .2s ease-in-out .08s infinite alternate}
 .traveler-tag.special:after{border-color:var(--glow)}
 .traveler-tag.special.faded{opacity:.55;animation:none}
-.traveler-tag.special-gift{--glow:#ff86d0}.traveler-tag.special-heart{--glow:var(--red)}.traveler-tag.special-rush{--glow:var(--blue)}.traveler-tag.special-diamond{--glow:#7fe3ff}
+.traveler-tag.special-gift{--glow:#ff86d0}.traveler-tag.special-heart{--glow:var(--green)}.traveler-tag.special-rush{--glow:var(--blue)}.traveler-tag.special-diamond{--glow:#7fe3ff}
 .special-badge{position:absolute;top:-10px;right:-10px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#fff;color:var(--glow);box-shadow:0 2px 0 #0002}
 .special-badge .ico{width:12px;height:12px}
 .life-timer{position:absolute;left:5px;right:5px;bottom:-1px;height:3px;border-radius:3px;background:var(--glow,var(--green));transform-origin:left;animation-name:drain;animation-timing-function:linear;animation-fill-mode:forwards}
@@ -212,7 +215,7 @@ button:disabled{cursor:not-allowed}
 .float-gain.special-lvl2{font-size:20px;color:var(--orange-d)}
 .float-gain.special-lvl3{font-size:22px;color:var(--red-d)}
 .float-gain.special-lvl4{font-size:25px;color:var(--purple-d)}
-.float-gain.special-vip{color:#c99700;font-size:18px}.float-gain.special-gift{color:#e0459a;font-size:18px}.float-gain.special-heart{color:var(--red-d);font-size:18px}.float-gain.special-rush{color:var(--blue-d);font-size:18px}.float-gain.special-diamond{color:#0fa3c9;font-size:20px}
+.float-gain.special-vip{color:#c99700;font-size:18px}.float-gain.special-gift{color:#e0459a;font-size:18px}.float-gain.special-heart{color:var(--green-d);font-size:18px}.float-gain.special-rush{color:var(--blue-d);font-size:18px}.float-gain.special-diamond{color:#0fa3c9;font-size:20px}
 .float-gain.special-cash{color:#c99700;font-size:26px}
 .float-gain.special-depart{color:var(--orange-d);font-size:16px}
 .float-gain.special-xp{color:var(--purple-d);font-size:14px}
@@ -460,7 +463,7 @@ button:disabled{cursor:not-allowed}
 .hud-row .mult-badge span{line-height:14px}
 
 /* =====================================================================================================
-   Levels: in-level HUD (pause · hearts · timer · sound / goal · multiplier / station tabs) and the overlays
+   Levels: in-level HUD (pause · mood · timer · sound / goal · multiplier / station tabs) and the overlays
    (home, intro, pause, result). Outside play the HUD keeps its space (so the camera framing is stable) but is hidden.
    ===================================================================================================== */
 #game:not([data-mode="play"]):not([data-mode="paused"]) .hud-top,
@@ -470,14 +473,17 @@ button:disabled{cursor:not-allowed}
 
 /* Top bar */
 .hud-top{gap:8px}
-.hearts{display:flex;align-items:center;gap:3px;height:42px;padding:0 10px;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white)}
-.hearts .ico{width:24px;height:24px}
-.hearts .heart.full{color:var(--red);filter:drop-shadow(0 2px 0 var(--red-d))}
-.hearts .heart.empty{color:var(--line)}
-.hearts.hurt{animation:hurt .45s ease-out}
-.hearts.bump{animation:bump .3s ease-out}
-.hearts[data-count="4"]{gap:2px;padding:0 8px}.hearts[data-count="4"] .ico{width:21px;height:21px}
-.hearts[data-count="5"]{gap:1px;padding:0 7px}.hearts[data-count="5"] .ico{width:18px;height:18px}
+/* Mood meter: one smiling face filled with colour from the bottom up to the mood (--level), grey above. */
+@property --level{syntax:"<percentage>";inherits:true;initial-value:100%}
+.mood{--level:100%;--mood:var(--green);display:grid;place-items:center;width:52px;height:42px;padding:0;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white);transition:--level .45s ease-out}
+.mood[data-state="good"]{--mood:#8ed61f}
+.mood[data-state="meh"]{--mood:var(--gold)}
+.mood[data-state="ok"]{--mood:var(--orange)}
+.mood[data-state="bad"]{--mood:var(--red)}
+.mood .mood-face{width:32px;height:32px;background:linear-gradient(to top,var(--mood) var(--level),#d5dde2 var(--level))}
+.mood.hurt{animation:hurt .45s ease-out}
+.mood.bump{animation:bump .3s ease-out}
+.mood[data-state="bad"] .mood-face{animation:claim-pulse 1s ease-in-out infinite}
 .shop-text small i{font-style:normal;color:var(--green-d,#58a700)}
 @keyframes hurt{20%{transform:translateX(-6px);background:var(--red-l)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
 .timer-pill{display:flex;align-items:center;gap:5px;height:42px;padding:0 12px;border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius);background:var(--white);color:var(--blue-d)}
@@ -513,7 +519,7 @@ button:disabled{cursor:not-allowed}
 .side-nav{display:none!important}
 
 /* Overlay and cards */
-.overlay{position:absolute;inset:0;z-index:20;display:grid;place-items:center;padding:calc(var(--top) + 8px) 14px calc(var(--bottom) + 14px);background:#3c5a5266;backdrop-filter:blur(2px);overflow:auto}
+.overlay{position:absolute;inset:0;z-index:20;display:grid;grid-template-columns:minmax(0,1fr);place-items:center;padding:calc(var(--top) + 8px) 14px calc(var(--bottom) + 14px);background:#3c5a5266;backdrop-filter:blur(2px);overflow:hidden}
 .overlay.hidden{display:none}
 .overlay-card{width:min(100%,430px);display:grid;justify-items:center;gap:12px;padding:20px 18px 18px;border:2px solid var(--line);border-bottom-width:5px;border-radius:24px;background:var(--white);text-align:center;animation:card-in .3s cubic-bezier(.2,1.3,.4,1)}
 @keyframes card-in{from{opacity:0;transform:translateY(20px) scale(.92)}}
@@ -533,7 +539,7 @@ button:disabled{cursor:not-allowed}
 .chip-flag{width:20px;height:14px;border-radius:3px;margin-right:-2px;box-shadow:0 0 0 1px #0000001a}
 .intro-hint{margin:0;font-size:14px;font-weight:800;color:var(--ink);line-height:1.4}
 .intro-hearts{display:flex;align-items:center;gap:4px;margin:0;font-size:12px;font-weight:800;color:var(--muted);text-align:left}
-.intro-hearts .ico{width:20px;height:20px;color:var(--red)}
+.intro-hearts .ico{width:24px;height:24px;flex:none;color:var(--green)}
 .intro-hearts span{margin-left:6px}
 .how{display:grid;gap:8px;width:100%;margin:0;padding:0;list-style:none;text-align:left}
 .how li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:var(--snow);font-size:13px;font-weight:800}
@@ -561,6 +567,7 @@ button:disabled{cursor:not-allowed}
 .stars.reveal .star:nth-child(2).shown{transform:translateY(-10px) scale(1)}
 .stars.tiny{gap:0}
 .stars.tiny .ico{width:10px;height:10px}
+.stars.small{gap:2px}.stars.small .ico{width:20px;height:20px}
 
 /* Home */
 .overlay[data-kind="home"]{background:linear-gradient(#bce8e6e6,#d6f0e3d9)}
@@ -571,11 +578,17 @@ button:disabled{cursor:not-allowed}
 .logo.big .logo-text b{font-size:20px}
 .logo.big .logo-text small{font-size:11px}
 .home-brand .coin-pill{height:46px}
-.level-path{display:flex;align-items:center;gap:8px;width:100%;justify-content:center}
-.path-node{display:grid;justify-items:center;gap:2px;width:48px;padding:6px 0 4px;border:2px solid var(--line);border-bottom-width:4px;border-radius:16px;background:var(--white);color:var(--ink)}
+.level-path{position:relative;display:flex;align-items:center;gap:8px;width:calc(100% + 36px);margin:0 -18px;padding:8px calc(50% - 24px) 10px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;cursor:grab;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(90deg,transparent,#000 18%,#000 82%,transparent)}
+.level-path::-webkit-scrollbar{display:none}
+.level-path.dragging{cursor:grabbing}
+.level-path.dragging .path-node{pointer-events:none}
+.path-node{flex:none;transition:transform .2s,background-color .2s;display:grid;justify-items:center;gap:2px;width:48px;padding:6px 0 4px;border:2px solid var(--line);border-bottom-width:4px;border-radius:16px;background:var(--white);color:var(--ink)}
 .path-node b{display:grid;place-items:center;height:22px;font-size:17px;font-weight:900}
 .path-node b .ico{width:16px;height:16px;color:var(--muted)}
-.path-node.current{border-color:var(--green-d);background:var(--green);color:#fff;transform:scale(1.12);box-shadow:0 0 0 4px #58cc0233}
+.path-node.picked{border-color:var(--green-d);background:var(--green);color:#fff;transform:scale(1.15);box-shadow:0 0 0 4px #58cc0233}
+.path-node.next:not(.picked){border-color:var(--green)}
+.path-node.picked .stars .star.off{color:#ffffff80}
 .path-node.locked{background:var(--snow)}
 .level-card{display:grid;justify-items:center;gap:8px;width:100%;padding:16px 14px;border:2px solid var(--line);border-bottom-width:5px;border-radius:22px;background:var(--white)}
 .level-card small{font-size:11px;font-weight:900;letter-spacing:1.5px;color:var(--muted)}
@@ -601,7 +614,7 @@ button:disabled{cursor:not-allowed}
 .countdown.pop{animation:count-pop .6s ease-out}
 @keyframes count-pop{0%{transform:translate(-50%,-50%) scale(2.2);opacity:0}30%{transform:translate(-50%,-50%) scale(.95);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:.85}}
 
-@media(max-width:380px){.timer-pill b{font-size:17px}.hearts .ico{width:21px;height:21px}.level-card h1{font-size:30px}}
+@media(max-width:380px){.timer-pill b{font-size:17px}.level-card h1{font-size:30px}}
 /* The multiplier card shows COMBO + value (+ timer while a combo runs); the goal lives in the goal card */
 .hud-row .mult-badge span#mult-boost{display:none}
 
@@ -614,13 +627,176 @@ button:disabled{cursor:not-allowed}
 .claim-pill .claim-flag{width:24px;height:16px;border-radius:3px;box-shadow:0 0 0 2px #fff}
 .claim-pill .ico{width:15px;height:15px}
 .claim-pill b{font-size:14px;font-weight:900}
-.claim-pill span{padding:1px 6px;border-radius:999px;background:#ffffff80;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums}
-.claim-pill i:last-child{position:absolute;left:0;right:0;bottom:0;height:4px;background:#7a5200;transform-origin:left;animation-name:drain;animation-timing-function:linear;animation-fill-mode:forwards}
+.claim-pill .claim-secs{padding:1px 6px;border-radius:999px;background:#ffffff80;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums}
+.claim-pill > i:last-child{position:absolute;left:0;right:0;bottom:0;height:4px;background:#7a5200;transform-origin:left;animation-name:drain;animation-timing-function:linear;animation-fill-mode:forwards}
 .claim-pill.hurry{background:var(--red);color:#fff;box-shadow:0 3px 0 var(--red-d);animation:claim-pulse 1s ease-in-out infinite}
-#game[data-mode="paused"] .claim-pill i:last-child{animation-play-state:paused}
-.claim-pill.hurry span{background:#ffffff40}
-.claim-pill.hurry i:last-child{background:#fff}
+#game[data-mode="paused"] .claim-pill > i:last-child{animation-play-state:paused}
+.claim-pill.hurry .claim-secs{background:#ffffff40}
+.claim-pill.hurry > i:last-child{background:#fff}
 .claim-pill:active{transform:translateY(2px)}
 @keyframes claim-in{from{transform:scale(.4);opacity:0}}
 @keyframes claim-pulse{50%{transform:scale(1.05)}}
 .station-tabs{width:100%}
+
+/* Coin amounts on gold or coloured surfaces take the text colour. */
+.claim-pill .amt .ico,.chip.gold .amt .ico,.bus-tag.collect .amt .ico,.toast .amt .ico,.mult-badge .amt .ico,.btn .amt .ico,.station-tab.alert .ico{color:inherit;filter:none}
+.claim-pill b .ico{width:16px;height:16px}
+/* Amounts sit inside places that style every span (combo badge, result stats): keep them plain. */
+#game .amt{display:inline-flex;margin:0;padding:0;border-radius:0;background:none;color:inherit;font-size:inherit;font-weight:inherit;line-height:inherit}
+
+/* Music toggle on the home screen, next to the coins. */
+.home-brand .music-btn{margin-left:auto;margin-right:8px;width:46px;height:46px;color:var(--purple)}
+.home-brand .music-btn .ico{width:24px;height:24px}
+
+/* Reset progress: quiet until armed, then red. */
+.reset-btn{padding:8px 14px;font-size:12px;color:var(--muted)}
+.reset-btn.armed{background:var(--red);border-color:var(--red-d);color:#fff;box-shadow:0 4px 0 var(--red-d)}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   One-screen home (no scrolling) + bottom sheets for boosters and how to play
+   --------------------------------------------------------------------------------------------------------------- */
+.btn.purple{background:var(--purple);box-shadow:0 4px 0 var(--purple-d)}
+.home-tools{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.home-tools .btn{position:relative;padding:13px 8px;font-size:13px}
+.home-tools .btn .ico{width:18px;height:18px}
+.home-tools .badge{position:absolute;top:-7px;right:-5px;display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border:2px solid #fff;border-radius:999px;background:var(--red);font-size:12px;line-height:1}
+.home-foot{display:flex;align-items:center;justify-content:space-between;width:100%;padding:0 4px}
+.home-foot .reset-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border:0;border-radius:999px;background:none;font:inherit;font-size:11px;font-weight:900;letter-spacing:.4px;color:var(--muted);box-shadow:none}
+.home-foot .reset-btn .ico{width:13px;height:13px}
+.home-foot .reset-btn.armed{background:var(--red);color:#fff;box-shadow:0 3px 0 var(--red-d)}
+.sheet{position:absolute;inset:0;width:auto;max-height:none;overflow:hidden;padding:0;border-radius:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:#2c443d73;animation:sheet-fade .2s ease-out}
+.sheet.hidden{display:none}
+.sheet-panel{display:grid;gap:10px;width:min(100%,480px);max-height:calc(100% - var(--top) - 20px);overflow:hidden;padding:10px 16px calc(var(--bottom) + 18px);border-radius:26px 26px 0 0;background:var(--white);box-shadow:0 -6px 0 #0000000d;animation:sheet-up .32s cubic-bezier(.2,1.2,.4,1)}
+.sheet-panel:before{content:"";justify-self:center;width:44px;height:5px;border-radius:999px;background:var(--line)}
+.sheet-head{display:flex;align-items:center;gap:8px}
+.sheet-head h2{display:flex;align-items:center;gap:8px;margin:0 auto 0 0;font-size:22px;font-weight:900}
+.sheet-head h2 .ico{width:24px;height:24px;color:var(--purple)}
+.sheet[data-kind="howto"] .sheet-head h2 .ico{color:var(--blue)}
+.sheet-head .coin-pill{height:38px}
+.sheet-head .icon-btn{width:38px;height:38px;color:var(--muted)}
+.sheet-head .icon-btn .ico{width:16px;height:16px}
+.sheet-sub{margin:-4px 0 0;font-size:12px;font-weight:800;color:var(--muted)}
+.how .mood-step .ico{background:var(--green)}
+@keyframes sheet-up{from{transform:translateY(100%)}}
+@keyframes sheet-fade{from{background:#2c443d00}}
+/* Short screens: tighten the home and intro cards so they always fit. */
+@media (max-height:760px){
+  .overlay-card{gap:9px;padding:14px 14px 14px}
+  .level-card{gap:6px;padding:12px}
+  .level-card h1{font-size:30px}
+  .btn.big{padding:13px 16px;font-size:17px}
+  .level-path{padding-top:6px;padding-bottom:6px}
+}
+@media (max-height:660px){
+  .level-card h1{font-size:26px}
+  .level-card p{font-size:12px}
+  .home-brand .logo.big{transform:scale(.9);transform-origin:left center}
+}
+/* Home fills the screen: logo and coins at the top; the level picker, level card and the three buttons (one per line)
+   grouped in the middle; best combo and reset at the bottom. */
+.overlay[data-kind="home"]{place-items:stretch;grid-template-columns:minmax(0,1fr);padding-bottom:calc(var(--bottom) + 8px)}
+.overlay[data-kind="home"] .overlay-card{display:flex;flex-direction:column;align-items:center;height:100%;width:min(100%,430px);justify-self:center;padding-bottom:0}
+.overlay[data-kind="home"] .level-path{margin-top:auto}
+.overlay[data-kind="home"] .home-tools{margin-bottom:auto}
+.home-tools{grid-template-columns:1fr}
+.home-tools .btn{padding:14px 12px;font-size:15px}
+/* Boosters you can afford: the button glows, a shine sweeps across it, it gives a little wiggle every few seconds
+   and the count bounces, so the player notices there is something to buy. */
+.home-tools .btn.ready{overflow:visible;animation:ready-glow 1.6s ease-in-out infinite,ready-wiggle 4s ease-in-out 1s infinite}
+.home-tools .btn.ready:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(105deg,transparent 35%,#ffffff8c 50%,transparent 65%) -150% 0/250% 100% no-repeat;animation:ready-shine 2.4s ease-in-out infinite;pointer-events:none}
+.home-tools .btn.ready .badge{animation:ready-badge 1.2s ease-in-out infinite}
+.home-tools .ready-text{padding:2px 8px;border-radius:999px;background:#ffffff38;font-size:11px;letter-spacing:.3px}
+@keyframes ready-glow{50%{box-shadow:0 4px 0 var(--purple-d),0 0 0 6px #ce82ff40}}
+@keyframes ready-shine{0%,40%{background-position:-150% 0}100%{background-position:250% 0}}
+@keyframes ready-wiggle{0%,86%,100%{transform:none}89%{transform:rotate(-2.5deg) scale(1.03)}92%{transform:rotate(2.5deg) scale(1.03)}95%{transform:rotate(-1.5deg)}}
+@keyframes ready-badge{50%{transform:scale(1.18)}}
+@media (max-height:700px){.home-tools .btn{padding:11px 12px;font-size:14px}.overlay[data-kind="home"] .overlay-card{gap:8px}}
+
+/* Level details: big coin goal + three icon tiles. */
+.level-goal{display:flex;align-items:center;gap:10px;padding:6px 18px 6px 8px;border-radius:20px;background:var(--gold-l,#fff5cc);box-shadow:inset 0 0 0 2px #ffe08a}
+.level-goal .goal-coin{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--gold);box-shadow:0 3px 0 var(--gold-d)}
+.level-goal .goal-coin .ico{width:28px;height:28px;color:#fff}
+.level-goal>span:last-child{display:grid;text-align:left;line-height:1}
+.level-goal small{font-size:10px;font-weight:900;letter-spacing:1.4px;color:#b07d00}
+.level-goal b{font-size:28px;font-weight:900;color:#8a5f00}
+.level-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%}
+.stat{--c:var(--blue);--c-l:var(--blue-l);display:grid;justify-items:center;gap:1px;padding:8px 4px 7px;border-radius:16px;background:var(--c-l)}
+.stat.orange{--c:var(--orange);--c-l:var(--orange-l)}
+.stat.green{--c:var(--green-d);--c-l:var(--green-l)}
+.stat .ico{width:26px;height:26px;color:var(--c);margin-bottom:2px}
+.stat b{font-size:19px;font-weight:900;line-height:1.1;color:var(--ink)}
+.stat small{font-size:10px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--c)}
+@media (max-height:700px){.level-goal .goal-coin{width:38px;height:38px}.level-goal b{font-size:24px}.stat{padding:6px 4px}.stat .ico{width:22px;height:22px}.stat b{font-size:17px}}
+
+.how-tips{display:grid;gap:6px;margin:0;padding:0 4px;list-style:none;text-align:left}
+.how-tips li{display:flex;align-items:flex-start;gap:8px;font-size:12px;font-weight:800;color:var(--muted);line-height:1.35}
+.how-tips .ico{flex:none;width:16px;height:16px;margin-top:1px;color:var(--gold)}
+.how-tips li:last-child .ico{color:var(--green-d)}
+@media (max-height:700px){.how li{padding:6px 10px;font-size:12px}.sheet-panel{gap:8px}}
+
+/* Languages: language button in the home footer, the language sheet, and Arabic (rounded Arabic font, no letter
+   spacing since it would break the joined letters; the level strip and progress bars keep left-to-right order). */
+.home-foot .lang-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border:2px solid var(--line);border-radius:999px;background:var(--white);font:inherit;font-size:12px;font-weight:900;color:var(--blue)}
+.home-foot .lang-btn .ico{width:15px;height:15px}
+.lang-list{display:grid;gap:10px}
+.lang-option{width:100%;padding:15px;font-size:17px;text-transform:none}
+html[lang="ar"] body,html[lang="ar"] button{font-family:'Baloo Bhaijaan 2','Nunito',system-ui,sans-serif}
+html[lang="ar"] *{letter-spacing:0!important}
+html[dir="rtl"] .level-path,html[dir="rtl"] .goal-track,html[dir="rtl"] .bus-progress,html[dir="rtl"] .claim-pill{direction:ltr}
+html[dir="rtl"] .level-goal>span:last-child,html[dir="rtl"] .how,html[dir="rtl"] .how-tips,html[dir="rtl"] .shop-text{text-align:right}
+
+/* Level card keeps one size: the hint line always reserves two lines. */
+.level-card .level-hint{min-height:2.7em;line-height:1.35;display:grid;place-items:center}
+.path-node.picked .stars .star.off{color:#ffffff73}
+
+.home-foot{gap:8px}
+.home-foot .home-best,.home-foot .reset-btn{white-space:nowrap}
+@media (max-height:700px){
+  .overlay[data-kind="home"] .overlay-card{gap:7px}
+  .level-card{gap:5px;padding:10px 12px}
+  .level-card h1{font-size:26px}
+  .level-card .stars.small .ico{width:17px;height:17px}
+  .level-goal{padding:4px 14px 4px 6px}
+  .level-goal .goal-coin{width:34px;height:34px}.level-goal .goal-coin .ico{width:22px;height:22px}
+  .level-goal b{font-size:22px}
+  .stat{padding:5px 4px}.stat .ico{width:20px;height:20px}.stat b{font-size:16px}
+  .level-card .level-hint{font-size:12px}
+  .overlay[data-kind="home"] #play-btn{padding:13px;font-size:19px}
+  .home-tools{gap:8px}.home-tools .btn{padding:10px 12px}
+  .level-path{padding-top:4px;padding-bottom:6px}
+}
+/* Footer sits as far from the bottom edge as the header is from the top. */
+.overlay[data-kind="home"]{padding-bottom:calc(max(12px,var(--bottom)) + 16px)}
+/* Numbers and the multiplier read left to right in Arabic too. */
+html[dir="rtl"] .mult-badge #mult-value,html[dir="rtl"] #goal-text,html[dir="rtl"] .timer-pill b{direction:ltr;unicode-bidi:isolate}
+
+/* Best combo sits right under the buttons; the footer keeps language and reset. */
+.overlay[data-kind="home"] .home-tools{margin-bottom:0}
+.overlay[data-kind="home"] .home-best{margin:2px 0 auto;justify-content:center}
+@media (max-height:660px){
+  .overlay[data-kind="home"] .overlay-card{gap:6px}
+  .overlay[data-kind="home"]{padding-bottom:calc(max(12px,var(--bottom)) + 10px)}
+  .level-card .level-hint{min-height:2.5em;font-size:11.5px}
+  .level-card small{font-size:10px}
+  .home-tools .btn{padding:9px 12px}
+}
+
+/* Goal: last, full width, filled gold. */
+.level-goal{width:100%;justify-content:center;padding:8px 14px;border-radius:18px;background:var(--gold);box-shadow:0 4px 0 var(--gold-d)}
+.level-goal .goal-coin{background:#fff;box-shadow:0 3px 0 #e5a40099}
+.level-goal .goal-coin .ico{color:var(--gold)}
+.level-goal small{color:#fff8dc;text-shadow:0 1px 0 #c98f00}
+.level-goal b{color:#fff;text-shadow:0 2px 0 #c98f00}
+
+/* Level card: no hint line; even spacing between title, stars, tiles and goal. */
+.level-card{gap:10px}
+.level-card h1{margin-top:-4px}
+.level-card .stars.small{margin-top:-6px}
+@media (max-height:700px){.level-card{gap:7px}}
+
+/* Goal: light gold panel (not a button), plain gold coin. */
+.level-goal{background:var(--gold-l);box-shadow:inset 0 0 0 2px #ffe08a;padding:8px 14px}
+.level-goal .ico.goal-coin{width:40px;height:40px;color:var(--gold);filter:drop-shadow(0 2px 0 var(--gold-d));background:currentColor;border-radius:0;box-shadow:none}
+.level-goal small{color:#b07d00;text-shadow:none}
+.level-goal b{color:#8a5f00;text-shadow:none}
+@media (max-height:700px){.level-goal .ico.goal-coin{width:32px;height:32px}}
