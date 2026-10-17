@@ -996,3 +996,41 @@ html[lang="ar"] .brand-logo *{letter-spacing:-4px!important}
 .tag-vanish{border-color:var(--line);animation:tag-vanish .2s ease-in forwards}
 @keyframes tag-vanish{to{transform:translate(-50%,-80%) scale(.3);opacity:0}}
 .traveler-tag .mini-flag{top:-6px;bottom:auto;left:-7px}
+/* Travelers: one colour for everyone. Patience shows inside the icon: it empties from the top (like the mood face)
+   and turns orange, then red, as the traveler is about to leave. */
+@property --life{syntax:"<percentage>";inherits:true;initial-value:100%}
+@property --tc{syntax:"<color>";inherits:true;initial-value:#4b4b4b}
+.traveler-tag .person-icon{animation-name:life-drain;animation-timing-function:linear;animation-fill-mode:forwards}
+.traveler-tag .person-icon .ico{background:linear-gradient(to top,var(--tc) var(--life),#d5dbdf var(--life))}
+@keyframes life-drain{0%{--life:100%;--tc:#4b4b4b}60%{--tc:#4b4b4b}80%{--tc:#ff9600}100%{--life:0%;--tc:#ff4b4b}}
+.traveler-tag:not(.special) .life-timer{display:none}
+.traveler-tag.faded .person-icon{animation:none}
+.traveler-tag.faded .person-icon .ico{background:#9aa5ab}
+.board-flyer .person-icon,.tag-vanish .person-icon{animation:none}
+.board-flyer .person-icon .ico,.tag-vanish .person-icon .ico{background:#4b4b4b}
+/* The red "leaving" pulse is now just the border; the icon already shows it. */
+.traveler-tag.leaving{animation:none}
+.traveler-tag.group .person-icon .ico{width:26px;height:24px}
+/* Traveler tags are circles. */
+.traveler-tag,.traveler-tag.group,.traveler-tag.special{width:40px;height:40px;min-width:0;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center}
+.traveler-tag.special{width:46px;height:46px}
+.traveler-tag .special-ring{border-radius:50%}
+.traveler-tag .person-icon .ico{width:24px;height:24px}
+.traveler-tag.group .person-icon .ico{width:27px;height:25px}
+.traveler-tag .mini-flag{top:-4px;left:-5px}
+.traveler-tag .group-badge{top:-6px;right:-8px}
+.board-flyer,.tag-vanish{width:40px;height:40px;padding:0;border-radius:50%}
+/* A group that won't fit the selected bus: filled red, white icon (still draining), so it stands out. */
+.traveler-tag.too-big{background:var(--red)!important;border-color:var(--red-d)!important;box-shadow:0 0 0 3px #ff4b4b40!important}
+.traveler-tag.too-big .person-icon .ico{background:linear-gradient(to top,#fff var(--life),#ffffff70 var(--life))}
+.traveler-tag.too-big:after{background:#ff4b4b40}
+/* Specials: the white outline IS the countdown — a ring that empties clockwise until the special disappears. */
+@property --ring{syntax:"<angle>";inherits:false;initial-value:360deg}
+.traveler-tag.special{border-color:var(--glow);box-shadow:0 0 18px 4px var(--glow),0 0 34px 8px var(--glow)}
+.traveler-tag .special-ring{inset:-7px;border:0;border-radius:50%;opacity:1;clip-path:none;background:conic-gradient(#fff var(--ring),#ffffff00 0);
+  -webkit-mask:radial-gradient(farthest-side,#0000 calc(100% - 4px),#000 calc(100% - 3.5px));mask:radial-gradient(farthest-side,#0000 calc(100% - 4px),#000 calc(100% - 3.5px));animation-name:special-ring-drain}
+@keyframes special-ring-drain{from{--ring:360deg}to{--ring:0deg}}
+.traveler-tag .life-timer{display:none}
+/* Specials: no glow, just the coloured circle and its white countdown ring. */
+.traveler-tag.special{box-shadow:none!important}
+.traveler-tag .special-glow{display:none}

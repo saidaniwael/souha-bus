@@ -101,3 +101,10 @@ Difficulty still climbs (a casual player now loses level 13 on time at 87% inste
   destination's colour (two icons for a group, with the count badge), a small flag badge only when it can board the
   selected bus, and a soft ground shadow. Boarding: the icon hops in an arc into the bus door (the bus still dips);
   leaving: it pops away. Traveler tags are measured only when they appear or the screen changes (not every frame).
+- **Traveler patience** — every traveler icon is the same dark colour; groups use the "User Friendship Group" icon.
+  Patience shows inside the icon: it empties from the top like the mood face and turns orange, then red, just before
+  the traveler leaves (replaces the thin bar and the red tag border).
+- **Circular traveler tags** — travelers and specials are round tags (flag badge top-left, group count top-right).
+- **Won't fit** — a group that doesn't fit the selected bus is a filled red circle with a white (still draining) icon.
+- **Special countdown** — a special's white outline is its timer: a ring that empties clockwise until it disappears (the small bar is gone).
+- **Specials look** — no glow rays or halo and no timer bar: a solid coloured circle with its icon and the white countdown ring.

@@ -900,10 +900,10 @@ function renderLabels(){
     if(!tag){const el=document.createElement('button');el.dataset[attr]=id;host.appendChild(el);tag={el,sig:null};tagElements.set(key,tag);}
     if(tag.sig!==sig){tag.el.innerHTML=html;tag.sig=sig;}if(tag.el.className!==className)tag.el.className=className;tag.el.setAttribute('aria-label',label);return tag.el;};
   for(const entry of busLabels){const b=run.buses.find(x=>x.id===entry.id);if(!b)continue;const m=busTagMarkup(b,now);entry.el=upsert('bus'+b.id,'bus',b.id,m.className,m.label,m.html,m.sig);}
-  for(const entry of crowdLabels){const p=crowd.find(x=>x.id===entry.id);if(!p)continue;const special=p.special&&SPECIALS[p.special],faded=special?!tappableDest:p.dest!==tappableDest,life=p.until-p.born,leaving=!special&&!faded&&p.until-now<650;
+  for(const entry of crowdLabels){const p=crowd.find(x=>x.id===entry.id);if(!p)continue;const special=p.special&&SPECIALS[p.special],faded=special?!tappableDest:p.dest!==tappableDest,life=p.until-p.born;
     const size=p.size||1,tooBig=!faded&&!special&&size>freeSeats;
-    entry.el=upsert('t'+p.id,'traveler',p.id,`traveler-tag${faded?' faded':''}${special?` special special-${p.special}`:''}${size>1?' group':''}${tooBig?' too-big':''}${leaving?' leaving':''}`,`${special?t('specials')[p.special]+' ':''}${size>1?`group of ${size} `:''}traveler to ${city[p.dest].name}${faded?', board a bus to that country first':tooBig?', does not fit':''}`,
-      `${special?`<span class="special-glow"></span><span class="special-icon">${icon(special.icon)}</span><span class="special-ring" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`:`<span class="person-icon" style="--c:#${new THREE.Color(city[p.dest].shirt).getHexString()}">${icon('person').repeat(Math.min(2,size))}</span>${faded?'':flagMarkup(p.dest,'mini-flag')}`}${size>1?`<span class="group-badge">${size}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,`${p.dest}-${p.special}-${size}-${p.until}-${faded?1:0}`);}
+    entry.el=upsert('t'+p.id,'traveler',p.id,`traveler-tag${faded?' faded':''}${special?` special special-${p.special}`:''}${size>1?' group':''}${tooBig?' too-big':''}`,`${special?t('specials')[p.special]+' ':''}${size>1?`group of ${size} `:''}traveler to ${city[p.dest].name}${faded?', board a bus to that country first':tooBig?', does not fit':''}`,
+      `${special?`<span class="special-glow"></span><span class="special-icon">${icon(special.icon)}</span><span class="special-ring" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`:`<span class="person-icon" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms">${icon(size>1?'group':'person')}</span>${faded?'':flagMarkup(p.dest,'mini-flag')}`}${size>1?`<span class="group-badge">${size}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,`${p.dest}-${p.special}-${size}-${p.until}-${faded?1:0}`);}
   for(const [key,tag] of tagElements)if(!seen.has(key)){tag.el.remove();tagElements.delete(key);}
   positionLabels();}
 let labelEpoch=0;const placedTags=new WeakMap();
@@ -976,7 +976,7 @@ function animate(){
   for(let i=smokeEffects.length-1;i>=0;i--){const effect=smokeEffects[i],t=Math.min(1,(now-effect.started)/620);effect.puff.position.y+=.006;effect.puff.position.x+=effect.vx*.016;effect.puff.scale.setScalar(1+t*2.5);effect.puff.material.opacity=.82*(1-t);if(t>=1){scene.remove(effect.puff);effect.puff.geometry.dispose();effect.puff.material.dispose();smokeEffects.splice(i,1);}}
   // Claim countdowns tick down on the gold tags without re-rendering them.
   if(run)for(const el of document.querySelectorAll('.claim-left')){const bus=run.buses.find(b=>b.id===Number(el.closest('[data-bus]').dataset.bus));if(bus){const s=Math.max(0,Math.ceil((bus.claimBy-clockNow)/1000));if(el.textContent!==String(s))el.textContent=s;el.closest('.bus-tag').classList.toggle('hurry',bus.claimBy-clockNow<3500);}}
-  if(run&&mode==='play'){for(const p of crowd){const tag=tagElements.get('t'+p.id);if(tag)tag.el.classList.toggle('leaving',!p.special&&!tag.el.classList.contains('faded')&&p.until-clockNow<650);}if(rushActive(clockNow))renderRush(clockNow);}
+  if(run&&mode==='play'&&rushActive(clockNow))renderRush(clockNow);
   positionLabels();renderer.render(scene,camera);}
 
 coachTemplate=await coachTemplatePromise;

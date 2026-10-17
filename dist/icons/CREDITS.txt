@@ -7,3 +7,4 @@ music-note-1, music-note-off-1, help (alert-help-question), close (delete-1), gl
 Also: magnet, ticket (ticket-star), target (target-2), album (book-reading).
 Also: trophy.
 Also: person (user-full-body).
+Also: group (user-friendship-group).
