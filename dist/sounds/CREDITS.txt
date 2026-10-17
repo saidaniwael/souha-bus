@@ -34,3 +34,11 @@ More interface sounds (CC0, www.kenney.nl, Interface Sounds)
   tick.mp3          <- tick_002.ogg (claim countdown)
   lost.mp3          <- minimize_006.ogg (fare lost)
   note.mp3          <- Music Jingles: jingles_STEEL16.ogg (single steel-drum note, trimmed; played up a pentatonic scale as combos grow)
+
+"pop sounds" by EZduzziteh, OpenGameArt.org (https://opengameart.org/content/pop-sounds-0) - CC0
+  pop-a.mp3 <- pop9.wav, pop-b.mp3 <- pop4.wav, pop-c.mp3 <- pop1.wav (boarding pops, loudness-normalised)
+
+Claim and purchase sounds (all CC0)
+  ping.mp3          <- "plingy coin" by Fupi, OpenGameArt.org (https://opengameart.org/content/plingy-coin); played as a rising 5-note cascade
+  coin-jingle.mp3   <- Kenney "RPG Audio": handleCoins.ogg (www.kenney.nl)
+  purchase.mp3      <- "Purchasing Sound Effect" by Spring Spring, OpenGameArt.org (https://opengameart.org/content/purchasing-sound-effect), trimmed to 1 s

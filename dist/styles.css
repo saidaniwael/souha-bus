@@ -1,204 +1,370 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
-:root{font-family:'DM Sans',sans-serif;color:#263d3b;background:#bce8e6;font-synthesis:none}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden}button{font:inherit;cursor:pointer}button:disabled{cursor:not-allowed;opacity:.48}#game{position:relative;width:100vw;height:100vh;height:100dvh;min-height:580px;overflow:hidden;background:#bce8e6}#scene{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}#scene-labels{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}.hud-top{position:absolute;top:max(16px,env(safe-area-inset-top));left:clamp(16px,3vw,38px);right:clamp(16px,3vw,38px);z-index:4;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none}.hud-top>*{pointer-events:auto}.brand{display:flex;align-items:center;gap:9px;padding:6px 12px 6px 7px;border-radius:15px;background:#fffef4ec;box-shadow:0 6px 25px #24627423;backdrop-filter:blur(10px)}.brand-icon{position:relative;display:grid;place-items:center;width:36px;height:36px;background:#f47c37;border-radius:11px;color:#fff;font-size:25px;line-height:1;transform:rotate(-5deg)}.brand-icon i{position:absolute;bottom:5px;font-style:normal;font-size:7px;letter-spacing:5px;left:8px;white-space:nowrap}.brand b{display:block;font:800 16px/1 'Outfit';letter-spacing:-.4px;white-space:nowrap}.brand small{display:block;color:#8baaa0;letter-spacing:1.6px;font-weight:800;font-size:7px;margin-top:4px}.top-stats{display:flex;gap:8px;align-items:center}.coin-pill{display:flex;align-items:center;gap:7px;background:#fffef4ee;box-shadow:0 6px 25px #24627423;border-radius:999px;padding:7px 12px 7px 7px;min-height:42px}.coin-pill span{display:grid;place-items:center;background:#ffc75c;color:#895013;width:28px;height:28px;border-radius:50%;font:800 17px 'Outfit';box-shadow:0 2px 0 #eab248}.coin-pill strong{font:800 16px 'Outfit';white-space:nowrap}.round-icon{border:0;background:#fffef4ee;color:#f38d42;width:42px;height:42px;border-radius:50%;font-size:19px;box-shadow:0 6px 25px #24627423}.station-switch{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 64px);left:clamp(16px,3vw,38px);z-index:4;display:flex;align-items:center;gap:10px;border:1px solid #ffffffb5;background:#fffef3e8;box-shadow:0 8px 25px #2462741c;border-radius:16px;padding:8px 10px 8px 8px;color:#2c4c43;text-align:left;backdrop-filter:blur(12px)}.station-switch:hover{background:#fff}.station-flag{display:grid;place-items:center;width:37px;height:37px;border-radius:11px;background:#dff2e9;color:#4a9878;font-size:11px;font-weight:900;letter-spacing:.7px}.station-switch small{display:block;color:#8dab9e;font-size:8px;font-weight:900;letter-spacing:1.1px}.station-switch b{display:block;font:800 15px 'Outfit';margin-top:2px}.switch-arrow{padding-left:8px;color:#8fa99b;font-size:22px;line-height:1}.progress-hud{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 70px);right:clamp(16px,3vw,38px);z-index:3;display:flex;align-items:center;gap:7px;border-radius:14px;padding:6px 11px 6px 7px;background:#fdfdf0d9;box-shadow:0 7px 20px #25616f20}.progress-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:#dff3e7;color:#52b77a;font-size:17px}.progress-hud b{display:block;font:800 14px/1 'Outfit'}.progress-hud small{display:block;color:#87a99a;font-size:8px;font-weight:700;white-space:nowrap}.scene-callout{position:absolute;left:50%;bottom:calc(194px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3;background:#315f4ce8;color:#fff;border:1px solid #ffffff34;box-shadow:0 8px 20px #264e3d44;border-radius:999px;display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:11px;font-weight:800;white-space:nowrap;pointer-events:none;max-width:calc(100vw - 30px);overflow:hidden;text-overflow:ellipsis}.hand{font-size:15px;color:#ffca72}.bottom-area{position:absolute;bottom:0;left:0;right:0;z-index:4;display:flex;align-items:center;flex-direction:column;gap:9px;padding:0 clamp(14px,3vw,30px) calc(13px + env(safe-area-inset-bottom));pointer-events:none}.bottom-area>*{pointer-events:auto}.bus-panel{width:min(100%,480px);background:#fffdf3f2;border:1px solid #fff;backdrop-filter:blur(16px);box-shadow:0 14px 35px #254d3940;border-radius:20px;padding:13px 17px 12px}.bus-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.bus-panel-head small{display:block;color:#90aa9b;font-size:8px;font-weight:900;letter-spacing:1.4px}.bus-panel h2{font:800 17px 'Outfit';margin:3px 0 0;letter-spacing:-.3px}.bus-pill{padding:6px 8px;background:#e6f5e9;border-radius:7px;color:#50a472;font-size:8px;font-weight:900;letter-spacing:.4px;white-space:nowrap}.bus-pill.full{background:#ffebdb;color:#d66b30}.bus-pill.none{background:#e8ece9;color:#889d92}.route-line{font-size:10px;color:#7b9789;font-weight:700;margin:7px 0 8px}.seats-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.seat-dots{display:flex;gap:6px}.seat-dots i{display:block;width:19px;height:19px;border:2px solid #c8d8c9;border-radius:6px;background:#f7faf3}.seat-dots i.filled{background:#f58a45;border-color:#f58a45;box-shadow:inset 0 -3px #df6d2f}.seats-row>span{font:800 13px 'Outfit';white-space:nowrap;color:#436d56}.bus-instruction{font-size:10px;color:#92a69a;font-weight:600;margin-top:7px}.game-nav{display:flex;gap:9px;width:min(100%,480px)}.game-nav button{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;border:1px solid #ffffffc4;border-radius:13px;background:#fffdf3ed;color:#39604f;box-shadow:0 8px 24px #254d3930;padding:10px 8px;backdrop-filter:blur(12px)}.game-nav button:hover{transform:translateY(-2px);background:#fff}.game-nav b{font-size:11px;white-space:nowrap}.nav-icon{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#e4f3e7;color:#62ab7b;font-size:19px;line-height:1}.game-nav button:last-child .nav-icon{background:#fff0de;color:#ee9247}.passenger-tag,.bus-tag{position:absolute;transform:translate(-50%,-100%);border:0;pointer-events:auto;touch-action:manipulation;white-space:nowrap}.passenger-tag{background:#fffdf0f4;border:2px solid #fff;border-radius:999px;box-shadow:0 5px 15px #2f5c4942;color:#476b57;font-size:9px;font-weight:900;padding:5px 8px;min-width:47px}.passenger-tag:after{content:'';position:absolute;bottom:-6px;left:calc(50% - 4px);height:7px;width:7px;background:#fffdf0;transform:rotate(45deg)}.passenger-tag:hover{background:#fff1dc;transform:translate(-50%,-100%) scale(1.08)}.passenger-tag.mismatch{opacity:.8}.bus-tag{background:#f9fff4e8;border:2px solid #fff;border-radius:9px;box-shadow:0 5px 15px #2f5c4942;color:#5c8667;font-size:10px;font-weight:900;padding:5px 7px}.bus-tag.selected{border-color:#ffa254;background:#fff4dc;color:#bd672c}.bus-tag.full{background:#f58a45;border-color:#fff;color:#fff;animation:pulse 1.3s infinite}.bus-tag:after{content:'';position:absolute;bottom:-6px;left:calc(50% - 4px);height:7px;width:7px;background:inherit;transform:rotate(45deg)}@keyframes pulse{50%{box-shadow:0 0 0 7px #ffba6c44,0 5px 15px #2f5c4942}}.toast-stack{position:absolute;left:50%;top:155px;transform:translateX(-50%);z-index:7;display:grid;gap:7px;width:max-content;max-width:calc(100vw - 30px);pointer-events:none}.toast{background:#284e3f;color:#fff;border-radius:11px;box-shadow:0 10px 25px #203f3465;padding:10px 14px;font-size:11px;font-weight:800;text-align:center;animation:toastin .2s ease}.toast.error{background:#bb644c}@keyframes toastin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}.modal-backdrop{position:absolute;inset:0;z-index:10;background:#1d4336a3;display:flex;align-items:flex-end;justify-content:center}.modal-backdrop.hidden{display:none}.sheet{width:min(100%,520px);max-height:min(78vh,700px);overflow:auto;background:#fffdf2;border-radius:25px 25px 0 0;box-shadow:0 -20px 60px #1c433860;padding:10px 18px calc(25px + env(safe-area-inset-bottom));animation:slideup .25s ease}@keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}.sheet-grip{height:5px;width:40px;border-radius:5px;background:#dbe6d9;margin:0 auto 15px}.sheet-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}.sheet-header small{display:block;color:#91aa9a;font-size:9px;font-weight:900;letter-spacing:1.5px}.sheet-header h2{font:800 24px 'Outfit';margin:3px 0 0}.sheet-header button{border:0;background:#eff4ea;color:#7b9a87;width:31px;height:31px;border-radius:9px;font-size:22px}.sheet-intro{font-size:12px;color:#8ca197;margin:0 0 15px;line-height:1.5}.sheet-list{display:grid;gap:8px}.sheet-row{display:flex;align-items:center;gap:11px;width:100%;border:1px solid #e5ece1;background:#fff;border-radius:13px;padding:11px;text-align:left;color:#2f4b3f}.sheet-row.selected{border-color:#f7a865;background:#fff8ee}.sheet-row-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:11px;background:#e8f5e9;color:#5fa77a;font-size:12px;font-weight:900;flex:0 0 auto}.sheet-row b{display:block;font:800 14px 'Outfit'}.sheet-row small{display:block;color:#93a99b;font-size:10px;margin-top:2px}.sheet-row-end{margin-left:auto;color:#e78b47;font-size:11px;font-weight:900;white-space:nowrap}.sheet-row-end.muted{color:#9eb1a5}.sheet-note{padding:12px 4px 0;color:#9db1a3;font-size:10px;text-align:center}.buy-section{margin-top:17px;border-top:1px solid #e7eee4;padding-top:15px}.buy-section h3{font:800 15px 'Outfit';margin:0 0 7px}.buy-section p{color:#91a799;font-size:11px;line-height:1.5;margin:0 0 10px}.buy-section button{width:100%;background:#f58a45;border:0;border-radius:11px;color:#fff;font-weight:900;padding:12px;font-size:12px}.buy-section button:disabled{background:#bfcac0}.status-trip{color:#ec914c}.status-idle{color:#5aad76}
-@media(max-width:600px){.hud-top{left:13px;right:13px}.brand{padding:5px 8px 5px 5px}.brand-icon{width:31px;height:31px;font-size:21px}.brand-icon i{font-size:6px;left:7px}.brand b{font-size:14px}.brand small{font-size:6px}.coin-pill{min-height:38px;padding:5px 9px 5px 5px}.coin-pill span{width:26px;height:26px}.coin-pill strong{font-size:14px}.round-icon{height:38px;width:38px}.station-switch{left:13px;top:calc(max(16px,env(safe-area-inset-top)) + 57px)}.progress-hud{right:13px;top:calc(max(16px,env(safe-area-inset-top)) + 61px)}.scene-callout{bottom:calc(195px + env(safe-area-inset-bottom));font-size:10px}.bottom-area{padding-left:12px;padding-right:12px}.bus-panel{padding:12px 14px}.seat-dots i{width:18px;height:18px}.game-nav b{font-size:10px}}
-@media(max-height:700px){.scene-callout{bottom:calc(177px + env(safe-area-inset-bottom))}.bus-panel{padding-top:9px;padding-bottom:9px}.game-nav button{padding:7px}.bottom-area{gap:6px;padding-bottom:calc(7px + env(safe-area-inset-bottom))}}
-.load-row{display:flex;align-items:center;gap:10px}.load-track{flex:1;height:10px;border-radius:999px;background:#e2ebe0;overflow:hidden}.load-track span{display:block;height:100%;width:0;background:linear-gradient(90deg,#f7b36a,#f27b37);border-radius:999px;transition:width .2s ease}.load-row b{font:800 11px 'Outfit';color:#49735c;white-space:nowrap}
-.flag-icon,.flag-large,.flag-station{display:inline-block;object-fit:cover;flex:none;border-radius:2px;box-shadow:0 1px 3px #294a4350}.flag-icon{width:19px;height:13px;vertical-align:-2px}.flag-large{width:30px;height:20px}.flag-station{width:29px;height:20px}.passenger-tag{display:flex;align-items:center;gap:4px}.passenger-tag span{line-height:1}
-.passenger-tag{justify-content:center;min-width:31px;padding:5px 5px}.passenger-tag .flag-icon{width:20px;height:14px}.progress-hud.medium .progress-icon{background:#fff0cf;color:#d99d35}.progress-hud.low .progress-icon{background:#ffe0d8;color:#dc7567}
-.scene-callout{bottom:calc(76px + env(safe-area-inset-bottom))}.bus-tag{display:grid;gap:3px;min-width:58px;padding:5px 7px 6px;text-align:center}.bus-tag small{font-size:9px;line-height:1;font-weight:900}.bus-progress{display:block;width:100%;height:5px;border-radius:9px;background:#d8e8d8;overflow:hidden}.bus-progress i{display:block;height:100%;border-radius:9px;background:#f58a45;transition:width .2s ease}.bus-tag.full{min-width:48px;padding:6px 10px}.bus-tag.full strong{font-size:12px;line-height:1.1}
-.progress-hud .fare-indicator{margin-top:3px;color:#48a36a;font-size:8px;font-weight:900}.progress-hud.medium .fare-indicator{color:#d69a30}.progress-hud.low .fare-indicator{color:#d97161}
-.quick-buy{position:absolute;right:clamp(14px,3vw,30px);bottom:calc(141px + env(safe-area-inset-bottom));z-index:4;display:grid;justify-items:center;align-content:center;width:59px;height:59px;border:2px solid #fff8ed;border-radius:18px;background:#f58a45;color:#fff;box-shadow:0 8px 20px #a6582f61;line-height:1;touch-action:manipulation}.quick-buy span{font-size:21px;font-weight:900;line-height:18px}.quick-buy b{font:800 11px 'Outfit';margin-top:1px}.quick-buy small{font-size:8px;font-weight:800;margin-top:2px;color:#fff7d9}.quick-buy:active{transform:scale(.94)}.fleet-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.fleet-stats>div{display:grid;gap:4px;background:#f0f6e8;border:1px solid #e4eddd;border-radius:14px;padding:18px 12px;text-align:center}.fleet-stats>div:last-child{background:#fff1e2;border-color:#fbe4ce}.fleet-stats strong{font:800 28px 'Outfit';color:#4fa16d}.fleet-stats>div:last-child strong{color:#ed8842}.fleet-stats span{font-size:11px;font-weight:800;color:#789889}
-.bus-tag-heading{display:flex;align-items:center;justify-content:center;gap:4px}.bus-route-flag{display:inline-flex;align-items:center}.bus-route-flag .flag-icon{width:17px;height:12px}.bus-tag.full{display:flex;align-items:center;gap:5px}.passenger-tag.mismatch{opacity:.55}
-/* Station picker lives in the bottom bar */
-.game-nav .station-switch{position:static;flex:1.7;justify-content:flex-start;gap:8px;min-width:0;padding:6px 8px;border-radius:13px;box-shadow:0 8px 24px #254d3930}
-.game-nav .station-switch>span:nth-child(2){min-width:0}
-.game-nav .station-switch .station-flag{flex:none;width:30px;height:30px;border-radius:9px}
-.game-nav .station-switch small{font-size:7.5px;white-space:nowrap}
-.game-nav .station-switch b{margin-top:1px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.game-nav .station-switch .switch-arrow{margin-left:auto;padding-left:0;font-size:18px}
-.bus-tag.selected{border-color:#3cc27a;background:#effff4;color:#23864f}
-/* Fast tapping: floating fares, special travelers, combo / rush badge */
-.float-layer{position:absolute;inset:0;z-index:6;overflow:hidden;pointer-events:none}
-.float-gain{position:absolute;transform:translate(-50%,-100%);color:#2f8f57;font:900 15px 'Outfit',sans-serif;white-space:nowrap;text-shadow:0 2px 0 #fff,0 0 10px #fff;animation:float-up .95s ease-out forwards}
-.float-gain[class*=special-]{font-size:18px}
-.float-gain.special-vip{color:#c98a00}.float-gain.special-gift{color:#e0458f}.float-gain.special-heart{color:#e2434f}.float-gain.special-rush{color:#1f9ed6}.float-gain.special-diamond{color:#2aa8c9}
-@keyframes float-up{0%{opacity:0;transform:translate(-50%,-70%) scale(.7)}15%{opacity:1;transform:translate(-50%,-110%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-280%) scale(1)}}
-.coin-pill.bump{animation:coin-bump .3s ease-out}
-@keyframes coin-bump{40%{transform:scale(1.18)}}
-.passenger-tag{position:absolute}
-.passenger-tag.special{--glow:#ffd34d;border-color:var(--glow);box-shadow:0 0 0 2px var(--glow),0 0 16px var(--glow);animation:special-pulse .6s ease-in-out infinite alternate}
-.passenger-tag.special-gift{--glow:#ff8fc6}.passenger-tag.special-heart{--glow:#ff7a84}.passenger-tag.special-rush{--glow:#6fd3ff}.passenger-tag.special-diamond{--glow:#a6f0ff}
-@keyframes special-pulse{to{transform:translate(-50%,-100%) scale(1.12)}}
-.special-badge{position:absolute;top:-11px;right:-11px;font-size:15px;font-style:normal;line-height:1;filter:drop-shadow(0 1px 1px #0003)}
-.special-timer{position:absolute;left:5px;right:5px;bottom:-5px;height:3px;border-radius:3px;background:var(--glow);transform-origin:left;animation-name:special-timer;animation-timing-function:linear;animation-fill-mode:forwards}
-@keyframes special-timer{to{transform:scaleX(0)}}
-.combo-hud{position:absolute;top:calc(max(16px,env(safe-area-inset-top)) + 64px);left:clamp(13px,3vw,38px);z-index:4;display:grid;gap:2px;padding:7px 12px;border-radius:14px;background:#fffdf3ee;box-shadow:0 7px 20px #25616f20;color:#d06a24;pointer-events:none;animation:combo-pop .25s ease-out}
-.combo-hud.hidden{display:none}
-.combo-hud b{font:900 17px/1 'Outfit',sans-serif}
-.combo-hud b.rush{color:#1f9ed6;margin-top:3px}
-.combo-hud small{color:#8aa597;font-size:9px;font-weight:800}
-@keyframes combo-pop{from{transform:scale(.8);opacity:0}}
-.bus-tag .bus-fare{display:block;font-size:9px;opacity:.9}
-.bus-tag.collect{display:grid;gap:2px;background:#ffd34d;border-color:#fff7d1;color:#6b4a00;box-shadow:0 0 0 3px #ffe58a,0 0 22px #ffcf40;animation:collect-pulse .55s ease-in-out infinite alternate}
-.bus-tag.collect:after{background:#ffd34d}
-.bus-tag.collect strong{font:900 14px/1 'Outfit',sans-serif}
-.bus-tag.collect small{font-size:8px;letter-spacing:.6px}
-@keyframes collect-pulse{to{transform:translate(-50%,-100%) scale(1.1)}}
-.float-gain.special-cash{color:#c98a00;font-size:22px}
-.bus-tag .bus-mult{display:inline-block;margin-top:2px;padding:1px 6px;border-radius:999px;background:#ffd34d;color:#6b4a00;font:900 10px/1.3 'Outfit',sans-serif}
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
 
-/* ===================== v2: icons, fast tapping, claims, swipe ===================== */
+/* =====================================================================================================
+   Design tokens: a bright, flat, chunky style (Duolingo-like). Buttons and cards have a darker 4px
+   bottom edge that "presses" when tapped.
+   ===================================================================================================== */
+:root{
+  --green:#58cc02;--green-d:#58a700;--green-l:#d7ffb8;
+  --blue:#1cb0f6;--blue-d:#1899d6;--blue-l:#ddf4ff;
+  --gold:#ffc800;--gold-d:#e5a400;--gold-l:#fff5d3;
+  --orange:#ff9600;--orange-d:#e08600;--orange-l:#ffefd9;
+  --red:#ff4b4b;--red-d:#ea2b2b;--red-l:#ffdfe0;
+  --purple:#ce82ff;--purple-d:#a568cc;--purple-l:#f4e5ff;
+  --ink:#4b4b4b;--muted:#afafaf;--line:#e5e5e5;--snow:#f7f7f7;--white:#fff;
+  --radius:16px;--top:max(12px,env(safe-area-inset-top));--bottom:env(safe-area-inset-bottom);
+  font-family:'Nunito',system-ui,sans-serif;color:var(--ink);background:#bce8e6;font-synthesis:none}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:disabled{cursor:not-allowed}
 [hidden]{display:none!important}
+#game{position:relative;width:100vw;height:100vh;height:100dvh;min-height:560px;overflow:hidden;background:#bce8e6;user-select:none;-webkit-user-select:none}
+#scene{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
+#scene-labels{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+
+/* Icons: single-colour SVG masks that take the text colour */
 .ico{display:inline-block;width:1em;height:1em;flex:none;vertical-align:-.15em;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
-.brand-icon{font-size:20px}
-.brand-icon .ico{width:22px;height:22px}
-.coin-pill .coin-ico{width:26px;height:26px;color:#f2a91b;filter:drop-shadow(0 2px 0 #d48a12)}
-.round-icon{display:grid;place-items:center}
-.round-icon .ico{width:21px;height:21px}
-.nav-icon .ico{width:17px;height:17px}
-.boost-hud{border:0;font:inherit;color:#2c4c43;text-align:left;cursor:pointer}
-.boost-hud .progress-icon{background:#fff0de;color:#ee9247}
-.boost-hud .progress-icon .ico{width:17px;height:17px}
-.boost-hud b{color:#e0731f}
-.quick-buy{gap:1px}
-.quick-buy .ico{width:20px;height:20px}
-.quick-buy:not(.can-buy){background:#d9cfc2;box-shadow:none}
-.quick-buy.can-buy{animation:buy-glow 1.6s ease-in-out infinite}
-@keyframes buy-glow{50%{box-shadow:0 0 0 5px #f58a4533,0 8px 20px #a6582f61}}
-.station-switch .switch-swipe{margin-left:auto;width:20px;height:20px;color:#8fa99b}
-.station-switch.alert{border-color:#ffd34d;background:#fff6d6;animation:chip-alert .8s ease-in-out infinite alternate}
-.station-switch.alert small{color:#c27c00}
-@keyframes chip-alert{to{box-shadow:0 0 0 4px #ffd34d66,0 8px 24px #254d3930}}
-#station-info .ico{color:#e0a100}
-.scene-callout #scene-hint{display:flex;align-items:center;gap:5px}
-.scene-callout .ico{width:15px;height:15px;color:#ffd166}
-.scene-callout .hint-flag{width:20px;height:14px;border-radius:3px;box-shadow:0 0 0 1px #fff6}
 
-/* Side arrows to the neighbouring stations */
-.side-nav{position:absolute;top:47%;z-index:4;display:grid;justify-items:center;gap:3px;border:0;padding:9px 6px;background:#fffdf3e0;color:#5d8370;box-shadow:0 8px 22px #25616f2b;backdrop-filter:blur(8px);touch-action:manipulation}
-.side-nav.prev{left:0;border-radius:0 14px 14px 0}
-.side-nav.next{right:0;border-radius:14px 0 0 14px}
+/* Flags */
+.flag-icon,.flag-large,.flag-station,.nav-flag,.bus-flag,.hint-flag{display:inline-block;flex:none;object-fit:cover;border-radius:4px;box-shadow:0 0 0 2px #0000000f}
+.flag-icon{width:19px;height:13px;border-radius:3px}
+.flag-large{width:34px;height:23px}
+.flag-station{width:30px;height:20px}
+
+/* Building blocks: card, chunky button, chip */
+.card,.level-chip,.coin-pill,.icon-btn,.nav-card,.combo-hud,.side-nav,.scene-callout,.sheet-row,.boost-row,.perk-card,.fleet-stats>div{background:var(--white);border:2px solid var(--line);border-bottom-width:4px;border-radius:var(--radius)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:var(--radius);padding:12px 16px;font-weight:900;font-size:14px;letter-spacing:.6px;text-transform:uppercase;color:#fff;transition:transform .05s}
+.btn .ico{width:17px;height:17px}
+.btn.green{background:var(--green);box-shadow:0 4px 0 var(--green-d)}
+.btn.blue{background:var(--blue);box-shadow:0 4px 0 var(--blue-d)}
+.btn.orange{background:var(--orange);box-shadow:0 4px 0 var(--orange-d)}
+.btn.locked,.btn:disabled{background:var(--line);color:var(--muted);box-shadow:0 4px 0 #cecece}
+.btn:not(:disabled):active,.icon-btn:active,.nav-card:active,.quick-buy:active,.mult-badge:active,.level-chip:active,.side-nav:active,.sheet-row:active{transform:translateY(3px)}
+.btn.green:not(:disabled):active{box-shadow:0 1px 0 var(--green-d)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:900;white-space:nowrap}
+.chip .ico{width:12px;height:12px}
+.chip.green{background:var(--green-l);color:var(--green-d)}
+.chip.blue{background:var(--blue-l);color:var(--blue-d)}
+.chip.gold{background:var(--gold-l);color:#b07d00}
+.chip.orange{background:var(--orange-l);color:var(--orange-d)}
+.bump{animation:bump .22s ease-out}
+@keyframes bump{40%{transform:scale(1.12)}}
+
+/* =====================================================================================================
+   Top bar: logo · level + XP · coins · sound
+   ===================================================================================================== */
+.hud-top{position:absolute;top:var(--top);left:12px;right:12px;z-index:5;display:flex;align-items:center;gap:8px}
+.logo{display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:14px;background:var(--orange);color:#fff;box-shadow:0 4px 0 var(--orange-d)}
+.logo .ico{width:24px;height:24px}
+.level-chip{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;text-align:left}
+.level-badge{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--purple);color:#fff;font-weight:900;font-size:15px;box-shadow:0 3px 0 var(--purple-d)}
+.xp{flex:1;min-width:0;display:grid;gap:3px}
+.xp-track{display:block;height:12px;border-radius:999px;background:var(--line);overflow:hidden}
+.xp-track i{position:relative;display:block;height:100%;width:0;border-radius:999px;background:var(--gold);transition:width .3s ease}
+.xp-track i:after{content:'';position:absolute;left:6px;right:6px;top:3px;height:3px;border-radius:3px;background:#ffffff80}
+.xp small{font-size:10px;font-weight:900;color:var(--muted);white-space:nowrap}
+.coin-pill{display:flex;align-items:center;gap:6px;flex:none;height:42px;padding:0 12px 0 8px}
+.coin-ico{width:24px;height:24px;color:var(--gold);filter:drop-shadow(0 2px 0 var(--gold-d))}
+.coin-pill strong{font-size:17px;font-weight:900;color:#d89a00}
+.icon-btn{display:grid;place-items:center;flex:none;width:42px;height:42px;padding:0;color:var(--blue)}
+.icon-btn .ico{width:22px;height:22px}
+
+/* =====================================================================================================
+   Row 2: combo card (left) and the big money multiplier (right)
+   ===================================================================================================== */
+.combo-hud{position:absolute;left:12px;top:calc(var(--top) + 56px);z-index:4;display:grid;grid-template-columns:auto auto;align-items:center;gap:0 8px;padding:5px 12px 9px 10px;pointer-events:none}
+.combo-hud.hidden{display:none}
+.combo-num{font-size:40px;font-weight:900;line-height:1;color:var(--orange)}
+.combo-side{display:grid;gap:1px}
+.combo-word{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:900;color:var(--muted);letter-spacing:.8px}
+.combo-word .ico{width:14px;height:14px;color:var(--gold)}
+.combo-pot{font-size:13px;font-weight:900;color:var(--green-d)}
+.combo-timer{grid-column:1/-1;display:block;height:6px;margin-top:4px;border-radius:6px;background:var(--orange);transform-origin:left}
+.combo-timer.frozen{background:var(--blue)}
+.combo-hud.bump .combo-num{animation:bump-big .2s ease-out}
+.combo-hud.bump{animation:none}
+@keyframes bump-big{40%{transform:scale(1.3)}}
+
+.mult-badge{position:absolute;right:12px;top:calc(var(--top) + 56px);z-index:4;display:grid;justify-items:center;min-width:96px;padding:6px 12px 8px;border:0;border-radius:20px;background:var(--white);color:var(--muted);box-shadow:inset 0 0 0 2px var(--line),0 4px 0 var(--line)}
+.mult-badge small{font-size:10px;font-weight:900;letter-spacing:1px}
+.mult-badge b{font-size:38px;font-weight:900;line-height:1}
+.mult-badge span{margin-top:2px;padding:2px 8px;border-radius:999px;background:var(--green-l);color:var(--green-d);font-size:11px;font-weight:900;white-space:nowrap}
+.mult-badge[data-level="1"]{background:var(--orange);color:#fff;box-shadow:0 4px 0 var(--orange-d)}
+.mult-badge[data-level="2"]{background:var(--red);color:#fff;box-shadow:0 4px 0 var(--red-d)}
+.mult-badge[data-level="3"]{background:var(--purple);color:#fff;box-shadow:0 4px 0 var(--purple-d)}
+.mult-badge[data-level="4"]{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;box-shadow:0 4px 0 var(--blue-d),0 0 24px #ce82ff99}
+.mult-badge[data-level]:not([data-level="0"]) span{background:#ffffff33;color:#fff}
+.mult-badge.bump b{animation:bump-big .22s ease-out}
+.mult-badge.bump{animation:none}
+
+/* =====================================================================================================
+   Side arrows to the neighbouring stations
+   ===================================================================================================== */
+.side-nav{position:absolute;top:47%;z-index:4;display:grid;justify-items:center;gap:4px;padding:8px 6px 10px;color:var(--blue)}
+.side-nav.prev{left:-2px;border-radius:0 16px 16px 0}
+.side-nav.next{right:-2px;border-radius:16px 0 0 16px}
 .side-nav .nav-arrow{width:16px;height:16px}
-.side-nav .nav-flag{width:24px;height:16px;border-radius:3px;box-shadow:0 0 0 1px #0001}
-.side-nav.alert{background:#ffd34d;color:#6b4a00;animation:chip-alert .7s ease-in-out infinite alternate}
-.nav-claim{display:flex;align-items:center;gap:1px;font:900 10px/1 'Outfit',sans-serif}
+.side-nav .nav-flag{width:24px;height:16px}
+.side-nav.alert{background:var(--gold);border-color:var(--gold-d);color:#7a5200;animation:alert-glow .7s ease-in-out infinite alternate}
+.nav-claim{display:flex;align-items:center;gap:1px;font-size:11px;font-weight:900}
 .nav-claim .ico{width:12px;height:12px}
+@keyframes alert-glow{to{box-shadow:0 0 0 4px #ffc80066}}
 
-/* Travelers: everyone shows their flag; only the selected bus's country is tappable */
-.traveler-tag{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;min-width:31px;padding:5px;border:2px solid #fff;border-radius:999px;background:#fffdf0f4;box-shadow:0 5px 15px #2f5c4942;pointer-events:auto;touch-action:manipulation;transition:opacity .15s,filter .15s;animation:tag-pop .2s ease-out}
-.traveler-tag:after{content:'';position:absolute;bottom:-6px;left:calc(50% - 4px);height:7px;width:7px;background:#fffdf0;transform:rotate(45deg)}
-.traveler-tag .flag-icon{width:20px;height:14px;border-radius:2px}
-.traveler-tag:not(.faded){border-color:#3cc27a;box-shadow:0 0 0 2px #3cc27a55,0 6px 16px #2f5c4955}
-.traveler-tag:not(.faded):active{transform:translate(-50%,-100%) scale(.88)}
-.traveler-tag.faded{opacity:.42;filter:saturate(.35)}
-.traveler-tag.special{--glow:#ffd34d;border-color:var(--glow);box-shadow:0 0 0 2px var(--glow),0 0 16px var(--glow);animation:tag-pop .2s ease-out,special-pulse .45s ease-in-out .2s infinite alternate}
+/* =====================================================================================================
+   Hint, quick buy and the bottom bar
+   ===================================================================================================== */
+.scene-callout{position:absolute;left:50%;bottom:calc(94px + var(--bottom));z-index:3;transform:translateX(-50%);display:flex;align-items:center;max-width:calc(100vw - 110px);padding:8px 14px;pointer-events:none;font-size:13px;font-weight:900;white-space:nowrap}
+#scene-hint{display:flex;align-items:center;gap:5px;overflow:hidden;text-overflow:ellipsis}
+#scene-hint .ico{width:16px;height:16px;color:var(--gold)}
+.hint-flag{width:22px;height:15px}
+
+.quick-buy{position:absolute;right:12px;bottom:calc(150px + var(--bottom));z-index:4;display:grid;justify-items:center;gap:0;width:66px;padding:8px 4px 7px;border:0;border-radius:18px;background:var(--line);color:var(--muted);box-shadow:0 4px 0 #cecece;line-height:1.1}
+.quick-buy .ico{width:22px;height:22px}
+.quick-buy b{font-size:12px;font-weight:900;letter-spacing:.5px}
+.quick-buy small{font-size:11px;font-weight:900}
+.quick-buy em{position:absolute;top:-9px;right:-6px;padding:2px 6px;border-radius:999px;background:var(--blue);color:#fff;font-size:10px;font-weight:900;font-style:normal;box-shadow:0 2px 0 var(--blue-d)}
+.quick-buy.can-buy{background:var(--green);color:#fff;box-shadow:0 4px 0 var(--green-d);animation:buy-glow 1.4s ease-in-out infinite}
+@keyframes buy-glow{50%{box-shadow:0 4px 0 var(--green-d),0 0 0 6px #58cc0233}}
+
+.bottom-area{position:absolute;left:0;right:0;bottom:0;z-index:4;padding:0 12px calc(12px + var(--bottom))}
+.game-nav{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px;max-width:520px;margin:0 auto}
+.nav-card{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 9px;text-align:left}
+.nav-text{display:grid;min-width:0}
+.nav-text b{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-text small{font-size:10px;font-weight:900;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-icon{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:11px;color:#fff}
+.nav-icon .ico{width:19px;height:19px}
+.nav-icon.orange{background:var(--orange);box-shadow:0 3px 0 var(--orange-d)}
+.nav-icon.blue{background:var(--blue);box-shadow:0 3px 0 var(--blue-d)}
+#fleet-sub{color:var(--orange-d)}
+#build-sub{color:var(--blue-d)}
+#build-button.can-buy{border-color:var(--green);background:var(--green-l)}
+.station-flag{display:grid;place-items:center;flex:none}
+.station-switch .switch-swipe{flex:none;margin-left:auto;width:20px;height:20px;color:var(--muted)}
+.station-switch.alert{border-color:var(--gold-d);background:var(--gold-l);animation:alert-glow .8s ease-in-out infinite alternate}
+.station-switch.alert small{color:#b07d00}
+#station-info .ico{width:12px;height:12px;color:var(--gold-d)}
+
+/* =====================================================================================================
+   Tags over the 3D scene: travelers and buses
+   ===================================================================================================== */
+.traveler-tag,.bus-tag{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;touch-action:manipulation;white-space:nowrap}
+.traveler-tag{display:flex;align-items:center;justify-content:center;min-width:28px;padding:3px 4px;border:2px solid var(--line);border-bottom-width:3px;border-radius:12px;background:var(--white);animation:tag-pop .15s ease-out}
+.traveler-tag:before{content:'';position:absolute;inset:-7px -9px -34px -9px;border-radius:14px}
+.traveler-tag:after{content:'';position:absolute;bottom:-6px;left:calc(50% - 3px);width:6px;height:6px;background:inherit;border-right:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+.traveler-tag .flag-icon{width:18px;height:12px}
+.traveler-tag:not(.faded){z-index:2;border-color:var(--green);background:var(--white);box-shadow:0 0 0 2px var(--green-l)}
+.traveler-tag:not(.faded):after{border-color:var(--green)}
+.traveler-tag.faded{opacity:.4;filter:grayscale(.6);pointer-events:none}
+.traveler-tag.special{--glow:var(--gold);border-color:var(--glow);background:var(--glow);box-shadow:0 0 14px var(--glow);animation:tag-pop .08s ease-out,special-pulse .2s ease-in-out .08s infinite alternate}
+.traveler-tag.special:after{border-color:var(--glow)}
 .traveler-tag.special.faded{opacity:.55;animation:none}
-.traveler-tag.special-gift{--glow:#ff8fc6}.traveler-tag.special-heart{--glow:#ff7a84}.traveler-tag.special-rush{--glow:#6fd3ff}.traveler-tag.special-diamond{--glow:#a6f0ff}
-.traveler-tag .special-badge{position:absolute;top:-10px;right:-10px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:var(--glow);color:#fff;box-shadow:0 2px 4px #0003}
-.traveler-tag .special-badge .ico{width:12px;height:12px}
-.traveler-tag .life-timer{position:absolute;left:6px;right:6px;bottom:-1px;height:3px;border-radius:3px;background:var(--glow,#3cc27a);transform-origin:left;animation-name:special-timer;animation-timing-function:linear;animation-fill-mode:forwards}
-.traveler-tag.faded .life-timer{background:#9fb5aa}
+.traveler-tag.special-gift{--glow:#ff86d0}.traveler-tag.special-heart{--glow:var(--red)}.traveler-tag.special-rush{--glow:var(--blue)}.traveler-tag.special-diamond{--glow:#7fe3ff}
+.special-badge{position:absolute;top:-10px;right:-10px;display:grid;place-items:center;width:19px;height:19px;border-radius:50%;background:#fff;color:var(--glow);box-shadow:0 2px 0 #0002}
+.special-badge .ico{width:12px;height:12px}
+.life-timer{position:absolute;left:5px;right:5px;bottom:-1px;height:3px;border-radius:3px;background:var(--glow,var(--green));transform-origin:left;animation-name:drain;animation-timing-function:linear;animation-fill-mode:forwards}
+.traveler-tag.special .life-timer{background:#fff}
+.traveler-tag.faded .life-timer{background:var(--muted)}
 .traveler-tag.nope{animation:nope .25s}
 @keyframes tag-pop{from{transform:translate(-50%,-60%) scale(.4);opacity:0}}
-@keyframes nope{25%{transform:translate(-56%,-100%)}75%{transform:translate(-44%,-100%)}}
+@keyframes special-pulse{to{transform:translate(-50%,-100%) scale(1.14)}}
+@keyframes nope{25%{transform:translate(-58%,-100%)}75%{transform:translate(-42%,-100%)}}
+@keyframes drain{to{transform:scaleX(0)}}
 
-/* Bus tags: destination flag and country, progress, GO, and the gold claim tag with its countdown */
-.bus-tag .bus-tag-heading{display:flex;align-items:center;justify-content:center;gap:5px}
-.bus-tag .bus-flag{width:22px;height:15px;border-radius:3px;box-shadow:0 0 0 1px #0001}
-.bus-tag .bus-dest{font:900 11px/1 'Outfit',sans-serif;color:#2c4c43}
-.bus-tag.full{display:grid;gap:3px}
-.bus-tag.full .bus-dest{color:#fff}
-.bus-tag.full strong{display:flex;align-items:center;justify-content:center;gap:4px}
-.bus-tag.full strong .ico{width:14px;height:14px}
-.bus-tag.collect{display:grid;gap:3px;padding-bottom:9px;overflow:visible}
-.bus-tag.collect strong{display:flex;align-items:center;justify-content:center;gap:4px}
-.bus-tag.collect strong .ico{width:16px;height:16px}
-.bus-tag.collect .claim-timer{position:absolute;left:8px;right:8px;bottom:4px;height:4px;border-radius:4px;background:#6b4a00;transform-origin:left;animation-name:special-timer;animation-timing-function:linear;animation-fill-mode:forwards}
-.bus-tag.collect.hurry{background:#ff8a5c;box-shadow:0 0 0 3px #ffb08f,0 0 22px #ff6a3d;color:#fff;animation:collect-pulse .25s ease-in-out infinite alternate}
-.bus-tag.collect.hurry:after{background:#ff8a5c}
+.bus-tag{z-index:3;display:grid;justify-items:center;gap:3px;min-width:70px;padding:5px 9px 7px;border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;background:var(--white);color:var(--ink);font-weight:900}
+.bus-tag:before{content:'';position:absolute;inset:-8px -8px -14px -8px;border-radius:16px}
+.bus-tag:after{content:'';position:absolute;bottom:-8px;left:calc(50% - 5px);width:9px;height:9px;background:inherit;border-right:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+.bus-tag-heading{display:flex;align-items:center;gap:5px}
+.bus-flag{width:22px;height:15px}
+.bus-dest{font-size:13px;font-weight:900}
+.bus-tag small{font-size:11px;font-weight:900;color:var(--muted)}
+.bus-progress{display:block;width:100%;height:8px;border-radius:8px;background:var(--line);overflow:hidden}
+.bus-progress i{display:block;height:100%;border-radius:8px;background:var(--orange);transition:width .15s}
+.bus-tag.selected{border-color:var(--green);background:var(--green-l)}
+.bus-tag.selected:after{border-color:var(--green)}
+.bus-tag.selected .bus-progress i{background:var(--green)}
+.bus-tag.full{border-color:var(--orange-d);background:var(--orange);color:#fff;animation:go-pulse .6s ease-in-out infinite alternate}
+.bus-tag.full:after{border-color:var(--orange-d)}
+.bus-tag.full strong{display:flex;align-items:center;gap:4px;font-size:17px}
+.bus-tag.full strong .ico{width:16px;height:16px}
+.bus-tag.full small,.bus-tag.full .bus-dest{color:#fff}
+.bus-tag.collect{border-color:var(--gold-d);background:var(--gold);color:#6b4a00;padding-bottom:11px;animation:go-pulse .45s ease-in-out infinite alternate}
+.bus-tag.collect:after{border-color:var(--gold-d)}
+.bus-tag.collect strong{display:flex;align-items:center;gap:4px;font-size:17px}
+.bus-tag.collect strong .ico{width:18px;height:18px}
+.bus-tag.collect small{color:#7a5200}
+.claim-timer{position:absolute;left:9px;right:9px;bottom:4px;height:5px;border-radius:5px;background:#7a5200;transform-origin:left;animation-name:drain;animation-timing-function:linear;animation-fill-mode:forwards}
+.bus-tag.collect.hurry{border-color:var(--red-d);background:var(--red);color:#fff;animation:go-pulse .2s ease-in-out infinite alternate}
+.bus-tag.collect.hurry:after{border-color:var(--red-d)}
+.bus-tag.collect.hurry small{color:#fff}
 .bus-tag.collect.hurry .claim-timer{background:#fff}
+@keyframes go-pulse{to{transform:translate(-50%,-100%) scale(1.07)}}
 
-/* Combo badge, combo banner and floating gains */
-.combo-hud{min-width:150px}
-.combo-hud b{display:flex;align-items:center;gap:5px}
-.combo-hud b .ico{width:17px;height:17px;color:#f2a91b}
-.combo-hud .combo-mult{font:900 13px/1.2 'Outfit',sans-serif;color:#e0731f}
-.combo-hud small .ico{width:10px;height:10px;color:#1f9ed6}
-.combo-timer{display:block;height:4px;margin-top:4px;border-radius:4px;background:#f58a45;transform-origin:left}
-.combo-timer.frozen{background:#48c8ff}
-.combo-banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:2px;padding:12px 22px;border-radius:20px;background:#fffdf3f2;box-shadow:0 14px 40px #25616f40;color:#e0731f;animation:combo-banner 1.5s ease-out forwards;pointer-events:none}
-.combo-banner small{display:flex;align-items:center;gap:5px;color:#5d8370;font:900 12px/1 'Outfit',sans-serif;letter-spacing:.6px}
-.combo-banner small .ico{width:16px;height:16px;color:#f2a91b}
-.combo-banner b{font:900 34px/1 'Outfit',sans-serif}
-.combo-banner span{color:#8aa597;font-size:11px;font-weight:800}
-@keyframes combo-banner{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
-.float-gain{display:flex;align-items:center;gap:3px}
+/* =====================================================================================================
+   Floating feedback: fares, XP, combo banner, shouts, level up, purchases
+   ===================================================================================================== */
+.float-layer{position:absolute;inset:0;z-index:6;overflow:hidden;pointer-events:none}
+.float-gain{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;gap:3px;color:var(--green-d);font-size:16px;font-weight:900;white-space:nowrap;text-shadow:0 2px 0 #fff,0 0 8px #fff;animation:float-up .95s ease-out forwards}
 .float-gain .ico{width:16px;height:16px}
+.float-gain em{margin-left:3px;padding:1px 6px;border-radius:999px;background:var(--orange);color:#fff;font-size:11px;font-style:normal;text-shadow:none;box-shadow:0 2px 0 var(--orange-d)}
+.float-gain.special-lvl1{font-size:18px;color:var(--green-d)}
+.float-gain.special-lvl2{font-size:20px;color:var(--orange-d)}
+.float-gain.special-lvl3{font-size:22px;color:var(--red-d)}
+.float-gain.special-lvl4{font-size:25px;color:var(--purple-d)}
+.float-gain.special-vip{color:#c99700;font-size:18px}.float-gain.special-gift{color:#e0459a;font-size:18px}.float-gain.special-heart{color:var(--red-d);font-size:18px}.float-gain.special-rush{color:var(--blue-d);font-size:18px}.float-gain.special-diamond{color:#0fa3c9;font-size:20px}
+.float-gain.special-cash{color:#c99700;font-size:26px}
+.float-gain.special-depart{color:var(--orange-d);font-size:16px}
+.float-gain.special-xp{color:var(--purple-d);font-size:14px}
+@keyframes float-up{0%{opacity:0;transform:translate(-50%,-70%) scale(.7)}15%{opacity:1;transform:translate(-50%,-110%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-280%) scale(1)}}
 
-/* Toasts with icons */
-.toast{display:flex;align-items:center;gap:6px}
-.toast .ico{width:15px;height:15px}
-.toast.claim{background:#ffd34d;color:#5a3d00}
-.toast.error-soft{background:#7a5c52}
+.combo-banner,.level-up,.purchase-pop{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);display:grid;justify-items:center;gap:6px;padding:14px 24px 16px;border:2px solid var(--line);border-bottom-width:5px;border-radius:22px;background:var(--white);pointer-events:none}
+.combo-banner{animation:pop-card 1.5s ease-out forwards}
+.combo-banner small{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:13px;font-weight:900;letter-spacing:.8px}
+.combo-banner small .ico{width:16px;height:16px;color:var(--gold)}
+.combo-banner b{font-size:38px;font-weight:900;line-height:1;color:var(--green-d)}
+.combo-banner span{padding:3px 10px;border-radius:999px;background:var(--orange);color:#fff;font-size:12px;font-weight:900}
+.level-up{top:36%;border-color:var(--purple-d);animation:pop-card 2.3s ease-out forwards}
+.level-up-badge{display:grid;place-items:center;width:62px;height:62px;border-radius:50%;background:var(--purple);color:#fff;font-size:30px;font-weight:900;box-shadow:0 5px 0 var(--purple-d)}
+.level-up b{font-size:28px;font-weight:900;color:var(--purple-d)}
+.purchase-pop{top:42%;border-color:var(--green);animation:pop-card 2.3s ease-out forwards}
+.purchase-art{display:grid;place-items:center;width:56px;height:56px;border-radius:16px;background:var(--orange);color:#fff;box-shadow:0 4px 0 var(--orange-d)}
+.purchase-art .ico{width:32px;height:32px}
+.purchase-art .flag-large{width:44px;height:30px}
+.purchase-pop b{font-size:22px;font-weight:900}
+@keyframes pop-card{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}22%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
+.shout{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);color:#fff;font-size:38px;font-weight:900;letter-spacing:1px;-webkit-text-stroke:2px var(--orange-d);text-shadow:0 5px 0 var(--orange-d);white-space:nowrap;pointer-events:none;animation:shout .9s ease-out forwards}
+@keyframes shout{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(3deg)}35%{transform:translate(-50%,-50%) scale(1) rotate(0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%)}}
 
-/* Sheets */
-.boost-card{display:flex;gap:12px;align-items:flex-start;padding:12px;margin-bottom:12px;border-radius:14px;background:#fff4e4;color:#5a4a3a}
-.boost-card>.ico{width:28px;height:28px;color:#ee9247}
-.boost-card>div>b{display:block;color:#e0731f;font:900 16px 'Outfit',sans-serif}
-.boost-card small b{color:#e0731f}
-.boost-card small{display:block;margin-top:3px;font-size:11px;line-height:1.45}
-.fleet-stats{grid-template-columns:repeat(3,1fr)}
-#buy-bus .ico{width:16px;height:16px;margin-right:4px}
-.sheet-row small .ico{width:12px;height:12px}
+/* =====================================================================================================
+   Toasts
+   ===================================================================================================== */
+.toast-stack{position:absolute;left:50%;top:calc(var(--top) + 150px);z-index:7;transform:translateX(-50%);display:grid;gap:6px;width:max-content;max-width:calc(100vw - 24px);pointer-events:none}
+.toast{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:14px;background:var(--ink);color:#fff;font-size:13px;font-weight:900;box-shadow:0 4px 0 #2c2c2c;animation:toast-in .2s ease}
+.toast .ico{width:16px;height:16px}
+.toast.claim{background:var(--gold);color:#5a3d00;box-shadow:0 4px 0 var(--gold-d)}
+.toast.error{background:var(--red);box-shadow:0 4px 0 var(--red-d)}
+.toast.error-soft{background:#8a7067;box-shadow:0 4px 0 #6c554d}
+@keyframes toast-in{from{opacity:0;transform:translateY(-8px)}}
+
+/* =====================================================================================================
+   Sheets (bottom panels)
+   ===================================================================================================== */
+.modal-backdrop{position:absolute;inset:0;z-index:10;display:flex;align-items:flex-end;justify-content:center;background:#0006}
+.modal-backdrop.hidden{display:none}
+.sheet{width:min(100%,520px);max-height:min(82vh,720px);overflow:auto;padding:10px 16px calc(22px + var(--bottom));border-radius:24px 24px 0 0;background:var(--white);animation:slide-up .22s ease}
+@keyframes slide-up{from{transform:translateY(100%)}}
+.sheet-grip{width:44px;height:5px;margin:0 auto 14px;border-radius:5px;background:var(--line)}
+.sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.sheet-header small{font-size:11px;font-weight:900;letter-spacing:1.2px;color:var(--muted)}
+.sheet-header h2{margin:2px 0 0;font-size:24px;font-weight:900}
+#close-sheet{flex:none;width:36px;height:36px;border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;background:var(--white);color:var(--muted);font-size:22px;line-height:1}
+.sheet-intro{margin:0 0 14px;font-size:14px;color:var(--muted);font-weight:800;line-height:1.45}
+.sheet-list{display:grid;gap:10px}
+.sheet-row{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;text-align:left}
+.sheet-row.selected{border-color:var(--blue);background:var(--blue-l)}
+.sheet-row-icon{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:14px;background:var(--snow)}
+.sheet-row>span:nth-child(2){display:grid;gap:3px;min-width:0}
+.sheet-row b{font-size:16px;font-weight:900}
+.sheet-row small{font-size:12px;font-weight:800;color:var(--muted)}
+.sheet-row small .ico{width:13px;height:13px}
+.sheet-row-end{margin-left:auto;padding:8px 12px;border-radius:12px;background:var(--blue);color:#fff;font-size:12px;font-weight:900;box-shadow:0 3px 0 var(--blue-d)}
+.sheet-row.selected .sheet-row-end{background:var(--line);color:var(--muted);box-shadow:none}
+.station-offer .btn{margin-left:auto;flex:none;display:grid;gap:0;padding:9px 12px;font-size:13px}
+.station-offer .btn small{font-size:10px;color:inherit;text-transform:none;letter-spacing:0}
+.perk-strip{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.boost-list{display:grid;gap:8px;margin-bottom:14px}
+.boost-row{display:flex;align-items:center;gap:12px;padding:10px 12px}
+.boost-row>span:nth-child(2){display:grid;gap:2px;min-width:0}
+.boost-row b{font-size:16px;font-weight:900}
+.boost-row small{font-size:12px;font-weight:800;color:var(--muted)}
+.boost-row strong{margin-left:auto;font-size:20px;font-weight:900}
+.boost-art{display:grid;place-items:center;flex:none;width:40px;height:40px;border-radius:12px;color:#fff}
+.boost-art .ico{width:22px;height:22px}
+.boost-art.orange{background:var(--orange);box-shadow:0 3px 0 var(--orange-d)}.boost-row strong.orange{color:var(--orange-d)}
+.boost-art.blue{background:var(--blue);box-shadow:0 3px 0 var(--blue-d)}.boost-row strong.blue{color:var(--blue-d)}
+.boost-art.purple{background:var(--purple);box-shadow:0 3px 0 var(--purple-d)}.boost-row strong.purple{color:var(--purple-d)}
+.perk-card{display:grid;gap:8px;padding:14px;margin-bottom:14px;border-color:var(--green);background:#f7ffef}
+.perk-card h3{margin:0;font-size:17px;font-weight:900;color:var(--green-d)}
+.perk-card p{display:flex;gap:8px;margin:0;font-size:13px;font-weight:800;line-height:1.4}
+.perk-card p .ico{width:18px;height:18px;margin-top:1px;color:var(--green-d)}
+.perk-card .btn{margin-top:4px;width:100%}
+.fleet-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fleet-stats>div{display:grid;justify-items:center;gap:2px;padding:12px 6px}
+.fleet-stats strong{font-size:24px;font-weight:900;color:var(--blue-d)}
+.fleet-stats span{font-size:11px;font-weight:900;color:var(--muted)}
 
 /* Sliding between stations */
 #game.slide-from-right #scene,#game.slide-from-right #scene-labels{animation:slide-from-right .3s ease-out}
 #game.slide-from-left #scene,#game.slide-from-left #scene-labels{animation:slide-from-left .3s ease-out}
 @keyframes slide-from-right{from{transform:translateX(35%);opacity:.2}}
 @keyframes slide-from-left{from{transform:translateX(-35%);opacity:.2}}
-.bus-tag.full,.bus-tag.full.selected{background:#f58a45;border-color:#fff;color:#fff}
-.bus-tag.full.selected{box-shadow:0 0 0 3px #3cc27a,0 5px 15px #2f5c4942}
-.bus-tag.full:after{background:#f58a45}
 
-/* ===================== fast pace: compact tags, big combo counter, numbers everywhere ===================== */
-.traveler-tag{min-width:26px;padding:3px 4px;border-width:2px}
-.traveler-tag .flag-icon{width:17px;height:12px}
-.traveler-tag:after{bottom:-5px;width:6px;height:6px;left:calc(50% - 3px)}
-.traveler-tag .special-badge{top:-9px;right:-9px;width:17px;height:17px}
-.traveler-tag .special-badge .ico{width:11px;height:11px}
-.traveler-tag.special{animation:tag-pop .15s ease-out,special-pulse .3s ease-in-out .15s infinite alternate}
+/* Small screens */
+@media(max-width:380px){.coin-pill strong{font-size:15px}.nav-text b{font-size:13px}.mult-badge{min-width:86px}.mult-badge b{font-size:32px}}
+@media(max-height:700px){.scene-callout{bottom:calc(86px + var(--bottom))}.quick-buy{bottom:calc(136px + var(--bottom))}}
 
-/* Big combo counter, top centre */
-.combo-hud{left:50%;right:auto;top:calc(max(16px,env(safe-area-inset-top)) + 58px);transform:translateX(-50%);display:grid;grid-template-columns:auto auto;align-items:center;gap:2px 9px;min-width:0;padding:6px 14px 9px 12px;border-radius:18px;animation:none}
-.combo-hud .combo-num{font:900 40px/1 'Outfit',sans-serif;color:#e0731f;text-shadow:0 3px 0 #ffd9b8}
-.combo-hud .combo-side{display:grid;gap:1px}
-.combo-hud .combo-word{display:flex;align-items:center;gap:4px;color:#5d8370;font:900 11px/1 'Outfit',sans-serif;letter-spacing:.8px}
-.combo-hud .combo-word .ico{width:14px;height:14px;color:#f2a91b}
-.combo-hud .combo-mult{font:900 15px/1.1 'Outfit',sans-serif;color:#e0731f}
-.combo-hud .combo-pot{color:#8aa597;font-size:10px;font-weight:800}
-.combo-hud .combo-timer{grid-column:1/-1;margin-top:3px}
-.combo-hud.bump .combo-num{animation:combo-bump .18s ease-out}
-.combo-hud[data-level="1"] .combo-num{color:#f08a1c}
-.combo-hud[data-level="2"] .combo-num{color:#f05a28;text-shadow:0 3px 0 #ffc9b0}
-.combo-hud[data-level="3"] .combo-num{color:#e8335e;text-shadow:0 3px 0 #ffc0d0}
-.combo-hud[data-level="4"] .combo-num{color:#a63ee0;text-shadow:0 3px 0 #e6c8ff}
-.combo-hud[data-level="3"],.combo-hud[data-level="4"]{box-shadow:0 0 0 3px #ffd34d88,0 7px 20px #25616f30}
-@keyframes combo-bump{40%{transform:scale(1.35)}}
+/* =====================================================================================================
+   Bonus travelers: bigger, brighter, with a spinning glow; particle bursts when popped
+   ===================================================================================================== */
+.traveler-tag.special{z-index:4;padding:4px 6px;border-width:3px;animation:tag-pop-big .08s ease-out,special-pulse-big .18s ease-in-out .08s infinite alternate;box-shadow:0 0 0 3px #fff,0 0 18px 4px var(--glow),0 0 34px 8px var(--glow)}
+.traveler-tag.special .flag-icon{width:22px;height:15px}
+.special-glow{position:absolute;left:50%;top:50%;z-index:-1;width:84px;height:84px;margin:-42px 0 0 -42px;border-radius:50%;background:repeating-conic-gradient(from 0deg,var(--glow) 0 12deg,transparent 12deg 30deg);-webkit-mask:radial-gradient(circle,#000 0 22%,transparent 64%);mask:radial-gradient(circle,#000 0 22%,transparent 64%);opacity:.85;animation:spin 1.2s linear infinite;pointer-events:none}
+.traveler-tag.special .special-badge{top:-14px;right:-14px;width:26px;height:26px;border:2px solid var(--glow);box-shadow:0 3px 0 #0002}
+.traveler-tag.special .special-badge .ico{width:16px;height:16px}
+.traveler-tag.special.faded .special-glow{display:none}
+@keyframes tag-pop-big{from{transform:translate(-50%,-60%) scale(.3);opacity:0}}
+@keyframes special-pulse-big{from{transform:translate(-50%,-100%) scale(1.3)}to{transform:translate(-50%,-100%) scale(1.48)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* Floating fares grow with the combo */
-.float-gain{font-size:15px}
-.float-gain em{margin-left:3px;padding:1px 5px;border-radius:999px;background:#f58a45;color:#fff;font:900 11px/1.3 'Outfit',sans-serif;font-style:normal;text-shadow:none}
-.float-gain.special-lvl1{font-size:17px;color:#2f9f5a}
-.float-gain.special-lvl2{font-size:19px;color:#e0731f}
-.float-gain.special-lvl3{font-size:21px;color:#e8335e}
-.float-gain.special-lvl4{font-size:24px;color:#a63ee0}
-.float-gain.special-depart{font-size:16px;color:#e0731f}
-.float-gain.special-cash{font-size:26px}
+.burst{position:absolute;z-index:7;width:0;height:0;pointer-events:none}
+.burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);animation:particle .5s cubic-bezier(.2,.8,.3,1) forwards}
+.burst.big i{left:-5px;top:-5px;width:10px;height:10px}
+.burst i:nth-child(3n){border-radius:2px;background:#fff;box-shadow:0 0 6px var(--c)}
+.burst .burst-ring{left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;background:none;border:3px solid var(--c);box-shadow:none;animation:ring .4s ease-out forwards}
+.burst.big .burst-ring{left:-20px;top:-20px;width:40px;height:40px;border-width:4px}
+@keyframes particle{to{transform:translate(var(--dx),var(--dy)) scale(var(--s));opacity:0}}
+@keyframes ring{from{transform:scale(.3);opacity:1}to{transform:scale(2.2);opacity:0}}
 
-/* Milestone shouts */
-.shout{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);color:#fff;font:900 34px/1 'Outfit',sans-serif;letter-spacing:1px;-webkit-text-stroke:2px #e0731f;text-shadow:0 4px 0 #e0731f,0 10px 24px #e0731f66;animation:shout .9s ease-out forwards;pointer-events:none;white-space:nowrap}
-@keyframes shout{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(3deg)}35%{transform:translate(-50%,-50%) scale(1) rotate(0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%) scale(1.05)}}
-/* The whole traveler is the tap target: the area reaches down over their body. */
-.traveler-tag:before{content:"";position:absolute;inset:-7px -9px -34px -9px;border-radius:14px}
-.traveler-tag.faded{pointer-events:none}
-.traveler-tag:not(.faded){z-index:2}
+/* =====================================================================================================
+   Bottom bar: icon above label so nothing is cut off
+   ===================================================================================================== */
+.game-nav{grid-template-columns:repeat(3,1fr)}
+.nav-card{flex-direction:column;justify-content:center;gap:3px;padding:7px 4px 6px;text-align:center}
+.nav-card .nav-text{justify-items:center}
+.nav-card .nav-icon{width:30px;height:30px}
+.station-switch .station-flag .flag-station{width:34px;height:23px}
+.station-switch .switch-swipe{position:absolute;top:6px;right:7px;width:16px;height:16px;margin:0}
+.nav-card{position:relative}
+.scene-callout{bottom:calc(112px + var(--bottom));max-width:calc(100vw - 24px)}
+.quick-buy{bottom:calc(166px + var(--bottom))}
+@media(max-height:700px){.scene-callout{bottom:calc(104px + var(--bottom))}.quick-buy{bottom:calc(152px + var(--bottom))}}
+/* Toast text flows as one line of inline content */
+.toast{display:block;text-align:center;line-height:1.35}
+.toast .ico{margin:0 2px;vertical-align:-.2em}
+
+/* Coins and XP orbs flying to their counters */
+.xp-track i{transition:none}
+.flyer{position:absolute;left:0;top:0;z-index:8;pointer-events:none;will-change:transform}
+.coin-flyer{margin:-12px 0 0 -12px;color:var(--gold);filter:drop-shadow(0 2px 0 var(--gold-d)) drop-shadow(0 0 6px #ffc80099)}
+.coin-flyer .ico{width:24px;height:24px}
+.xp-orb{width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--purple) 55%,var(--purple-d));box-shadow:0 0 10px var(--purple)}
+.flyer{opacity:0}
+
+/* Notices: combo payouts, level-ups and purchases sit on the rail under the top bar, above the buses */
+.toast-stack{top:calc(var(--top) + 140px);justify-items:center}
+.notice{display:inline-flex;align-items:center;gap:7px;max-width:calc(100vw - 24px);padding:5px 12px 5px 5px;border:2px solid var(--line);border-bottom-width:4px;border-radius:999px;background:var(--white);font-size:13px;font-weight:900;white-space:nowrap;animation:notice-in .25s cubic-bezier(.2,1.4,.4,1)}
+.notice b{font-size:17px}
+.notice .chip{font-size:11px}
+.notice-art{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;color:#fff;font-size:15px;font-weight:900}
+.notice-art .ico{width:18px;height:18px}
+.notice-art .flag-large{width:26px;height:18px}
+.notice-combo{border-color:var(--orange)}.notice-combo .notice-art{background:var(--gold);box-shadow:0 2px 0 var(--gold-d)}.notice-combo b{color:var(--green-d)}
+.notice-level{border-color:var(--purple)}.notice-level .notice-art{background:var(--purple);box-shadow:0 2px 0 var(--purple-d)}.notice-level b{color:var(--purple-d)}
+.notice-buy{border-color:var(--green)}.notice-buy .notice-art{background:var(--orange);box-shadow:0 2px 0 var(--orange-d)}
+@keyframes notice-in{from{opacity:0;transform:translateY(-14px) scale(.85)}}
+/* Shouts sit high, in the sky, not over the buses */
+.shout{top:calc(var(--top) + 118px);font-size:30px}
+.shout{top:calc(var(--top) + 168px)}
+.toast-stack{top:calc(var(--top) + 134px)}
+.notice{padding-top:4px;padding-bottom:4px}

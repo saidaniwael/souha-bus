@@ -24,22 +24,27 @@ const BAYS=[{x:-2.15,z:-2},{x:0,z:0},{x:2.15,z:2}],LANE_EDGES=[-3.1,-1.02,1.02,3
 // Where the raised walkway stops behind bay i (just past the rear of a parked coach).
 const platformEdge=i=>BAYS[i].x-1.98;
 // Travelers arrive every SPAWN_MS while there is room on screen and leave after LIFE_MS; bonus travelers leave after BONUS_LIFE_MS.
-const SPAWN_MS=170,LIFE_MS=[2600,3800],BONUS_LIFE_MS=1700;
+const SPAWN_MS=170,LIFE_MS=[2600,3800],BONUS_LIFE_MS=500;
 // An arrived bus holds its fares for CLAIM_MS: tap it in time or the money is lost.
 const CLAIM_MS=12000;
 // Combo: boardings less than COMBO_MS apart keep it going, and every COMBO_STEP boardings add +0.5 to its multiplier.
 const COMBO_MS=1500,COMBO_STEP=4;
 const SPECIALS={
   vip:{icon:'star',label:'VIP · combo ×2',chance:.06,color:0xffc93c},
-  gift:{icon:'gift',label:'Gift',chance:.06,color:0xff7ab8,bonus:40},
+  gift:{icon:'gift',label:'Gift',chance:.06,color:0xff7ab8,bonus:60},
   heart:{icon:'heart',label:'Friends +3',chance:.05,color:0xff5f6d},
   rush:{icon:'flash',label:'Rush · combo frozen',chance:.04,color:0x48c8ff},
-  diamond:{icon:'diamond',label:'Diamond',chance:.015,color:0x8ee8ff,bonus:150}};
+  diamond:{icon:'diamond',label:'Diamond',chance:.015,color:0x8ee8ff,bonus:250}};
+const SPECIAL_CSS={vip:'#ffc800',gift:'#ff86d0',heart:'#ff4b4b',rush:'#1cb0f6',diamond:'#7fe3ff'};
 const stationIndex=id=>STATIONS.findIndex(s=>s.id===id);
 const distance=(a,b)=>Math.abs(stationIndex(a)-stationIndex(b));
-// Why grow: every bus beyond the first five adds +5% to every fare and every station beyond the first two adds +15%;
-// new stations also open longer routes, and longer routes pay more per traveler.
-const boost=()=>1+.05*Math.max(0,game.buses.length-5)+.15*Math.max(0,game.open.length-2);
+// Why grow: every bus beyond the first five adds +5% to every fare, every station beyond the first two adds +15%,
+// and every player level adds +2%; new stations also open longer routes, and longer routes pay more per traveler.
+const BUS_BOOST=.05,STATION_BOOST=.15,LEVEL_BOOST=.02;
+const boostParts=()=>({buses:BUS_BOOST*Math.max(0,game.buses.length-5),stations:STATION_BOOST*Math.max(0,game.open.length-2),level:LEVEL_BOOST*((game.level||1)-1)});
+const boost=()=>{const p=boostParts();return 1+p.buses+p.stations+p.level;};
+const shortEuro=n=>n>=1000?'€'+(n/1000).toFixed(n%1000?1:0).replace(/\.0$/,'')+'k':euro(n);
+const pct=v=>`+${Math.round(v*100)}%`;
 const fareFor=(origin,dest)=>Math.round((12+6*distance(origin,dest))*boost());
 const tripTime=(origin,dest)=>(7+2*distance(origin,dest))*1000;
 // Each bus beyond the starting five costs 20% more than the last.
@@ -49,14 +54,14 @@ const busCost=()=>Math.round(1500*1.2**Math.max(0,game.buses.length-5)/10)*10;
 // Saved game: coins, unlocked stations and buses. Travelers are not saved; they come and go every few seconds.
 // ---------------------------------------------------------------------------------------------------------------
 function newBus(id,location){return {id,location,status:'idle',dest:null,passengers:0,revenue:0,payout:0,claimBy:0,readyAt:Date.now()};}
-function freshGame(){const buses=[];for(let id=1;id<=5;id++)buses.push(newBus(id,id<=3?'tunis':'paris'));return {version:2,coins:360,open:['tunis','paris'],buses,nextBus:6,bestCombo:0};}
+function freshGame(){const buses=[];for(let id=1;id<=5;id++)buses.push(newBus(id,id<=3?'tunis':'paris'));return {version:2,coins:360,open:['tunis','paris'],buses,nextBus:6,bestCombo:0,xp:0,level:1};}
 // Version 1 saves keep their coins (plus any fares still on buses), stations and buses; every bus is parked at a station.
 function migrate(old){
   const open=old.open.filter(id=>city[id]),parked=b=>b.status==='idle'&&open.includes(b.location)?b.location:open.includes(b.destination)?b.destination:open[0];
   const owed=old.buses.reduce((sum,b)=>sum+(b.payout||0)+(b.revenue||0),0);
   return {version:2,coins:Math.floor((old.coins||0)+owed),open,buses:old.buses.map(b=>newBus(b.id,parked(b))),nextBus:old.nextBus||old.buses.length+1,bestCombo:0};}
 function load(){try{const data=JSON.parse(localStorage.getItem(SAVE_KEY));if(data?.version===2&&Array.isArray(data.buses))return data;if(data?.version===1&&Array.isArray(data.buses))return migrate(data);}catch{}return freshGame();}
-const game=load();
+const game=load();game.xp??=0;game.level??=1;
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(game));}catch{}}
 // Every parked bus waiting for travelers has a random destination among the other unlocked stations.
 function assignDest(bus){const options=game.open.filter(id=>id!==bus.location);bus.dest=options[Math.floor(Math.random()*options.length)]||null;}
@@ -67,16 +72,22 @@ save();
 // ---------------------------------------------------------------------------------------------------------------
 // Sound: CC0 samples (see sounds/CREDITS.txt) through one shared Web Audio context, unlocked by the first tap.
 // ---------------------------------------------------------------------------------------------------------------
-const SOUND_NAMES=['board','bus-full','select','depart','coins','buy','station-open','switch','error','menu-open','arrival','vip','gift','heart','rush','diamond','combo','tick','lost','note'];
+const SOUND_NAMES=['board','bus-full','select','depart','coins','buy','station-open','switch','error','menu-open','arrival','vip','gift','heart','rush','diamond','combo','tick','lost','note','pop-a','pop-b','pop-c','ping','coin-jingle','purchase'];
 const soundFiles=Object.fromEntries(SOUND_NAMES.map(name=>[name,fetch(`./sounds/${name}.mp3`).then(r=>r.arrayBuffer()).catch(()=>null)]));
 let audioCtx=null;const soundBuffers={};
 function unlockAudio(){if(audioCtx){if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});return;}const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)return;try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch{}audioCtx=new AudioCtx();audioCtx.resume().catch(()=>{});for(const name of SOUND_NAMES)soundFiles[name].then(data=>data&&audioCtx.decodeAudioData(data)).then(buffer=>{if(buffer)soundBuffers[name]=buffer;}).catch(()=>{});}
 for(const type of ['pointerdown','touchend','click','keydown'])addEventListener(type,unlockAudio,{capture:true});
-function play(name,volume=1,rate=1){if(!sound||!audioCtx||!soundBuffers[name])return;if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});const source=audioCtx.createBufferSource(),gain=audioCtx.createGain();source.buffer=soundBuffers[name];source.playbackRate.value=rate;gain.gain.value=volume;source.connect(gain).connect(audioCtx.destination);source.start();}
+function play(name,volume=1,rate=1,delay=0){if(!sound||!audioCtx||!soundBuffers[name])return;if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});const source=audioCtx.createBufferSource(),gain=audioCtx.createGain();source.buffer=soundBuffers[name];source.playbackRate.value=rate;gain.gain.value=volume;source.connect(gain).connect(audioCtx.destination);source.start(audioCtx.currentTime+delay);}
+// Money in: a quick cascade of rising coin pings (a major arpeggio, longer for big sums) over a coin jingle.
+function playCash(amount,jingle=.9){const notes=amount>=1000?[0,4,7,12,16,19,24]:amount>=200?[0,4,7,12,16]:[0,4,7];notes.forEach((step,i)=>play('ping',.5,.7*2**(step/12),i*.055));if(jingle)play('coin-jingle',jingle);}
 const PENTATONIC=[0,2,4,7,9,12,14,16,19];
-function playComboNote(count){play('note',.8,1.2*2**(PENTATONIC[(count-1)%PENTATONIC.length]/12));play('board',.4,1.5);}
-function vibrate(pattern){if(sound)try{navigator.vibrate?.(pattern);}catch{}}
-function toast(message,kind=''){if(kind==='error')play('error',.6);const node=document.createElement('div');node.className='toast'+(kind?' '+kind:'');node.innerHTML=message;$('toast-stack').appendChild(node);while($('toast-stack').children.length>3)$('toast-stack').firstChild.remove();setTimeout(()=>node.remove(),2600);}
+// Boarding: one of three CC0 pops (picked at random so fast taps never sound identical) rising gently with the combo,
+// over a quiet steel-drum note that climbs a pentatonic scale.
+const POPS=['pop-a','pop-b','pop-c'];
+function playComboNote(count){const step=PENTATONIC[(count-1)%PENTATONIC.length];play(POPS[Math.floor(Math.random()*POPS.length)],1,.95*2**(step/24));play('note',.35,1.2*2**(step/12));}
+// Phones only allow vibration after the first tap.
+function vibrate(pattern){if(sound&&navigator.userActivation?.hasBeenActive!==false)try{navigator.vibrate?.(pattern);}catch{}}
+function toast(message,kind=''){if(kind==='error')play('error',.6);const node=document.createElement('div');node.className='toast'+(kind?' '+kind:'');node.innerHTML=message;$('toast-stack').replaceChildren(node);setTimeout(()=>node.remove(),2600);}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Buses: tap one to choose it, fill it with travelers for its country, tap it again when full to send it.
@@ -106,28 +117,28 @@ function depart(bus){
   Object.assign(bus,{status:'trip',origin:bus.location,departed:Date.now(),arrival:Date.now()+tripTime(bus.location,bus.dest),bay:null});
   const replacement=bayBuses().find(b=>b.bay===vacated);if(replacement)pendingMoves[replacement.id]=true;
   selectedBus=null;syncSelectedBus();save();renderBuses();renderCrowd();renderHud();play('depart',.9);vibrate(20);
-  if(tagRect)floatText(tagRect.left+tagRect.width/2,tagRect.top,`${icon('bus')} ${euro(bus.revenue)} → ${city[bus.dest].name}`,'depart');}
+  if(tagRect){floatText(tagRect.left+tagRect.width/2,tagRect.top,`${icon('bus')} ${euro(bus.revenue)} → ${city[bus.dest].name}`,'depart');gainXp(10,tagRect.left+tagRect.width/2,tagRect.top+34);}else gainXp(10);}
 function arrive(bus,now){
   Object.assign(bus,{status:'idle',location:bus.dest,dest:null,payout:bus.revenue,revenue:0,passengers:0,claimBy:now+CLAIM_MS,readyAt:now,bay:null});
   if(bus.location===currentStation){pendingMoves[bus.id]=true;play('arrival',.9);}
   else toast(`${icon('bag')} ${busName(bus)} reached <b>${city[bus.location].name}</b> with ${euro(bus.payout)} · ${CLAIM_MS/1000}s to claim! ${icon('swipe')}`,'claim');}
 function claim(bus){
-  const amount=bus.payout;bus.payout=0;bus.claimBy=0;game.coins+=amount;assignDest(bus);
-  const tag=document.querySelector(`[data-bus="${bus.id}"]`)?.getBoundingClientRect();if(tag)floatText(tag.left+tag.width/2,tag.top,`${icon('bag')} +${euro(amount)}`,'cash');
-  bumpCoins();play('coins');play('vip',.5,1.2);vibrate([20,30,20]);save();renderBuses();renderCrowd();renderHud();}
+  const amount=bus.payout;bus.payout=0;bus.claimBy=0;game.coins+=amount;coinsInFlight+=amount;assignDest(bus);
+  const tag=document.querySelector(`[data-bus="${bus.id}"]`)?.getBoundingClientRect();if(tag)floatText(tag.left+tag.width/2,tag.top,`${icon('bag')} +${euro(amount)}`,'cash');gainXp(5,tag&&tag.left+tag.width/2,tag&&tag.top+40);
+  playCash(amount);burstAt(tag,'#ffc800',16,true);if(tag)flyCoins(tag.left+tag.width/2,tag.top+tag.height/2,amount);else coinsInFlight-=amount;vibrate([20,30,20]);save();renderBuses();renderCrowd();renderHud();}
 function loseClaim(bus){
   const lost=bus.payout;bus.payout=0;bus.claimBy=0;assignDest(bus);play('lost',.8);vibrate(60);
   toast(`${icon('timer')} ${euro(lost)} lost: ${busName(bus)} waited too long in ${city[bus.location].name}`,'error-soft');}
 function buyBus(){
   const cost=busCost();if(game.coins<cost)return toast(`Earn ${euro(cost-game.coins)} more for a bus.`,'error');
   game.coins-=cost;const bus=newBus(game.nextBus++,currentStation);assignDest(bus);game.buses.push(bus);pendingMoves[bus.id]=true;
-  save();closeSheet();renderBuses();renderCrowd();renderHud();toast(`${icon('bus')} New ${busName(bus)} · fares now +${Math.round((boost()-1)*100)}%`);play('buy');}
+  gainXp(25);save();closeSheet();renderBuses();renderCrowd();renderHud();showPurchase(icon('bus'),`New ${busName(bus)}`,[`${pct(BUS_BOOST)} every fare`,`Fares now ${pct(boost()-1)}`]);play('purchase',.9);play('buy',.6);}
 function buyStation(id){
   const target=city[id];if(!target||game.open.includes(id))return;if(game.coins<target.cost)return toast(`Earn ${euro(target.cost-game.coins)} more to open ${target.name}.`,'error');
   game.coins-=target.cost;game.open.push(id);
   // The new station starts with a bus of its own so you can play there right away.
   const bus=newBus(game.nextBus++,id);assignDest(bus);game.buses.push(bus);
-  save();toast(`${icon('pin')} ${target.name} is open · fares now +${Math.round((boost()-1)*100)}%`);switchStation(id);play('station-open');}
+  gainXp(100);save();switchStation(id);showPurchase(flagMarkup(id,'flag-large'),`${target.name} is open!`,[`${pct(STATION_BOOST)} every fare`,'+1 free bus',`Fares now ${pct(boost()-1)}`]);play('station-open');}
 
 // ---------------------------------------------------------------------------------------------------------------
 // Travelers: they pop up all over the visible walkway, each heading to a country, and leave after a few seconds.
@@ -159,6 +170,8 @@ function tapTraveler(id){
   crowd=crowd.filter(p=>p.id!==id);
   if(special==='heart')for(let i=0;i<3;i++)spawnTraveler(now,bus.dest);
   const tag=document.querySelector(`[data-traveler="${id}"]`)?.getBoundingClientRect();
+  burstAt(tag,special?SPECIAL_CSS[special]:'#58cc02',special?14:5,!!special);
+  gainXp(special?5:1,tag&&tag.left+tag.width/2,tag&&tag.top,!special);
   const level=Math.min(4,Math.floor(combo.count/COMBO_STEP));
   if(tag)floatText(tag.left+tag.width/2,tag.top,special?`${icon(SPECIALS[special].icon)} ${SPECIALS[special].label}${SPECIALS[special].bonus?' +'+euro(SPECIALS[special].bonus):''}`:`+${euro(fare)}${comboMultiplier()>1?`<em>×${comboMultiplier()}</em>`:''}`,special||`lvl${level}`);
   const shout=SHOUTS[combo.count];if(shout)showShout(shout);
@@ -178,8 +191,8 @@ const comboPayout=()=>Math.round(combo.fares*(comboMultiplier()-1)+combo.bonus*c
 function endCombo(){
   if(!combo.count)return;const payout=comboPayout(),count=combo.count,mult=comboMultiplier();
   Object.assign(combo,{count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0});
-  if(count>game.bestCombo)game.bestCombo=count;
-  if(payout>0){game.coins+=payout;save();bumpCoins();renderHud();showComboBanner(count,mult,payout);play('combo',.8);play('coins',.8);vibrate([20,40,20]);}
+  if(count>game.bestCombo)game.bestCombo=count;if(count>=5)gainXp(Math.floor(count/2));
+  if(payout>0){game.coins+=payout;coinsInFlight+=payout;save();renderHud();flyCoins(...rectCentre(showComboBanner(count,mult,payout)),payout);play('combo',.8);playCash(payout,.6);vibrate([20,40,20]);}
   renderCombo();}
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -216,56 +229,109 @@ let lastHudSecond=0;
 // ---------------------------------------------------------------------------------------------------------------
 const floatLayer=document.createElement('div');floatLayer.className='float-layer';$('game').appendChild(floatLayer);
 const comboHud=document.createElement('div');comboHud.className='combo-hud hidden';$('game').appendChild(comboHud);
-function floatText(x,y,html,kind){const el=document.createElement('div');el.className='float-gain'+(kind?' special-'+kind:'');el.innerHTML=html;el.style.left=x+'px';el.style.top=y+'px';floatLayer.appendChild(el);setTimeout(()=>el.remove(),1000);}
+function floatText(x,y,html,kind){const el=document.createElement('div');el.className='float-gain'+(kind?' special-'+kind:'');el.innerHTML=html;el.style.top=y+'px';floatLayer.appendChild(el);
+  // Keep the whole label on screen, however long it is.
+  const half=el.offsetWidth/2+8;el.style.left=Math.min(Math.max(x,half),innerWidth-half)+'px';setTimeout(()=>el.remove(),1000);}
 function showShout(text){const el=document.createElement('div');el.className='shout';el.textContent=text;floatLayer.appendChild(el);setTimeout(()=>el.remove(),900);play('combo',.6,1.25);}
-function showComboBanner(count,mult,payout){const el=document.createElement('div');el.className='combo-banner';el.innerHTML=`<small>${icon('crown')} COMBO ×${count}</small><b>+${euro(payout)}</b><span>money ×${mult}</span>`;floatLayer.appendChild(el);setTimeout(()=>el.remove(),1500);}
-function bumpCoins(){const pill=$('coins').closest('.coin-pill');pill.classList.remove('bump');void pill.offsetWidth;pill.classList.add('bump');}
-comboHud.innerHTML=`<span class="combo-num">0</span><span class="combo-side"><b class="combo-word">${icon('crown')} COMBO</b><span class="combo-mult">×1</span><small class="combo-pot">€0</small></span><i class="combo-timer"></i>`;
-const comboEls={num:comboHud.querySelector('.combo-num'),mult:comboHud.querySelector('.combo-mult'),pot:comboHud.querySelector('.combo-pot'),timer:comboHud.querySelector('.combo-timer')};
-let shownCombo=-1;
+// The message rail under the top bar shows one message at a time (newest wins), so it never reaches the buses.
+function showNotice(kind,html,ms=2200){const el=document.createElement('div');el.className='notice notice-'+kind;el.innerHTML=html;$('toast-stack').replaceChildren(el);setTimeout(()=>el.remove(),ms);return el.getBoundingClientRect();}
+const rectCentre=r=>[r.left+r.width/2,r.top+r.height/2];
+function showComboBanner(count,mult,payout){return showNotice('combo',`<span class="notice-art">${icon('crown')}</span><span>COMBO ${count}</span><b>+${euro(payout)}</b><span class="chip orange">×${mult}</span>`,1800);}
+// A purchase pops a card listing exactly what it adds, so the benefit is always visible.
+function showPurchase(art,title,perks){showNotice('buy',`<span class="notice-art">${art}</span><b>${title}</b>${perks.map(p=>`<span class="chip green">${p}</span>`).join('')}`,2600);}
+// Particle burst at a screen rectangle: small CSS-animated dots that fly out and fade (no canvas or 3D work).
+function burstAt(rect,color,count=10,big=false){if(!rect)return;const host=document.createElement('div');host.className='burst'+(big?' big':'');host.style.left=rect.left+rect.width/2+'px';host.style.top=rect.top+rect.height/2+'px';host.style.setProperty('--c',color);
+  host.innerHTML='<i class="burst-ring"></i>'+Array.from({length:count},(_,i)=>{const a=i/count*Math.PI*2+Math.random()*.4,d=(big?46:30)+Math.random()*(big?34:20);return `<i style="--dx:${(Math.cos(a)*d).toFixed(1)}px;--dy:${(Math.sin(a)*d).toFixed(1)}px;--s:${(.6+Math.random()*.8).toFixed(2)}"></i>`;}).join('');
+  floatLayer.appendChild(host);setTimeout(()=>host.remove(),650);}
+function bump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+function bumpCoins(){bump($('coins').closest('.coin-pill'));}
+// Combo card (left): the streak, what it is worth and the time left. The money multiplier is shown big on the right.
+comboHud.innerHTML=`<span class="combo-num">0</span><span class="combo-side"><b class="combo-word">${icon('crown')} COMBO</b><small class="combo-pot">€0</small></span><i class="combo-timer"></i>`;
+const comboEls={num:comboHud.querySelector('.combo-num'),pot:comboHud.querySelector('.combo-pot'),timer:comboHud.querySelector('.combo-timer')};
+let shownCombo=-1,shownMult='';
+const multLevel=m=>m>=4?4:m>=3?3:m>=2?2:m>1?1:0;
 function renderCombo(now=Date.now()){
+  const mult=combo.count?comboMultiplier():1,label=`×${mult}`;
+  if(label!==shownMult){shownMult=label;$('mult-value').textContent=label;$('mult-badge').dataset.level=multLevel(mult);if(mult>1)bump($('mult-badge'));}
   const active=combo.count>=2;comboHud.classList.toggle('hidden',!active);if(!active){shownCombo=-1;return;}
-  if(shownCombo!==combo.count){shownCombo=combo.count;comboEls.num.textContent=combo.count;comboEls.mult.textContent=`money ×${comboMultiplier()}`;comboEls.pot.textContent=`worth ${euro(comboWorth())}`;
-    comboHud.dataset.level=Math.min(4,Math.floor(combo.count/COMBO_STEP));comboHud.classList.remove('bump');void comboHud.offsetWidth;comboHud.classList.add('bump');}
+  if(shownCombo!==combo.count){shownCombo=combo.count;comboEls.num.textContent=combo.count;comboEls.pot.textContent=`worth ${euro(comboWorth())}`;bump(comboHud);}
   const frozen=now<combo.frozenUntil;comboEls.timer.classList.toggle('frozen',frozen);comboEls.timer.style.transform=`scaleX(${frozen?1:Math.max(0,1-(now-combo.last)/COMBO_MS).toFixed(3)})`;}
+// XP and levels: every action earns XP; each level needs 25 XP more than the last, pays coins and adds +2% to every fare.
+const xpToNext=level=>40+25*(level-1);
+function xpProgress(xp=game.xp){let level=1;while(xp>=xpToNext(level)){xp-=xpToNext(level);level++;}return {level,into:xp,need:xpToNext(level)};}
+// Money and XP "add up": the game state changes at once, but coins and XP orbs fly to the counters first and the
+// numbers roll up as they land. coinsInFlight / xpInFlight hold what is still on its way.
+let coinsInFlight=0,xpInFlight=0,shownXp=game.xp,shownLevel=xpProgress().level;const pendingLevelUps=[];
+function gainXp(amount,x,y,quiet=false){
+  game.xp+=amount;xpInFlight+=amount;
+  if(x!==undefined&&y!==undefined){if(!quiet)floatText(x,y,`+${amount} XP`,'xp');flyTo(x,y,$('xp-fill'),'xp-orb','',1,()=>{xpInFlight-=amount;bump($('level-chip'));});}else xpInFlight-=amount;
+  const {level}=xpProgress();while(game.level<level){game.level++;const reward=150*game.level;game.coins+=reward;coinsInFlight+=reward;pendingLevelUps.push({level:game.level,reward});}}
+function renderXp(){const shown=Math.floor(shownXp),{level,into,need}=xpProgress(shown),fill=Math.min(100,(into+(shownXp-shown))/need*100);
+  $('level-num').textContent=level;$('xp-fill').style.width=fill.toFixed(1)+'%';$('xp-text').textContent=`${into} / ${need} XP`;}
+// Flying tokens use the Web Animations API on a few small elements, so they cost almost nothing.
+function flyTo(x,y,target,className,html,count,onArrive,onEach){
+  const to=target.getBoundingClientRect(),tx=target.id==='xp-fill'?to.right:to.left+to.width/2,ty=to.top+to.height/2;let landed=0;
+  for(let i=0;i<count;i++){const el=document.createElement('div');el.className='flyer '+className;el.innerHTML=html;floatLayer.appendChild(el);
+    const jx=(Math.random()-.5)*70,jy=(Math.random()-.5)*50-20,duration=520+i*55+Math.random()*80;let done=false;
+    const land=()=>{if(done)return;done=true;el.remove();landed++;if(className==='coin-flyer'){bump($('coins').closest('.coin-pill'));play('ping',.12,2.2+Math.random()*.4);}onEach?.();if(landed===count)onArrive();};
+    el.animate([{transform:`translate(${x}px,${y}px) scale(.4)`,opacity:0},{transform:`translate(${x+jx}px,${y+jy}px) scale(1.15)`,opacity:1,offset:.3},{transform:`translate(${tx}px,${ty}px) scale(.6)`,opacity:.9}],{duration,easing:'cubic-bezier(.45,0,.7,1)',delay:i*35,fill:'backwards'}).onfinish=land;
+    setTimeout(land,duration+i*35+400);}}
+// Each landing coin releases its share, so the counter climbs coin by coin.
+function flyCoins(x,y,amount){const count=Math.max(3,Math.min(10,Math.round(2+Math.log10(Math.max(1,amount))*2))),share=Math.floor(amount/count);let released=0;
+  flyTo(x,y,$('coins').closest('.coin-pill').querySelector('.coin-ico'),'coin-flyer',icon('coin'),count,()=>{coinsInFlight-=amount-released;},()=>{released+=share;coinsInFlight-=share;});}
+function showLevelUp(level,reward){
+  const rect=showNotice('level',`<span class="notice-art">${level}</span><b>LEVEL ${level}!</b><span class="chip gold">+${euro(reward)}</span><span class="chip green">${pct(LEVEL_BOOST)} fares</span>`,2600);
+  play('arrival');play('station-open',.6);vibrate([30,50,30,50,60]);setTimeout(()=>flyCoins(...rectCentre(rect),reward),350);save();renderHud();}
 function pendingClaims(id){return game.buses.filter(b=>b.status==='idle'&&b.location===id&&b.payout>0);}
+const secondsLeft=claims=>Math.max(0,Math.ceil(Math.min(...claims.map(b=>b.claimBy-Date.now()))/1000));
 function renderHud(){
-  const now=Date.now();lastHudSecond=Math.floor(now/1000);
-  
-  $('boost-value').textContent=`+${Math.round((boost()-1)*100)}%`;
+  const now=Date.now(),parts=boostParts();lastHudSecond=Math.floor(now/1000);
+  $('mult-boost').textContent=`${pct(boost()-1)} fares`;
   $('station-flag').innerHTML=flagMarkup(currentStation,'flag-station');$('station-name').textContent=city[currentStation].name;
   const here=busesHere().length,away=game.open.filter(id=>id!==currentStation).flatMap(pendingClaims);
-  $('station-info').innerHTML=away.length?`${icon('bag')} ${away.length} to claim · ${Math.max(0,Math.ceil(Math.min(...away.map(b=>b.claimBy-now))/1000))}s`:`${here} bus${here===1?'':'es'} here`;
+  $('station-info').innerHTML=away.length?`${icon('bag')} ${secondsLeft(away)}s`:`${here} bus${here===1?'':'es'}`;
   $('station-switch').classList.toggle('alert',away.length>0);
-  const price=busCost();$('quick-buy-bus').querySelector('small').textContent=euro(price);$('quick-buy-bus').setAttribute('aria-label',`Buy a Souha Bus for ${euro(price)}`);$('quick-buy-bus').classList.toggle('can-buy',game.coins>=price);
+  // The buy buttons say what each purchase is worth.
+  const price=busCost(),quick=$('quick-buy-bus');quick.querySelector('small').textContent=euro(price);quick.classList.toggle('can-buy',game.coins>=price);quick.setAttribute('aria-label',`Buy a Souha Bus for ${euro(price)}: ${pct(BUS_BOOST)} on every fare`);
+  $('fleet-sub').textContent=`${game.buses.length} · ${pct(parts.buses)}`;
+  const nextStation=STATIONS.find(st=>!game.open.includes(st.id));$('build-sub').textContent=nextStation?`${pct(STATION_BOOST)} · ${shortEuro(nextStation.cost)}`:'All open';$('build-button').classList.toggle('can-buy',!!nextStation&&game.coins>=nextStation.cost);
   // Side arrows show the neighbouring stations and any fares waiting there.
   const prev=neighbour(-1),next=neighbour(1),single=game.open.length<2;
   for(const [el,id,hidden] of [[$('nav-prev'),prev,single||prev===next],[$('nav-next'),next,single]]){
-    el.hidden=hidden;if(hidden)continue;const claims=pendingClaims(id),soonest=claims.length?Math.max(0,Math.ceil(Math.min(...claims.map(b=>b.claimBy-now))/1000)):0;
+    el.hidden=hidden;if(hidden)continue;const claims=pendingClaims(id);
     el.dataset.station=id;el.classList.toggle('alert',claims.length>0);el.setAttribute('aria-label',`Go to ${city[id].name}`);
-    el.innerHTML=`${icon(el.id==='nav-prev'?'left':'right','nav-arrow')}${flagMarkup(id,'nav-flag')}${claims.length?`<span class="nav-claim">${icon('bag')}${soonest}s</span>`:''}`;}
+    el.innerHTML=`${icon(el.id==='nav-prev'?'left':'right','nav-arrow')}${flagMarkup(id,'nav-flag')}${claims.length?`<span class="nav-claim">${icon('bag')}${secondsLeft(claims)}s</span>`:''}`;}
   const bus=getSelectedBus();
   $('scene-hint').innerHTML=bayBuses().some(b=>b.payout>0)?`${icon('bag')} Tap the gold bus to claim its fares!`
     :!busesHere().length?`${icon('swipe')} No buses here · swipe to another station`
     :!bus?'Tap a bus to choose its country'
     :bus.passengers>=CAPACITY?`${icon('bus')} Bus full · tap it to send it to ${city[bus.dest].name}`
-    :`Tap ${flagMarkup(bus.dest,'hint-flag')} travelers · catch ${icon('star')}${icon('gift')}${icon('diamond')}${icon('flash')}${icon('heart')}`;}
+    :`Tap ${flagMarkup(bus.dest,'hint-flag')} fast · catch ${icon('star')}${icon('gift')}${icon('diamond')}${icon('flash')}${icon('heart')}`;}
 function openSheet(kind){play('menu-open',.6);sheet=kind;$('modal-backdrop').classList.remove('hidden');renderSheet();}
 function closeSheet(){sheet=null;$('modal-backdrop').classList.add('hidden');}
+const boostRow=(art,name,detail,value,tone)=>`<div class="boost-row"><span class="boost-art ${tone}">${art}</span><span><b>${name}</b><small>${detail}</small></span><strong class="${tone}">${value}</strong></div>`;
 function renderSheet(){
-  if(!sheet)return;const eyebrow=$('sheet-eyebrow'),title=$('sheet-title'),content=$('sheet-content'),now=Date.now(),pct=Math.round((boost()-1)*100);
+  if(!sheet)return;const eyebrow=$('sheet-eyebrow'),title=$('sheet-title'),content=$('sheet-content'),parts=boostParts();
   if(sheet==='stations'){eyebrow.textContent='SWIPE OR TAP TO TRAVEL';title.textContent='Your stations';
     content.innerHTML=`<div class="sheet-list">${openInOrder().map(id=>{const claims=pendingClaims(id),buses=game.buses.filter(b=>b.status==='idle'&&b.location===id).length;
-      return `<button class="sheet-row ${id===currentStation?'selected':''}" data-station="${id}"><span class="sheet-row-icon">${flagMarkup(id,'flag-large')}</span><span><b>${city[id].name}</b><small>${buses} bus${buses===1?'':'es'} parked${claims.length?` · ${icon('bag')} ${euro(claims.reduce((s,b)=>s+b.payout,0))} to claim in ${Math.max(0,Math.ceil(Math.min(...claims.map(b=>b.claimBy-now))/1000))}s`:''}</small></span><span class="sheet-row-end">${id===currentStation?'HERE':'GO →'}</span></button>`;}).join('')}</div>`;}
-  else if(sheet==='fleet'){eyebrow.textContent='YOUR ORANGE FLEET';title.textContent=`${game.buses.length} Souha Buses`;
-    const parked=game.buses.filter(b=>b.status==='idle').length,trip=game.buses.length-parked;
-    content.innerHTML=`<div class="boost-card">${icon('boost')}<div><b>Fare boost +${pct}%</b><small>Every bus beyond 5 adds <b>+5%</b> to every fare. Every station beyond 2 adds <b>+15%</b>. More buses also means a full bay to fill while others travel.</small></div></div>
-      <div class="fleet-stats"><div><strong>${parked}</strong><span>Parked</span></div><div><strong>${trip}</strong><span>On a trip</span></div><div><strong>${game.bestCombo||0}</strong><span>Best combo</span></div></div>
-      <div class="buy-section"><h3>Add a bus at ${city[currentStation].name}</h3><p>Fares go to +${pct+5}% for every trip, everywhere.</p><button id="buy-bus" ${game.coins<busCost()?'disabled':''}>${icon('bus')} Buy Souha Bus · ${euro(busCost())}</button></div>`;}
-  else{eyebrow.textContent='GROW YOUR NETWORK';title.textContent='Open a station';const locked=STATIONS.filter(s=>!game.open.includes(s.id));
-    content.innerHTML=`<p class="sheet-intro">Each new station adds <b>+15%</b> to every fare, comes with its own bus, and opens longer routes that pay more per traveler.</p>
-      <div class="sheet-list">${locked.length?locked.map(s=>{const best=Math.max(...game.open.map(o=>Math.round((12+6*distance(o,s.id))*(boost()+.15)))),from=game.open.reduce((a,o)=>distance(o,s.id)>distance(a,s.id)?o:a,game.open[0]);
-        return `<div class="sheet-row"><span class="sheet-row-icon">${flagMarkup(s.id,'flag-large')}</span><span><b>${s.name}</b><small>${icon('route')} ${city[from].name} → ${s.name}: ${euro(best)} per traveler</small></span><button class="sheet-row-end build-action" data-build="${s.id}" ${game.coins<s.cost?'disabled':''}>${euro(s.cost)}</button></div>`;}).join(''):'<p class="sheet-intro">Every station is open. Your network spans the whole map!</p>'}</div>`;}}
+      return `<button class="sheet-row ${id===currentStation?'selected':''}" data-station="${id}"><span class="sheet-row-icon">${flagMarkup(id,'flag-large')}</span><span><b>${city[id].name}</b><small>${buses} bus${buses===1?'':'es'} parked</small>${claims.length?`<span class="chip gold">${icon('bag')} ${euro(claims.reduce((sum,b)=>sum+b.payout,0))} · ${secondsLeft(claims)}s</span>`:''}</span><span class="sheet-row-end">${id===currentStation?'HERE':'GO'}</span></button>`;}).join('')}</div>`;}
+  else if(sheet==='fleet'){eyebrow.textContent='FARE BOOST';title.textContent=`${pct(boost()-1)} on every fare`;
+    const parked=game.buses.filter(b=>b.status==='idle').length,trip=game.buses.length-parked,{level}=xpProgress();
+    content.innerHTML=`<div class="boost-list">
+        ${boostRow(icon('bus'),'Buses',`${game.buses.length} owned · ${pct(BUS_BOOST)} each after 5`,pct(parts.buses),'orange')}
+        ${boostRow(icon('pin'),'Stations',`${game.open.length} open · ${pct(STATION_BOOST)} each after 2`,pct(parts.stations),'blue')}
+        ${boostRow(icon('crown'),'Level',`Level ${level} · ${pct(LEVEL_BOOST)} per level`,pct(parts.level),'purple')}
+      </div>
+      <div class="perk-card"><h3>Why buy another bus?</h3>
+        <p>${icon('boost')} <span><b>${pct(BUS_BOOST)} on every fare</b>, everywhere, forever.</span></p>
+        <p>${icon('bus')} <span><b>Never wait:</b> a bus stays parked and ready while the others travel, so your combo keeps going.</span></p>
+        <p>${icon('route')} <span><b>More at once:</b> fill buses for several countries in the same station.</span></p>
+        <button id="buy-bus" class="btn green" ${game.coins<busCost()?'disabled':''}>${icon('bus')} Buy bus · ${euro(busCost())}</button></div>
+      <div class="fleet-stats"><div><strong>${parked}</strong><span>Parked</span></div><div><strong>${trip}</strong><span>On a trip</span></div><div><strong>${game.bestCombo||0}</strong><span>Best combo</span></div></div>`;}
+  else{eyebrow.textContent='GROW YOUR NETWORK';title.textContent='Open a station';const locked=STATIONS.filter(st=>!game.open.includes(st.id));
+    content.innerHTML=`<div class="perk-strip"><span class="chip green">${icon('boost')} ${pct(STATION_BOOST)} every fare</span><span class="chip blue">${icon('bus')} +1 free bus</span><span class="chip orange">${icon('route')} Longer routes pay more</span></div>
+      <div class="sheet-list">${locked.length?locked.map(st=>{const from=game.open.reduce((a,o)=>distance(o,st.id)>distance(a,st.id)?o:a,game.open[0]),best=Math.round((12+6*distance(from,st.id))*(boost()+STATION_BOOST)),short=Math.max(0,st.cost-game.coins);
+        return `<div class="sheet-row station-offer"><span class="sheet-row-icon">${flagMarkup(st.id,'flag-large')}</span><span><b>${st.name}</b><small>${icon('route')} ${city[from].name} → ${st.name}: ${euro(best)} per traveler</small></span><button class="btn ${short?'locked':'green'} build-action" data-build="${st.id}" ${short?'disabled':''}>${short?`${euro(st.cost)}<small>need ${euro(short)}</small>`:euro(st.cost)}</button></div>`;}).join(''):'<p class="sheet-intro">Every station is open. Your network spans the whole map!</p>'}</div>`;}}
 
 // ---------------------------------------------------------------------------------------------------------------
 // 3D scene: a small low-poly station; the sky and the flag on the pole change with the station.
@@ -421,7 +487,7 @@ function renderLabels(){
   for(const entry of busLabels){const b=game.buses.find(x=>x.id===entry.id);if(!b)continue;const m=busTagMarkup(b,now);entry.el=upsert('bus'+b.id,'bus',b.id,m.className,m.label,m.html,m.sig);}
   for(const entry of crowdLabels){const p=crowd.find(x=>x.id===entry.id);if(!p)continue;const faded=p.dest!==tappableDest,special=p.special&&SPECIALS[p.special],life=p.until-p.born;
     entry.el=upsert('t'+p.id,'traveler',p.id,`traveler-tag${faded?' faded':''}${special?` special special-${p.special}`:''}`,`${special?special.label+' ':''}traveler to ${city[p.dest].name}${faded?', board a bus to that country first':''}`,
-      `${flagMarkup(p.dest)}${special?`<span class="special-badge">${icon(special.icon)}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,'t');}
+      `${flagMarkup(p.dest)}${special?`<span class="special-glow"></span><span class="special-badge">${icon(special.icon)}</span>`:''}<span class="life-timer" style="animation-duration:${life}ms;animation-delay:-${Math.max(0,now-p.born)}ms"></span>`,'t');}
   for(const [key,tag] of tagElements)if(!seen.has(key)){tag.el.remove();tagElements.delete(key);}
   positionLabels();}
 function positionLabels(){
@@ -439,15 +505,13 @@ const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let press=null
 addEventListener('pointerdown',e=>{press=sheet?null:{x:e.clientX,y:e.clientY,t:performance.now()};},{capture:true});
 addEventListener('pointerup',e=>{
   if(!press)return;const dx=e.clientX-press.x,dy=e.clientY-press.y,quick=performance.now()-press.t<800;press=null;
-  if(quick&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&game.open.length>1){swiped=performance.now();switchStation(neighbour(dx<0?1:-1),dx<0?1:-1);}},{capture:true});
-let swiped=0;
-canvas.addEventListener('click',e=>{if(performance.now()-swiped<300)return;const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);for(const hit of raycaster.intersectObjects(busGroup.children,true)){let o=hit.object;while(o&&!o.userData.pick)o=o.parent;if(o){tapBus(o.userData.pick.id);break;}}});
-// Travelers board the moment a finger touches them (tag or body), so quick taps that wobble a little still count.
-$('scene-labels').addEventListener('pointerdown',e=>{const traveler=e.target.closest('[data-traveler]');if(traveler){e.preventDefault();tapTraveler(Number(traveler.dataset.traveler));}});
-canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);for(const hit of raycaster.intersectObjects(crowdGroup.children,true)){let o=hit.object;while(o&&o.userData.travelerId===undefined)o=o.parent;if(o){tapTraveler(o.userData.travelerId);break;}}});
-$('scene-labels').addEventListener('click',e=>{if(performance.now()-swiped<300)return;const bus=e.target.closest('[data-bus]');if(bus)tapBus(Number(bus.dataset.bus));});
+  if(quick&&Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5&&game.open.length>1){switchStation(neighbour(dx<0?1:-1),dx<0?1:-1);}},{capture:true});
+// Travelers and buses react the moment a finger touches them (tag, body or coach), so quick taps that wobble a little still count.
+$('scene-labels').addEventListener('pointerdown',e=>{const traveler=e.target.closest('[data-traveler]'),bus=e.target.closest('[data-bus]');if(traveler){e.preventDefault();tapTraveler(Number(traveler.dataset.traveler));}else if(bus){e.preventDefault();tapBus(Number(bus.dataset.bus));}});
+canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(pointer,camera);for(const hit of raycaster.intersectObjects([...crowdGroup.children,...busGroup.children],true)){let o=hit.object;while(o&&o.userData.travelerId===undefined&&!o.userData.pick)o=o.parent;if(!o)continue;if(o.userData.pick)tapBus(o.userData.pick.id);else tapTraveler(o.userData.travelerId);break;}});
+
 for(const id of ['nav-prev','nav-next'])$(id).addEventListener('click',()=>switchStation($(id).dataset.station,id==='nav-next'?1:-1));
-$('station-switch').addEventListener('click',()=>openSheet('stations'));$('fleet-button').addEventListener('click',()=>openSheet('fleet'));$('boost-hud').addEventListener('click',()=>openSheet('fleet'));$('quick-buy-bus').addEventListener('click',buyBus);$('build-button').addEventListener('click',()=>openSheet('build'));$('close-sheet').addEventListener('click',closeSheet);
+$('station-switch').addEventListener('click',()=>openSheet('stations'));$('fleet-button').addEventListener('click',()=>openSheet('fleet'));$('mult-badge').addEventListener('click',()=>openSheet('fleet'));$('level-chip').addEventListener('click',()=>openSheet('fleet'));$('quick-buy-bus').addEventListener('click',buyBus);$('build-button').addEventListener('click',()=>openSheet('build'));$('close-sheet').addEventListener('click',closeSheet);
 $('modal-backdrop').addEventListener('click',e=>{if(e.target.id==='modal-backdrop')return closeSheet();const station=e.target.closest('[data-station]'),build=e.target.closest('[data-build]');if(station)switchStation(station.dataset.station);else if(build)buyStation(build.dataset.build);else if(e.target.closest('#buy-bus'))buyBus();});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if(!sheet&&e.key==='ArrowRight')switchStation(neighbour(1),1);if(!sheet&&e.key==='ArrowLeft')switchStation(neighbour(-1),-1);});
 function renderSoundButton(){$('sound').innerHTML=icon(sound?'sound-on':'sound-off');$('sound').setAttribute('aria-label',sound?'Mute sound':'Turn sound on');}
@@ -459,7 +523,8 @@ $('sound').addEventListener('click',()=>{sound=!sound;localStorage.setItem('souh
 let shownCoins=0;
 function animate(){
   requestAnimationFrame(animate);const now=performance.now(),clock=Date.now();
-  if(shownCoins!==game.coins){const gap=game.coins-shownCoins;shownCoins+=Math.abs(gap)<2?gap:Math.round(gap*.18)||Math.sign(gap);$('coins').textContent=Math.round(shownCoins).toLocaleString('en-US');}
+  const coinTarget=game.coins-coinsInFlight;if(shownCoins!==coinTarget){const gap=coinTarget-shownCoins;shownCoins+=Math.abs(gap)<2?gap:Math.round(gap*.14)||Math.sign(gap);$('coins').textContent=Math.round(shownCoins).toLocaleString('en-US');}
+  const xpTarget=game.xp-xpInFlight;if(Math.abs(xpTarget-shownXp)>.001){const gap=xpTarget-shownXp;shownXp=Math.abs(gap)<.05?xpTarget:shownXp+gap*.12+Math.sign(gap)*.03;renderXp();const level=xpProgress(Math.floor(shownXp)).level;if(level>shownLevel){shownLevel=level;const up=pendingLevelUps.shift();if(up)showLevelUp(up.level,up.reward);}}
   if(combo.count&&clock-combo.last>COMBO_MS&&clock>combo.frozenUntil)endCombo();renderCombo(clock);
   for(const pad of pads){const pulse=Math.sin(now/260);pad.scale.set(1+pulse*.025,1,1+pulse*.012);pad.userData.fill.opacity=.42+pulse*.12;}
   if(stationFlag){const pos=stationFlag.geometry.attributes.position;for(let i=0;i<pos.count;i++){const x=pos.getX(i)+.525;pos.setZ(i,Math.sin(now/260+x*5)*.06*x);}pos.needsUpdate=true;}
@@ -475,4 +540,4 @@ function animate(){
   positionLabels();renderer.render(scene,camera);}
 
 coachTemplate=await coachTemplatePromise;
-renderSoundButton();buildStatic();resize();syncSelectedBus();for(let i=0;i<6;i++)spawnTraveler(Date.now());renderBuses();renderCrowd();renderHud();animate();setInterval(tick,90);
+renderSoundButton();renderXp();buildStatic();resize();syncSelectedBus();for(let i=0;i<6;i++)spawnTraveler(Date.now());renderBuses();renderCrowd();renderHud();animate();setInterval(tick,90);
