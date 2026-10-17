@@ -368,3 +368,127 @@ button:disabled{cursor:not-allowed}
 .shout{top:calc(var(--top) + 168px)}
 .toast-stack{top:calc(var(--top) + 134px)}
 .notice{padding-top:4px;padding-bottom:4px}
+
+/* =====================================================================================================
+   Filled style: HUD elements and buttons use solid colour fills with white text and a darker 3D edge,
+   like the multiplier badge (overrides the outlined cards above).
+   ===================================================================================================== */
+.level-chip,.coin-pill,.icon-btn,.combo-hud,.side-nav,.scene-callout,.nav-card,.mult-badge,.notice{border:0;color:#fff}
+.level-chip{background:var(--purple);box-shadow:0 4px 0 var(--purple-d)}
+.level-badge{background:#fff;color:var(--purple-d);box-shadow:0 3px 0 #0000001f}
+.xp-track{background:#ffffff40}
+.xp small{color:#ffffffd9}
+.coin-pill{background:var(--gold);box-shadow:0 4px 0 var(--gold-d)}
+.coin-pill strong{color:#fff;text-shadow:0 2px 0 var(--gold-d)}
+.coin-ico{color:#fff;filter:drop-shadow(0 2px 0 var(--gold-d))}
+.icon-btn{background:var(--blue);color:#fff;box-shadow:0 4px 0 var(--blue-d)}
+.combo-hud{background:var(--orange);box-shadow:0 4px 0 var(--orange-d)}
+.combo-num{color:#fff;text-shadow:0 3px 0 var(--orange-d)}
+.combo-word{color:#ffffffe0}
+.combo-word .ico{color:#fff}
+.combo-pot{color:#fff}
+.combo-timer{background:#fff}
+.combo-timer.frozen{background:var(--blue-l)}
+.mult-badge[data-level="0"]{background:var(--blue);color:#fff;box-shadow:0 4px 0 var(--blue-d)}
+.mult-badge span,.mult-badge[data-level="0"] span{background:#ffffff33;color:#fff}
+.side-nav{background:var(--blue);color:#fff;box-shadow:0 4px 0 var(--blue-d)}
+.side-nav .nav-flag{box-shadow:0 0 0 2px #fff}
+.side-nav.alert{background:var(--gold);color:#fff;box-shadow:0 4px 0 var(--gold-d)}
+.scene-callout{background:var(--green);box-shadow:0 4px 0 var(--green-d)}
+#scene-hint .ico{color:#fff}
+.hint-flag{box-shadow:0 0 0 2px #fff}
+.nav-card{box-shadow:0 4px 0 var(--shade)}
+.station-switch{--shade:var(--blue-d);background:var(--blue)}
+#fleet-button{--shade:var(--orange-d);background:var(--orange)}
+#build-button{--shade:var(--purple-d);background:var(--purple)}
+#build-button.can-buy{--shade:var(--green-d);background:var(--green)}
+.nav-text small,#fleet-sub,#build-sub{color:#ffffffe6}
+.nav-icon.orange,.nav-icon.blue{background:#fff;box-shadow:0 3px 0 #0000001f}
+.nav-icon.orange{color:var(--orange)}
+.nav-icon.blue{color:var(--purple)}
+#build-button.can-buy .nav-icon.blue{color:var(--green)}
+.station-switch .switch-swipe{color:#ffffffcc}
+.station-switch .flag-station{box-shadow:0 0 0 2px #fff}
+.station-switch.alert{--shade:var(--gold-d);background:var(--gold)}
+.station-switch.alert small,#station-info .ico{color:#fff}
+.quick-buy:not(.can-buy){background:#c9c9c9;color:#fff;box-shadow:0 4px 0 #aaa}
+.notice{padding-right:14px}
+.notice-combo{background:var(--gold);box-shadow:0 4px 0 var(--gold-d)}.notice-combo .notice-art{background:#fff;color:var(--gold-d);box-shadow:none}.notice-combo b{color:#fff}
+.notice-level{background:var(--purple);box-shadow:0 4px 0 var(--purple-d)}.notice-level .notice-art{background:#fff;color:var(--purple-d);box-shadow:none}.notice-level b{color:#fff}
+.notice-buy{background:var(--green);box-shadow:0 4px 0 var(--green-d)}.notice-buy .notice-art{background:#fff;color:var(--orange);box-shadow:none}
+.notice .chip{background:#ffffff33;color:#fff}
+
+/* Tags over the scene: filled too */
+.bus-tag{border:0;background:var(--blue);color:#fff;box-shadow:0 4px 0 var(--blue-d)}
+.bus-tag:after{border:0;background:var(--blue);box-shadow:3px 3px 0 var(--blue-d)}
+.bus-tag small{color:#ffffffd9}
+.bus-tag .bus-flag{box-shadow:0 0 0 2px #fff}
+.bus-progress{background:#ffffff40}
+.bus-progress i{background:#fff}
+.bus-tag.selected{background:var(--green);box-shadow:0 4px 0 var(--green-d),0 0 0 3px #fff}
+.bus-tag.selected:after{background:var(--green);box-shadow:3px 3px 0 var(--green-d)}
+.bus-tag.selected .bus-progress i{background:#fff}
+.bus-tag.full{border:0;background:var(--orange);box-shadow:0 4px 0 var(--orange-d)}
+.bus-tag.full:after{background:var(--orange);box-shadow:3px 3px 0 var(--orange-d)}
+.bus-tag.collect{border:0;background:var(--gold);color:#fff;box-shadow:0 4px 0 var(--gold-d)}
+.bus-tag.collect:after{background:var(--gold);box-shadow:3px 3px 0 var(--gold-d)}
+.bus-tag.collect strong{text-shadow:0 2px 0 var(--gold-d)}
+.bus-tag.collect small{color:#fff}
+.claim-timer{background:#fff}
+.bus-tag.collect.hurry{background:var(--red);box-shadow:0 4px 0 var(--red-d)}
+.bus-tag.collect.hurry:after{background:var(--red);box-shadow:3px 3px 0 var(--red-d)}
+.traveler-tag:not(.faded):not(.special){border:0;padding:5px 6px;background:var(--green);box-shadow:0 3px 0 var(--green-d)}
+.traveler-tag:not(.faded):not(.special):after{border:0;background:var(--green);box-shadow:2px 2px 0 var(--green-d)}
+.traveler-tag:not(.faded) .flag-icon{box-shadow:0 0 0 2px #fff}
+.traveler-tag:not(.faded):not(.special) .life-timer{background:#fff}
+.traveler-tag.faded{border:0;padding:5px 6px;background:#cfcfcf;box-shadow:0 3px 0 #b0b0b0}
+.traveler-tag.faded:after{border:0;background:#cfcfcf}
+.toast{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 24px);border-radius:999px;padding:8px 16px}
+
+/* Brand: logo with the SouSou Bus name */
+.logo{display:flex;align-items:center;gap:5px;width:auto;padding:0 10px 0 8px}
+.logo-text{display:grid;line-height:1}
+.logo-text b{font-size:15px;font-weight:900;letter-spacing:-.2px}
+.logo-text small{font-size:9px;font-weight:900;letter-spacing:3px;opacity:.9}
+@media(max-width:380px){.logo-text b{font-size:13px}.logo .ico{width:20px;height:20px}}
+
+/* Normal travelers stay white (a green edge marks the ones you can tap); buses you have not selected are grey */
+.traveler-tag:not(.faded):not(.special){background:#fff;box-shadow:0 3px 0 var(--green-d),0 0 0 2px var(--green)}
+.traveler-tag:not(.faded):not(.special):after{background:#fff;box-shadow:2px 2px 0 var(--green)}
+.traveler-tag:not(.faded):not(.special) .flag-icon{box-shadow:0 0 0 1px #0000001a}
+.traveler-tag:not(.faded):not(.special) .life-timer{background:var(--green)}
+.traveler-tag.faded:not(.special){background:#fff;box-shadow:0 3px 0 var(--line);opacity:.5;filter:grayscale(.5)}
+.traveler-tag.faded:not(.special):after{background:#fff}
+.traveler-tag.faded .life-timer{background:var(--muted)}
+.bus-tag:not(.selected):not(.full):not(.collect){background:#b4b4b4;box-shadow:0 4px 0 #8f8f8f}
+.bus-tag:not(.selected):not(.full):not(.collect):after{background:#b4b4b4;box-shadow:3px 3px 0 #8f8f8f}
+.bus-tag:not(.selected):not(.full):not(.collect) .bus-progress{background:#ffffff4d}
+/* No speech-bubble pointer under the labels */
+.traveler-tag:after,.bus-tag:after{display:none!important}
+
+/* =====================================================================================================
+   Layout: top bar = brand · coins · sound. Second row = level card (left) · combo (middle, while tapping)
+   · money multiplier (right). All three share the same top edge and height.
+   ===================================================================================================== */
+.hud-spacer{flex:1}
+.level-chip{position:absolute;left:12px;top:calc(var(--top) + 58px);z-index:4;flex:none;display:grid;gap:5px;width:124px;height:78px;padding:8px 10px;text-align:left}
+.level-head{display:flex;align-items:center;gap:6px}
+.level-head b{font-size:13px;font-weight:900;letter-spacing:1px}
+.level-badge{width:28px;height:28px;font-size:14px}
+.level-chip .xp{gap:3px}
+.combo-hud{left:50%;top:calc(var(--top) + 58px);transform:translateX(-50%);display:grid;grid-template-columns:1fr;justify-items:center;gap:1px;width:108px;height:78px;padding:5px 8px 8px}
+.combo-hud .combo-num{font-size:30px}
+.combo-hud .combo-side{justify-items:center}
+.combo-hud .combo-word{font-size:10px}
+.combo-hud .combo-word .ico{width:11px;height:11px}
+.combo-hud .combo-pot{font-size:11px}
+.combo-hud .combo-timer{width:100%;height:5px;margin-top:2px}
+.mult-badge{top:calc(var(--top) + 58px);height:78px;min-width:0;width:104px;padding:5px 8px 7px;align-content:center;gap:1px}
+.mult-badge b{font-size:32px}
+.mult-badge small{font-size:9px}
+.mult-badge span{font-size:10px;padding:1px 7px}
+@media(max-width:360px){.level-chip{width:112px}.combo-hud{width:96px}.mult-badge{width:96px}}
+/* XP lands often, so the level card only nudges */
+.level-chip.bump{animation:bump-small .2s ease-out}
+@keyframes bump-small{40%{transform:scale(1.04)}}
+.toast-stack{top:calc(var(--top) + 144px)}

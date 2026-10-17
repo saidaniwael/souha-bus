@@ -121,14 +121,14 @@ function depart(bus){
 function arrive(bus,now){
   Object.assign(bus,{status:'idle',location:bus.dest,dest:null,payout:bus.revenue,revenue:0,passengers:0,claimBy:now+CLAIM_MS,readyAt:now,bay:null});
   if(bus.location===currentStation){pendingMoves[bus.id]=true;play('arrival',.9);}
-  else toast(`${icon('bag')} ${busName(bus)} reached <b>${city[bus.location].name}</b> with ${euro(bus.payout)} · ${CLAIM_MS/1000}s to claim! ${icon('swipe')}`,'claim');}
+  else toast(`${icon('bag')} ${euro(bus.payout)} waiting in <b>${city[bus.location].name}</b> · ${CLAIM_MS/1000}s!`,'claim');}
 function claim(bus){
   const amount=bus.payout;bus.payout=0;bus.claimBy=0;game.coins+=amount;coinsInFlight+=amount;assignDest(bus);
   const tag=document.querySelector(`[data-bus="${bus.id}"]`)?.getBoundingClientRect();if(tag)floatText(tag.left+tag.width/2,tag.top,`${icon('bag')} +${euro(amount)}`,'cash');gainXp(5,tag&&tag.left+tag.width/2,tag&&tag.top+40);
   playCash(amount);burstAt(tag,'#ffc800',16,true);if(tag)flyCoins(tag.left+tag.width/2,tag.top+tag.height/2,amount);else coinsInFlight-=amount;vibrate([20,30,20]);save();renderBuses();renderCrowd();renderHud();}
 function loseClaim(bus){
   const lost=bus.payout;bus.payout=0;bus.claimBy=0;assignDest(bus);play('lost',.8);vibrate(60);
-  toast(`${icon('timer')} ${euro(lost)} lost: ${busName(bus)} waited too long in ${city[bus.location].name}`,'error-soft');}
+  toast(`${icon('timer')} ${euro(lost)} lost in ${city[bus.location].name}`,'error-soft');}
 function buyBus(){
   const cost=busCost();if(game.coins<cost)return toast(`Earn ${euro(cost-game.coins)} more for a bus.`,'error');
   game.coins-=cost;const bus=newBus(game.nextBus++,currentStation);assignDest(bus);game.buses.push(bus);pendingMoves[bus.id]=true;
@@ -292,7 +292,7 @@ function renderHud(){
   $('station-info').innerHTML=away.length?`${icon('bag')} ${secondsLeft(away)}s`:`${here} bus${here===1?'':'es'}`;
   $('station-switch').classList.toggle('alert',away.length>0);
   // The buy buttons say what each purchase is worth.
-  const price=busCost(),quick=$('quick-buy-bus');quick.querySelector('small').textContent=euro(price);quick.classList.toggle('can-buy',game.coins>=price);quick.setAttribute('aria-label',`Buy a Souha Bus for ${euro(price)}: ${pct(BUS_BOOST)} on every fare`);
+  const price=busCost(),quick=$('quick-buy-bus');quick.querySelector('small').textContent=euro(price);quick.classList.toggle('can-buy',game.coins>=price);quick.setAttribute('aria-label',`Buy a SouSou Bus for ${euro(price)}: ${pct(BUS_BOOST)} on every fare`);
   $('fleet-sub').textContent=`${game.buses.length} · ${pct(parts.buses)}`;
   const nextStation=STATIONS.find(st=>!game.open.includes(st.id));$('build-sub').textContent=nextStation?`${pct(STATION_BOOST)} · ${shortEuro(nextStation.cost)}`:'All open';$('build-button').classList.toggle('can-buy',!!nextStation&&game.coins>=nextStation.cost);
   // Side arrows show the neighbouring stations and any fares waiting there.
@@ -387,13 +387,13 @@ function buildStatic(){
   put(staticGroup,new THREE.CylinderGeometry(.035,.045,2.6,8),mats.pole,1.5,1.3,-4.35);
   stationFlag=put(staticGroup,new THREE.PlaneGeometry(1.05,.7,8,1),new THREE.MeshLambertMaterial({map:flagTexture(currentStation),side:THREE.DoubleSide}),2.05,2.2,-4.35);stationFlag.castShadow=false;
 }
-const busTexture=textTexture('Souha Bus','#bd5a28','#fff9e9');
-function sideBrandTexture(){const el=document.createElement('canvas');el.width=768;el.height=160;const ctx=el.getContext('2d');ctx.clearRect(0,0,768,160);ctx.fillStyle='#fff8e9';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 112px Arial';ctx.lineJoin='round';ctx.lineWidth=14;ctx.strokeStyle='#b4521f';ctx.strokeText('Souha Bus',384,83);ctx.fillText('Souha Bus',384,83);const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;return texture;}
+const busTexture=textTexture('SouSou Bus','#bd5a28','#fff9e9');
+function sideBrandTexture(){const el=document.createElement('canvas');el.width=768;el.height=160;const ctx=el.getContext('2d');ctx.clearRect(0,0,768,160);ctx.fillStyle='#fff8e9';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='bold 112px Arial';ctx.lineJoin='round';ctx.lineWidth=14;ctx.strokeStyle='#b4521f';ctx.strokeText('SouSou Bus',384,83);ctx.fillText('SouSou Bus',384,83);const texture=new THREE.CanvasTexture(el);texture.colorSpace=THREE.SRGBColorSpace;return texture;}
 const sideBrand=sideBrandTexture();
 // Low-poly Irizar i6 coach: flat-colour parts are named in the GLB and mapped to the game palette.
 const COACH_PARTS={Body:mats.orange,Trim:mats.trim,Chrome:mats.wheelHub,Glass:mats.coachGlass,Lights:mats.cream,Tire:mats.wheel,Rim:mats.wheelHub};
 let coachTemplate=null;
-const coachTemplatePromise=new GLTFLoader().loadAsync('./models/souha-bus.glb').then(gltf=>{const model=gltf.scene;model.scale.set(.325,.25,.25);model.traverse(o=>{if(!o.isMesh)return;o.material=COACH_PARTS[o.material.name]||mats.dark;o.geometry.userData.shared=true;o.castShadow=true;o.receiveShadow=true;});return model;}).catch(error=>{console.warn('Souha Bus model failed to load; using the built-in coach.',error);return null;});
+const coachTemplatePromise=new GLTFLoader().loadAsync('./models/souha-bus.glb').then(gltf=>{const model=gltf.scene;model.scale.set(.325,.25,.25);model.traverse(o=>{if(!o.isMesh)return;o.material=COACH_PARTS[o.material.name]||mats.dark;o.geometry.userData.shared=true;o.castShadow=true;o.receiveShadow=true;});return model;}).catch(error=>{console.warn('SouSou Bus model failed to load; using the built-in coach.',error);return null;});
 function addModelCoach(g){
   g.add(coachTemplate.clone());
   for(const side of [-1,1]){const brand=put(g,new THREE.PlaneGeometry(1.75,.29),new THREE.MeshBasicMaterial({map:sideBrand,transparent:true,side:THREE.DoubleSide,depthWrite:false}),side*.475,.42,-.05);brand.rotation.y=side*Math.PI/2;brand.castShadow=false;}
