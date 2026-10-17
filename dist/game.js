@@ -1,6 +1,9 @@
 import * as THREE from './vendor/three.module.js';
 import {GLTFLoader} from './vendor/GLTFLoader.js';
 
+// Build stamp from the page (index.html loads game.js?v=<commit>), added to sounds and the model so a new release never mixes with cached files.
+const BUILD=new URL(import.meta.url).searchParams.get('v')||'dev';
+
 // ---------------------------------------------------------------------------------------------------------------
 // Rules and tuning
 // ---------------------------------------------------------------------------------------------------------------
@@ -73,7 +76,7 @@ save();
 // Sound: CC0 samples (see sounds/CREDITS.txt) through one shared Web Audio context, unlocked by the first tap.
 // ---------------------------------------------------------------------------------------------------------------
 const SOUND_NAMES=['board','bus-full','select','depart','coins','buy','station-open','switch','error','menu-open','arrival','vip','gift','heart','rush','diamond','combo','tick','lost','note','pop-a','pop-b','pop-c','ping','coin-jingle','purchase'];
-const soundFiles=Object.fromEntries(SOUND_NAMES.map(name=>[name,fetch(`./sounds/${name}.mp3`).then(r=>r.arrayBuffer()).catch(()=>null)]));
+const soundFiles=Object.fromEntries(SOUND_NAMES.map(name=>[name,fetch(`./sounds/${name}.mp3?v=${BUILD}`).then(r=>r.arrayBuffer()).catch(()=>null)]));
 let audioCtx=null;const soundBuffers={};
 function unlockAudio(){if(audioCtx){if(audioCtx.state!=='running')audioCtx.resume().catch(()=>{});return;}const AudioCtx=window.AudioContext||window.webkitAudioContext;if(!AudioCtx)return;try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch{}audioCtx=new AudioCtx();audioCtx.resume().catch(()=>{});for(const name of SOUND_NAMES)soundFiles[name].then(data=>data&&audioCtx.decodeAudioData(data)).then(buffer=>{if(buffer)soundBuffers[name]=buffer;}).catch(()=>{});}
 for(const type of ['pointerdown','touchend','click','keydown'])addEventListener(type,unlockAudio,{capture:true});
@@ -166,7 +169,8 @@ function tapTraveler(id){
   if(combo.count&&now-combo.last>COMBO_MS&&now>combo.frozenUntil)endCombo();
   combo.count++;combo.last=now;const special=traveler.special,fare=fareFor(currentStation,bus.dest);
   if(special==='vip')combo.vip*=2;else if(special==='rush')combo.frozenUntil=now+5000;
-  combo.fares+=fare;combo.bonus+=SPECIALS[special]?.bonus||0;bus.revenue+=fare;bus.passengers++;
+  const bonus=SPECIALS[special]?.bonus||0,share=combo.byBus[bus.id]??={fares:0,bonus:0};share.fares+=fare;share.bonus+=bonus;
+  combo.fares+=fare;combo.bonus+=bonus;bus.revenue+=fare;bus.passengers++;
   crowd=crowd.filter(p=>p.id!==id);
   if(special==='heart')for(let i=0;i<3;i++)spawnTraveler(now,bus.dest);
   const tag=document.querySelector(`[data-traveler="${id}"]`)?.getBoundingClientRect();
@@ -183,16 +187,19 @@ function tapTraveler(id){
 // ---------------------------------------------------------------------------------------------------------------
 // Combo: money earned while the combo lasts is multiplied when it ends (fares already on buses get the extra part).
 // ---------------------------------------------------------------------------------------------------------------
-const combo={count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0};
+const combo={count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0,byBus:{}};
 const SHOUTS={10:'NICE!',20:'GREAT!',30:'AMAZING!',45:'INCREDIBLE!',60:'UNSTOPPABLE!',80:'LEGENDARY!'};
 const comboWorth=()=>Math.round((combo.fares+combo.bonus)*comboMultiplier());
 const comboMultiplier=()=>(1+.5*Math.floor(combo.count/COMBO_STEP))*combo.vip;
 const comboPayout=()=>Math.round(combo.fares*(comboMultiplier()-1)+combo.bonus*comboMultiplier());
 function endCombo(){
-  if(!combo.count)return;const payout=comboPayout(),count=combo.count,mult=comboMultiplier();
-  Object.assign(combo,{count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0});
+  if(!combo.count)return;const count=combo.count,mult=comboMultiplier(),shares=combo.byBus;
+  Object.assign(combo,{count:0,last:0,fares:0,bonus:0,vip:1,frozenUntil:0,byBus:{}});
   if(count>game.bestCombo)game.bestCombo=count;if(count>=5)gainXp(Math.floor(count/2));
-  if(payout>0){game.coins+=payout;coinsInFlight+=payout;save();renderHud();flyCoins(...rectCentre(showComboBanner(count,mult,payout)),payout);play('combo',.8);playCash(payout,.6);vibrate([20,40,20]);}
+  let payout=0;const targets=[];
+  for(const [id,share] of Object.entries(shares)){const extra=Math.round(share.fares*(mult-1)+share.bonus*mult),bus=game.buses.find(b=>b.id===Number(id));if(!bus||extra<=0)continue;
+    if(bus.payout>0)bus.payout+=extra;else bus.revenue+=extra;payout+=extra;targets.push(bus.id);}
+  if(payout>0){save();renderBuses();const from=rectCentre(showComboBanner(count,mult,payout));for(const id of targets)coinsToBus(from,id);play('combo',.8);playCash(payout,0);vibrate([20,40,20]);}
   renderCombo();}
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -236,7 +243,9 @@ function showShout(text){const el=document.createElement('div');el.className='sh
 // The message rail under the top bar shows one message at a time (newest wins), so it never reaches the buses.
 function showNotice(kind,html,ms=2200){const el=document.createElement('div');el.className='notice notice-'+kind;el.innerHTML=html;$('toast-stack').replaceChildren(el);setTimeout(()=>el.remove(),ms);return el.getBoundingClientRect();}
 const rectCentre=r=>[r.left+r.width/2,r.top+r.height/2];
-function showComboBanner(count,mult,payout){return showNotice('combo',`<span class="notice-art">${icon('crown')}</span><span>COMBO ${count}</span><b>+${euro(payout)}</b><span class="chip orange">×${mult}</span>`,1800);}
+function showComboBanner(count,mult,payout){return showNotice('combo',`<span class="notice-art">${icon('crown')}</span><span>COMBO ${count}</span><b>+${euro(payout)}</b><span class="chip orange">×${mult}</span><span class="chip blue">${icon('bus')} on the bus</span>`,1800);}
+// Coins fly onto a bus label (only a visual: the money is already on that bus).
+function coinsToBus([x,y],busId){const tag=document.querySelector(`[data-bus="${busId}"]`);if(tag)flyTo(x,y,tag,'coin-flyer',icon('coin'),4,()=>{});}
 // A purchase pops a card listing exactly what it adds, so the benefit is always visible.
 function showPurchase(art,title,perks){showNotice('buy',`<span class="notice-art">${art}</span><b>${title}</b>${perks.map(p=>`<span class="chip green">${p}</span>`).join('')}`,2600);}
 // Particle burst at a screen rectangle: small CSS-animated dots that fly out and fade (no canvas or 3D work).
@@ -265,7 +274,8 @@ let coinsInFlight=0,xpInFlight=0,shownXp=game.xp,shownLevel=xpProgress().level;c
 function gainXp(amount,x,y,quiet=false){
   game.xp+=amount;xpInFlight+=amount;
   if(x!==undefined&&y!==undefined){if(!quiet)floatText(x,y,`+${amount} XP`,'xp');flyTo(x,y,$('xp-fill'),'xp-orb','',1,()=>{xpInFlight-=amount;bump($('level-chip'));});}else xpInFlight-=amount;
-  const {level}=xpProgress();while(game.level<level){game.level++;const reward=150*game.level;game.coins+=reward;coinsInFlight+=reward;pendingLevelUps.push({level:game.level,reward});}}
+  const {level}=xpProgress();while(game.level<level){game.level++;const reward=150*game.level,bus=getSelectedBus()||bayBuses()[0];
+    if(bus){if(bus.payout>0)bus.payout+=reward;else bus.revenue+=reward;}else{game.coins+=reward;coinsInFlight+=reward;}pendingLevelUps.push({level:game.level,reward,busId:bus?.id});}}
 function renderXp(){const shown=Math.floor(shownXp),{level,into,need}=xpProgress(shown),fill=Math.min(100,(into+(shownXp-shown))/need*100);
   $('level-num').textContent=level;$('xp-fill').style.width=fill.toFixed(1)+'%';$('xp-text').textContent=`${into} / ${need} XP`;}
 // Flying tokens use the Web Animations API on a few small elements, so they cost almost nothing.
@@ -273,15 +283,15 @@ function flyTo(x,y,target,className,html,count,onArrive,onEach){
   const to=target.getBoundingClientRect(),tx=target.id==='xp-fill'?to.right:to.left+to.width/2,ty=to.top+to.height/2;let landed=0;
   for(let i=0;i<count;i++){const el=document.createElement('div');el.className='flyer '+className;el.innerHTML=html;floatLayer.appendChild(el);
     const jx=(Math.random()-.5)*70,jy=(Math.random()-.5)*50-20,duration=520+i*55+Math.random()*80;let done=false;
-    const land=()=>{if(done)return;done=true;el.remove();landed++;if(className==='coin-flyer'){bump($('coins').closest('.coin-pill'));play('ping',.12,2.2+Math.random()*.4);}onEach?.();if(landed===count)onArrive();};
+    const land=()=>{if(done)return;done=true;el.remove();landed++;if(className==='coin-flyer'){const pill=target.closest('.coin-pill');if(pill)bump(pill);play('ping',.12,2.2+Math.random()*.4);}onEach?.();if(landed===count)onArrive();};
     el.animate([{transform:`translate(${x}px,${y}px) scale(.4)`,opacity:0},{transform:`translate(${x+jx}px,${y+jy}px) scale(1.15)`,opacity:1,offset:.3},{transform:`translate(${tx}px,${ty}px) scale(.6)`,opacity:.9}],{duration,easing:'cubic-bezier(.45,0,.7,1)',delay:i*35,fill:'backwards'}).onfinish=land;
     setTimeout(land,duration+i*35+400);}}
 // Each landing coin releases its share, so the counter climbs coin by coin.
 function flyCoins(x,y,amount){const count=Math.max(3,Math.min(10,Math.round(2+Math.log10(Math.max(1,amount))*2))),share=Math.floor(amount/count);let released=0;
   flyTo(x,y,$('coins').closest('.coin-pill').querySelector('.coin-ico'),'coin-flyer',icon('coin'),count,()=>{coinsInFlight-=amount-released;},()=>{released+=share;coinsInFlight-=share;});}
-function showLevelUp(level,reward){
-  const rect=showNotice('level',`<span class="notice-art">${level}</span><b>LEVEL ${level}!</b><span class="chip gold">+${euro(reward)}</span><span class="chip green">${pct(LEVEL_BOOST)} fares</span>`,2600);
-  play('arrival');play('station-open',.6);vibrate([30,50,30,50,60]);setTimeout(()=>flyCoins(...rectCentre(rect),reward),350);save();renderHud();}
+function showLevelUp(level,reward,busId){
+  const rect=showNotice('level',`<span class="notice-art">${level}</span><b>LEVEL ${level}!</b><span class="chip gold">+${euro(reward)}${busId?' on the bus':''}</span><span class="chip green">${pct(LEVEL_BOOST)} fares</span>`,2600);
+  play('arrival');play('station-open',.6);vibrate([30,50,30,50,60]);setTimeout(()=>busId?coinsToBus(rectCentre(rect),busId):flyCoins(...rectCentre(rect),reward),350);save();renderBuses();renderHud();}
 function pendingClaims(id){return game.buses.filter(b=>b.status==='idle'&&b.location===id&&b.payout>0);}
 const secondsLeft=claims=>Math.max(0,Math.ceil(Math.min(...claims.map(b=>b.claimBy-Date.now()))/1000));
 function renderHud(){
@@ -393,7 +403,7 @@ const sideBrand=sideBrandTexture();
 // Low-poly Irizar i6 coach: flat-colour parts are named in the GLB and mapped to the game palette.
 const COACH_PARTS={Body:mats.orange,Trim:mats.trim,Chrome:mats.wheelHub,Glass:mats.coachGlass,Lights:mats.cream,Tire:mats.wheel,Rim:mats.wheelHub};
 let coachTemplate=null;
-const coachTemplatePromise=new GLTFLoader().loadAsync('./models/souha-bus.glb').then(gltf=>{const model=gltf.scene;model.scale.set(.325,.25,.25);model.traverse(o=>{if(!o.isMesh)return;o.material=COACH_PARTS[o.material.name]||mats.dark;o.geometry.userData.shared=true;o.castShadow=true;o.receiveShadow=true;});return model;}).catch(error=>{console.warn('SouSou Bus model failed to load; using the built-in coach.',error);return null;});
+const coachTemplatePromise=new GLTFLoader().loadAsync(`./models/souha-bus.glb?v=${BUILD}`).then(gltf=>{const model=gltf.scene;model.scale.set(.325,.25,.25);model.traverse(o=>{if(!o.isMesh)return;o.material=COACH_PARTS[o.material.name]||mats.dark;o.geometry.userData.shared=true;o.castShadow=true;o.receiveShadow=true;});return model;}).catch(error=>{console.warn('SouSou Bus model failed to load; using the built-in coach.',error);return null;});
 function addModelCoach(g){
   g.add(coachTemplate.clone());
   for(const side of [-1,1]){const brand=put(g,new THREE.PlaneGeometry(1.75,.29),new THREE.MeshBasicMaterial({map:sideBrand,transparent:true,side:THREE.DoubleSide,depthWrite:false}),side*.475,.42,-.05);brand.rotation.y=side*Math.PI/2;brand.castShadow=false;}
@@ -524,7 +534,7 @@ let shownCoins=0;
 function animate(){
   requestAnimationFrame(animate);const now=performance.now(),clock=Date.now();
   const coinTarget=game.coins-coinsInFlight;if(shownCoins!==coinTarget){const gap=coinTarget-shownCoins;shownCoins+=Math.abs(gap)<2?gap:Math.round(gap*.14)||Math.sign(gap);$('coins').textContent=Math.round(shownCoins).toLocaleString('en-US');}
-  const xpTarget=game.xp-xpInFlight;if(Math.abs(xpTarget-shownXp)>.001){const gap=xpTarget-shownXp;shownXp=Math.abs(gap)<.05?xpTarget:shownXp+gap*.12+Math.sign(gap)*.03;renderXp();const level=xpProgress(Math.floor(shownXp)).level;if(level>shownLevel){shownLevel=level;const up=pendingLevelUps.shift();if(up)showLevelUp(up.level,up.reward);}}
+  const xpTarget=game.xp-xpInFlight;if(Math.abs(xpTarget-shownXp)>.001){const gap=xpTarget-shownXp;shownXp=Math.abs(gap)<.05?xpTarget:shownXp+gap*.12+Math.sign(gap)*.03;renderXp();const level=xpProgress(Math.floor(shownXp)).level;if(level>shownLevel){shownLevel=level;const up=pendingLevelUps.shift();if(up)showLevelUp(up.level,up.reward,up.busId);}}
   if(combo.count&&clock-combo.last>COMBO_MS&&clock>combo.frozenUntil)endCombo();renderCombo(clock);
   for(const pad of pads){const pulse=Math.sin(now/260);pad.scale.set(1+pulse*.025,1,1+pulse*.012);pad.userData.fill.opacity=.42+pulse*.12;}
   if(stationFlag){const pos=stationFlag.geometry.attributes.position;for(let i=0;i<pos.count;i++){const x=pos.getX(i)+.525;pos.setZ(i,Math.sin(now/260+x*5)*.06*x);}pos.needsUpdate=true;}
