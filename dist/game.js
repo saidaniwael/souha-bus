@@ -713,9 +713,9 @@ function buyUpgrade(key){const level=game.upgrades[key],cost=upgradeCost(key,lev
 // 3D scene: a small low-poly station; the sky and the flag on the pole change with the station.
 // ---------------------------------------------------------------------------------------------------------------
 const scene=new THREE.Scene();scene.background=new THREE.Color(0xbbe3e5);scene.fog=new THREE.Fog(0xbbe3e5,16,34);
-const canvas=$('scene'),renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.4;
+const canvas=$('scene'),mobileRender=matchMedia('(pointer: coarse)').matches,renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobileRender?1.5:2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.4;
 const camera=new THREE.OrthographicCamera(-4,4,5,-5,.1,70);camera.position.set(2.8,8.4,10);camera.lookAt(0,.15,.7);
-scene.add(new THREE.HemisphereLight(0xffffff,0x93bfa3,2.1));const sunlight=new THREE.DirectionalLight(0xfff0cc,2.2);sunlight.position.set(-4,11,6);sunlight.castShadow=true;sunlight.shadow.mapSize.set(1024,1024);sunlight.shadow.camera.left=-9;sunlight.shadow.camera.right=9;sunlight.shadow.camera.top=9;sunlight.shadow.camera.bottom=-9;sunlight.shadow.normalBias=.025;scene.add(sunlight);
+scene.add(new THREE.HemisphereLight(0xffffff,0x93bfa3,2.1));const sunlight=new THREE.DirectionalLight(0xfff0cc,2.2);sunlight.position.set(-4,11,6);sunlight.castShadow=true;sunlight.shadow.mapSize.set(mobileRender?512:1024,mobileRender?512:1024);sunlight.shadow.camera.left=-9;sunlight.shadow.camera.right=9;sunlight.shadow.camera.top=9;sunlight.shadow.camera.bottom=-9;sunlight.shadow.normalBias=.025;scene.add(sunlight);
 const staticGroup=new THREE.Group(),busGroup=new THREE.Group(),crowdGroup=new THREE.Group(),departureEffects=[],entryEffects=[],smokeEffects=[],boardingEffects=[],vanishEffects=[];const pendingMoves={};scene.add(staticGroup,busGroup,crowdGroup);
 const material=(color,more={})=>new THREE.MeshLambertMaterial({color,flatShading:true,...more});
 const mats={grass:material(0x9bd49e),grass2:material(0xb7dca5),platform:material(0xf7eacb),tile:material(0xfff4df),road:material(0x80a9a6),stripe:material(0xfff5dc),orange:material(0xf7863e),orangeDark:material(0xdd6d2c),cream:material(0xfffaf0),glass:material(0x6fb7bc),coachGlass:material(0x2b5962,{side:THREE.DoubleSide}),glassShine:material(0x83aeb4,{side:THREE.DoubleSide}),dark:material(0x405b5e),trim:material(0x2f3d40),wheel:material(0x344347),wheelHub:material(0xdfd8c4),trunk:material(0x997c56),leaf:material(0x71b885),leaf2:material(0x84c99a),skin:material(0xf3c29f),hair:material(0x624d3c),pole:material(0xe9e4d6)};
@@ -960,9 +960,14 @@ const musicIcon=()=>icon(musicOn?'music-note-1':'music-note-off-1');
 // ---------------------------------------------------------------------------------------------------------------
 // Animation loop
 // ---------------------------------------------------------------------------------------------------------------
-let shownCoins=game.coins,lastFrame=0;
-function animate(){
-  requestAnimationFrame(animate);const now=performance.now(),clockNow=Date.now();
+let shownCoins=game.coins,lastFrame=0,lastMobileFrame=0;
+function animate(now=performance.now()){
+  requestAnimationFrame(animate);
+  if(document.hidden){lastFrame=0;lastMobileFrame=0;return;}
+  // Keep simulation and rendering together, but skip surplus mobile display refreshes.
+  // Game deadlines use Date.now() in tick(), so the level still runs at its normal speed.
+  if(mobileRender&&now-lastMobileFrame<30)return;
+  lastMobileFrame=now;const clockNow=Date.now();
   // Coin counters and the goal bar roll toward what has landed.
   const coinGoal=game.coins-coinsInFlight;if(shownCoins!==coinGoal){const gap=coinGoal-shownCoins;shownCoins+=Math.abs(gap)<2?gap:Math.round(gap*.14)||Math.sign(gap);if(gap>0&&mode==='home')rollTick(now,.5);for(const el of document.querySelectorAll('.coin-pill strong'))el.textContent=Math.round(shownCoins).toLocaleString('en-US');}
   if(run){const earnedGoal=run.earned-(mode==='play'||mode==='paused'?coinsInFlight:0);if(shownEarned!==earnedGoal){const gap=earnedGoal-shownEarned;shownEarned+=Math.abs(gap)<2?gap:Math.round(gap*.14)||Math.sign(gap);if(gap>0)rollTick(now,shownEarned/run.cfg.target);renderGoal();}}
